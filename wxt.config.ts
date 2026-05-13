@@ -9,7 +9,7 @@ export default defineConfig({
   manifest: {
     name: 'VideoTracker',
     description: '视频观看进度记录插件 - 自动记录你在各视频网站的观看进度',
-    version: '0.1.0',
+    version: '0.0.1',
     permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting'],
     host_permissions: ['*://*/*'],
     icons: {

@@ -71,7 +71,7 @@ const themeOverrides: GlobalThemeOverrides = {
 
           <NLayoutFooter bordered position="absolute" style="text-align: center; padding: 12px;">
             <NText depth="3" style="font-size: 12px">
-              VideoTracker v0.1.0 · 自动记录你的视频观看进度
+              VideoTracker v0.0.1 · 自动记录你的视频观看进度
             </NText>
           </NLayoutFooter>
         </NLayout>
