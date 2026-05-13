@@ -1,0 +1,35 @@
+name: Deploy Landing Page
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'landing/**'
+      - '.github/workflows/deploy-landing.yml'
+
+jobs:
+  deploy:
+    name: Deploy to Huawei Cloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: Deploy landing page via rsync over sshpass
+        run: |
+          SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e rsync -avz --delete \
+            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+            landing/ \
+            root@124.70.160.134:/var/www/video-tracker/
+
+      - name: Set permissions
+        run: |
+          SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            root@124.70.160.134 \
+            "chown -R www-data:www-data /var/www/video-tracker/ && find /var/www/video-tracker/ -type d -exec chmod 755 {} \; && find /var/www/video-tracker/ -type f -exec chmod 644 {} \;"
