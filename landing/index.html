@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VideoTracker - 视频观看进度记录器</title>
+  <meta name="description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。纯本地存储，保护隐私。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-brand">📹 VideoTracker</a>
+      <div class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#platforms">平台</a>
+        <a href="#privacy">隐私</a>
+        <a href="https://github.com/Ankkaya/video-tracker" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          再也不用记<br>
+          <span class="gradient-text">看到哪一集了</span>
+        </h1>
+        <p class="hero-desc">
+          VideoTracker 自动记录你在各视频网站的观看进度，支持一键跳转继续观看。纯本地存储，隐私无忧。
+        </p>
+        <div class="hero-actions">
+          <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
+            下载安装
+          </a>
+          <a href="https://github.com/Ankkaya/video-tracker" class="btn btn-secondary" target="_blank" rel="noopener">
+            查看源码
+          </a>
+        </div>
+        <p class="hero-note">支持 Chrome / Edge / Firefox · 完全免费开源</p>
+      </div>
+      <div class="hero-visual">
+        <div class="mockup-popup">
+          <div class="mockup-header">
+            <span class="mockup-title">📹 VideoTracker</span>
+            <span class="mockup-icon">⚙️</span>
+          </div>
+          <div class="mockup-item">
+            <div class="mockup-item-badge bilibili">B站</div>
+            <div class="mockup-item-info">
+              <div class="mockup-item-title">某某动漫 第12集</div>
+              <div class="mockup-item-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
+                <span>14:32 / 22:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-item">
+            <div class="mockup-item-badge youtube">YouTube</div>
+            <div class="mockup-item-info">
+              <div class="mockup-item-title">TypeScript 进阶教程 EP5</div>
+              <div class="mockup-item-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+                <span>08:20 / 20:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-item">
+            <div class="mockup-item-badge iqiyi">爱奇艺</div>
+            <div class="mockup-item-info">
+              <div class="mockup-item-title">某某电视剧 第10集</div>
+              <div class="mockup-item-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+                <span>36:00 / 45:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-btn">📋 查看全部记录 →</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="features">
+    <div class="container">
+      <h2 class="section-title">核心功能</h2>
+      <p class="section-desc">简单、高效、隐私优先的视频进度管理</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>自动记录</h3>
+          <p>访问视频页面时自动记录播放进度，无需手动操作。智能阈值过滤，避免无效记录。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⌨️</div>
+          <h3>快捷键保存</h3>
+          <p>按 Ctrl+Shift+V 立即记录当前视频，无需等待阈值。操作成功后 Toast 提示。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🚀</div>
+          <h3>一键继续观看</h3>
+          <p>点击记录即可跳转到对应页面，自动定位到上次播放位置，无缝衔接。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⏱️</div>
+          <h3>智能阈值</h3>
+          <p>默认观看满 30 秒才记录。可自定义阈值：0 / 10 / 30 / 60 / 120 秒。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>搜索筛选</h3>
+          <p>支持关键词搜索和按平台筛选，快速找到想继续观看的视频。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>自定义站点</h3>
+          <p>除内置平台外，可手动添加任意视频网站域名，通用适配器自动检测 HTML5 播放器。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platforms -->
+  <section id="platforms" class="platforms">
+    <div class="container">
+      <h2 class="section-title">支持平台</h2>
+      <p class="section-desc">内置主流视频平台适配器，精确提取视频信息</p>
+      <div class="platforms-grid">
+        <div class="platform-card">
+          <div class="platform-logo">📺</div>
+          <div class="platform-name">哔哩哔哩</div>
+          <div class="platform-domain">bilibili.com</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-logo">▶️</div>
+          <div class="platform-name">YouTube</div>
+          <div class="platform-domain">youtube.com</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-logo">🎬</div>
+          <div class="platform-name">爱奇艺</div>
+          <div class="platform-domain">iqiyi.com</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-logo">🎞️</div>
+          <div class="platform-name">腾讯视频</div>
+          <div class="platform-domain">v.qq.com</div>
+        </div>
+        <div class="platform-card custom">
+          <div class="platform-logo">➕</div>
+          <div class="platform-name">自定义站点</div>
+          <div class="platform-domain">任意 HTML5 视频网站</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2 class="section-title">工作原理</h2>
+      <p class="section-desc">轻量无感，后台默默工作</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>检测视频</h3>
+          <p>Content Script 自动检测当前页面的视频播放器，匹配对应平台适配器。</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>心跳上报</h3>
+          <p>每 5 秒上报一次播放进度到 Background Service Worker，累计观看时长。</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>阈值保存</h3>
+          <p>观看时长超过设定阈值后，自动将视频信息和进度保存到本地存储。</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>随时继续</h3>
+          <p>在 Popup 或 Options 页面查看记录，点击即可跳转继续观看。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section id="privacy" class="privacy">
+    <div class="container">
+      <div class="privacy-card">
+        <div class="privacy-icon">🔒</div>
+        <h2>隐私优先</h2>
+        <p class="privacy-desc">你的观看记录只属于你</p>
+        <div class="privacy-points">
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>所有数据纯本地存储，不联网</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>不收集、不传输任何个人信息</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>不与任何外部服务通信</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>完全开源，代码可审计</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>随时可删除单条记录或卸载清除全部数据</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container cta-inner">
+      <h2>开始使用 VideoTracker</h2>
+      <p>免费、开源、无广告。让追剧更轻松。</p>
+      <div class="cta-actions">
+        <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
+          下载最新版本
+        </a>
+        <a href="https://github.com/Ankkaya/video-tracker" class="btn btn-secondary" target="_blank" rel="noopener">
+          ⭐ Star on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>📹 VideoTracker · 由 <a href="https://github.com/Ankkaya" target="_blank" rel="noopener">Ankkaya</a> 开发</p>
+      <p class="footer-links">
+        <a href="https://github.com/Ankkaya/video-tracker" target="_blank" rel="noopener">GitHub</a>
+        <span>·</span>
+        <a href="https://github.com/Ankkaya/video-tracker/issues" target="_blank" rel="noopener">反馈问题</a>
+        <span>·</span>
+        <a href="https://github.com/Ankkaya/video-tracker/releases" target="_blank" rel="noopener">更新日志</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
