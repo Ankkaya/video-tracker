@@ -85,17 +85,56 @@ a {
 }
 
 .lang-switch {
-  padding: 6px 12px;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 4px 10px;
+  border-radius: 999px;
   background: var(--bg-alt);
   border: 1px solid var(--border);
-  font-weight: 600;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .lang-switch:hover {
-  background: var(--primary-light);
   border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(67, 97, 238, 0.12);
+}
+
+.lang-switch-icon {
+  font-size: 14px;
+  line-height: 1;
+  margin-right: 4px;
+  opacity: 0.7;
+}
+
+.lang-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.lang-option:hover {
+  color: var(--primary);
+}
+
+.lang-option.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(67, 97, 238, 0.3);
+  pointer-events: none;
+}
+
+.lang-option.active:hover {
+  color: #fff;
 }
 
 /* ===== Buttons ===== */
