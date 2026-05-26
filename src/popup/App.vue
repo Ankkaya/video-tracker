@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { WatchRecord } from '../shared/types';
 import { MSG, STORAGE_KEYS } from '../shared/constants';
 import RecordList from './components/RecordList.vue';
 import EmptyState from './components/EmptyState.vue';
+
+const { t } = useI18n();
 
 const records = ref<WatchRecord[]>([]);
 const manualSaveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -72,7 +75,7 @@ async function manualAddCurrentPage() {
 
     const response = await chrome.runtime.sendMessage({
       type: MSG.MANUAL_ADD_RECORD,
-      data: { url: tab.url, title: tab.title || '未命名视频' },
+      data: { url: tab.url, title: tab.title || t('popup.emptyTitle') },
     });
 
     if (response?.success) {
@@ -108,9 +111,9 @@ async function startPickerMode() {
 <template>
   <div class="popup-container">
     <header class="header">
-      <h1 class="title">📹 VideoTracker</h1>
+      <h1 class="title">{{ t('popup.title') }}</h1>
       <div class="header-actions">
-        <button class="settings-btn" @click="openSettings" title="设置">⚙️</button>
+        <button class="settings-btn" @click="openSettings" :title="t('common.settings')">⚙️</button>
       </div>
     </header>
 
@@ -124,29 +127,29 @@ async function startPickerMode() {
     <EmptyState v-else />
 
     <button class="view-all-btn" @click="openAllRecords">
-      📋 查看全部记录 →
+      {{ t('popup.viewAllRecords') }}
     </button>
 
     <div class="fallback-actions">
-      <span class="fallback-label">自动识别失败时</span>
+      <span class="fallback-label">{{ t('popup.fallbackLabel') }}</span>
       <button
         class="fallback-btn"
         :class="{ success: manualSaveStatus === 'success', error: manualSaveStatus === 'error' }"
         :disabled="manualSaveStatus === 'saving'"
         @click="manualAddCurrentPage"
-        title="兜底记录当前页面，不依赖视频进度"
+        :title="t('popup.manualRecord')"
       >
-        <span v-if="manualSaveStatus === 'idle'">📌 手动记录</span>
-        <span v-else-if="manualSaveStatus === 'saving'">⏳ 记录中</span>
-        <span v-else-if="manualSaveStatus === 'success'">✅ 已记录</span>
-        <span v-else>❌ 失败</span>
+        <span v-if="manualSaveStatus === 'idle'">{{ t('popup.manualRecord') }}</span>
+        <span v-else-if="manualSaveStatus === 'saving'">{{ t('popup.recording') }}</span>
+        <span v-else-if="manualSaveStatus === 'success'">{{ t('popup.recorded') }}</span>
+        <span v-else>{{ t('popup.failed') }}</span>
       </button>
       <button
         class="fallback-btn"
         @click="startPickerMode"
-        title="兜底选择页面上的时间文本或播放器区域"
+        :title="t('popup.selectTime')"
       >
-        🎯 选择时间
+        {{ t('popup.selectTime') }}
       </button>
     </div>
   </div>

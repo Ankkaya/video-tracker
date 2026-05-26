@@ -1,24 +1,39 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   NCard, NSwitch, NSelect, NSpace, NText, NDivider, useMessage,
 } from 'naive-ui';
 import type { Settings } from '../../shared/types';
 import { THRESHOLD_OPTIONS, DEFAULT_SETTINGS } from '../../shared/constants';
 import { api } from '../composables/useApi';
+import { setLanguage, type Language, SUPPORTED_LANGUAGES } from '../../locales';
 
+const { t, locale } = useI18n();
 const message = useMessage();
 const settings = ref<Settings>({ ...DEFAULT_SETTINGS });
 
-const thresholdOptions = THRESHOLD_OPTIONS.map((t) => ({
-  label: t === 0 ? '立即记录' : `${t} 秒`,
-  value: t,
-}));
+const thresholdOptions = computed(() => THRESHOLD_OPTIONS.map((threshold) => ({
+  label: threshold === 0 ? t('options.settings.immediateRecord') : `${threshold} ${t('common.seconds')}`,
+  value: threshold,
+})));
+
+const languageOptions = computed(() =>
+  Object.entries(SUPPORTED_LANGUAGES).map(([value, label]) => ({ value, label }))
+);
+
+const currentLanguage = ref<Language>(locale.value as Language);
 
 onMounted(async () => {
   const s = await api.getSettings();
   if (s) settings.value = s;
 });
+
+function onLanguageChange(lang: Language) {
+  currentLanguage.value = lang;
+  locale.value = lang;
+  setLanguage(lang);
+}
 
 async function onAutoRecordChange(val: boolean) {
   settings.value.autoRecord = val;
@@ -32,7 +47,7 @@ async function onThresholdChange(val: number) {
 
 async function persist() {
   await api.updateSettings(settings.value);
-  message.success('设置已保存');
+  message.success(t('options.settings.saveSuccess'));
 }
 </script>
 
@@ -41,9 +56,26 @@ async function persist() {
     <NSpace vertical :size="0">
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">自动记录</div>
+          <div class="setting-label">{{ t('language.title') }}</div>
           <NText depth="3" style="font-size: 13px">
-            开启后，观看视频达到阈值时间将自动记录
+            {{ t('language.description') }}
+          </NText>
+        </div>
+        <NSelect
+          :value="currentLanguage"
+          :options="languageOptions"
+          style="width: 140px"
+          @update:value="onLanguageChange"
+        />
+      </div>
+
+      <NDivider style="margin: 16px 0" />
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">{{ t('options.settings.autoRecordLabel') }}</div>
+          <NText depth="3" style="font-size: 13px">
+            {{ t('options.settings.autoRecordDesc') }}
           </NText>
         </div>
         <NSwitch :value="settings.autoRecord" @update:value="onAutoRecordChange" />
@@ -53,9 +85,9 @@ async function persist() {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">最低观看时长</div>
+          <div class="setting-label">{{ t('options.settings.thresholdLabel') }}</div>
           <NText depth="3" style="font-size: 13px">
-            观看超过此时长后自动记录（设为0则立即记录）
+            {{ t('options.settings.thresholdDesc') }}
           </NText>
         </div>
         <NSelect
@@ -70,9 +102,9 @@ async function persist() {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">手动记录快捷键</div>
+          <div class="setting-label">{{ t('options.settings.shortcutLabel') }}</div>
           <NText depth="3" style="font-size: 13px">
-            在视频页面按下快捷键可立即记录当前视频
+            {{ t('options.settings.shortcutDesc') }}
           </NText>
         </div>
         <NSpace :size="4">

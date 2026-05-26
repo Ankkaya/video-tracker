@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VideoTracker - Video Watch Progress Tracker</title>
+  <meta name="description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Pure local storage, privacy protected.">
+  <link rel="alternate" hreflang="zh-CN" href="../index.html">
+  <link rel="alternate" hreflang="en" href="./index.html">
+  <link rel="canonical" href="./index.html">
+  <meta property="og:title" content="VideoTracker - Video Watch Progress Tracker">
+  <meta property="og:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Pure local storage, privacy protected.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-brand">📹 VideoTracker</a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#platforms">Platforms</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://github.com/Ankkaya/video-tracker" target="_blank" rel="noopener">GitHub</a>
+        <a href="../index.html" class="lang-switch">中文</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Never Forget<br>
+          <span class="gradient-text">Where You Left Off</span>
+        </h1>
+        <p class="hero-desc">
+          VideoTracker automatically records your watch progress across video sites with one-click resume. Pure local storage, privacy guaranteed.
+        </p>
+        <div class="hero-actions">
+          <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
+            Download & Install
+          </a>
+          <a href="https://github.com/Ankkaya/video-tracker" class="btn btn-secondary" target="_blank" rel="noopener">
+            View Source
+          </a>
+        </div>
+        <p class="hero-note">Supports Chrome / Edge / Firefox · Completely Free & Open Source</p>
+      </div>
+      <div class="hero-visual">
+        <div class="mockup-popup">
+          <div class="mockup-header">
+            <span class="mockup-title">📹 VideoTracker</span>
+            <span class="mockup-icon">⚙️</span>
+          </div>
+          <div class="mockup-item">
+            <div class="mockup-item-badge bilibili">Bilibili</div>
+            <div class="mockup-item-info">
+              <div class="mockup-item-title">Anime Episode 12</div>
+              <div class="mockup-item-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
+                <span>14:32 / 22:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-item">
+            <div class="mockup-item-badge youtube">YouTube</div>
+            <div class="mockup-item-info">
+              <div class="mockup-item-title">TypeScript Advanced Tutorial EP5</div>
+              <div class="mockup-item-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+                <span>08:20 / 20:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-item">
+            <div class="mockup-item-badge iqiyi">iQIYI</div>
+            <div class="mockup-item-info">
+              <div class="mockup-item-title">TV Series Episode 10</div>
+              <div class="mockup-item-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+                <span>36:00 / 45:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="mockup-btn">📋 View All Records →</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="features">
+    <div class="container">
+      <h2 class="section-title">Core Features</h2>
+      <p class="section-desc">Simple, efficient, privacy-first video progress management</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Auto Record</h3>
+          <p>Automatically records playback progress when visiting video pages. Smart threshold filtering avoids invalid records.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⌨️</div>
+          <h3>Shortcut Save</h3>
+          <p>Press Ctrl+Shift+V to instantly record current video without waiting for threshold. Toast notification on success.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🚀</div>
+          <h3>One-Click Resume</h3>
+          <p>Click any record to jump to the corresponding page and automatically seek to the last playback position.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⏱️</div>
+          <h3>Smart Threshold</h3>
+          <p>Default 30 seconds before recording. Customizable: 0 / 10 / 30 / 60 / 120 seconds.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Search & Filter</h3>
+          <p>Support keyword search and platform filtering to quickly find videos you want to continue watching.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Custom Sites</h3>
+          <p>Besides built-in platforms, manually add any video website domain. Universal adapter auto-detects HTML5 players.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platforms -->
+  <section id="platforms" class="platforms">
+    <div class="container">
+      <h2 class="section-title">Supported Platforms</h2>
+      <p class="section-desc">Built-in adapters for mainstream video platforms with precise video info extraction</p>
+      <div class="platforms-grid">
+        <div class="platform-card">
+          <div class="platform-logo">📺</div>
+          <div class="platform-name">Bilibili</div>
+          <div class="platform-domain">bilibili.com</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-logo">▶️</div>
+          <div class="platform-name">YouTube</div>
+          <div class="platform-domain">youtube.com</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-logo">🎬</div>
+          <div class="platform-name">iQIYI</div>
+          <div class="platform-domain">iqiyi.com</div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-logo">🎞️</div>
+          <div class="platform-name">Tencent Video</div>
+          <div class="platform-domain">v.qq.com</div>
+        </div>
+        <div class="platform-card custom">
+          <div class="platform-logo">➕</div>
+          <div class="platform-name">Custom Sites</div>
+          <div class="platform-domain">Any HTML5 Video Site</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-desc">Lightweight and seamless, works quietly in the background</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Detect Video</h3>
+          <p>Content Script automatically detects video players on current page and matches corresponding platform adapter.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Heartbeat Report</h3>
+          <p>Reports playback progress to Background Service Worker every 5 seconds to accumulate watch time.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Threshold Save</h3>
+          <p>After watch time exceeds threshold, automatically saves video info and progress to local storage.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Resume Anytime</h3>
+          <p>View records in Popup or Options page, click to jump and continue watching.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section id="privacy" class="privacy">
+    <div class="container">
+      <div class="privacy-card">
+        <div class="privacy-icon">🔒</div>
+        <h2>Privacy First</h2>
+        <p class="privacy-desc">Your watch records belong only to you</p>
+        <div class="privacy-points">
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>All data stored locally, no network connection</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>No personal data collection or transmission</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>No communication with any external services</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>Completely open source, code is auditable</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>Delete individual records or uninstall to clear all data anytime</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container cta-inner">
+      <h2>Start Using VideoTracker</h2>
+      <p>Free, open source, no ads. Make binge-watching easier.</p>
+      <div class="cta-actions">
+        <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
+          Download Latest Version
+        </a>
+        <a href="https://github.com/Ankkaya/video-tracker" class="btn btn-secondary" target="_blank" rel="noopener">
+          ⭐ Star on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>📹 VideoTracker · Developed by <a href="https://github.com/Ankkaya" target="_blank" rel="noopener">Ankkaya</a></p>
+      <p class="footer-links">
+        <a href="https://github.com/Ankkaya/video-tracker" target="_blank" rel="noopener">GitHub</a>
+        <span>·</span>
+        <a href="https://github.com/Ankkaya/video-tracker/issues" target="_blank" rel="noopener">Report Issues</a>
+        <span>·</span>
+        <a href="https://github.com/Ankkaya/video-tracker/releases" target="_blank" rel="noopener">Changelog</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

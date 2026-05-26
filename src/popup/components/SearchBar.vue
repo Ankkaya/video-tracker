@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 defineProps<{
   query: string;
   platform: string;
@@ -9,13 +12,15 @@ const emit = defineEmits<{
   'update:platform': [value: string];
 }>();
 
-const platforms = [
-  { value: 'all', label: '全部' },
-  { value: 'bilibili', label: 'B站' },
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'iqiyi', label: '爱奇艺' },
-  { value: 'vqq', label: '腾讯视频' },
-];
+const { t } = useI18n();
+
+const platforms = computed(() => [
+  { value: 'all', label: t('popup.platforms.all') },
+  { value: 'bilibili', label: t('popup.platforms.bilibili') },
+  { value: 'youtube', label: t('popup.platforms.youtube') },
+  { value: 'iqiyi', label: t('popup.platforms.iqiyi') },
+  { value: 'vqq', label: t('popup.platforms.vqq') },
+]);
 </script>
 
 <template>
@@ -24,7 +29,7 @@ const platforms = [
       type="text"
       :value="query"
       @input="emit('update:query', ($event.target as HTMLInputElement).value)"
-      placeholder="搜索视频标题..."
+      :placeholder="t('popup.searchPlaceholder')"
       class="search-input"
     />
     <div class="platform-filter">

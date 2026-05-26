@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   NConfigProvider,
   NMessageProvider,
@@ -20,6 +21,8 @@ import SettingsTab from './components/SettingsTab.vue';
 import SitesTab from './components/SitesTab.vue';
 
 type TabId = 'records' | 'settings' | 'sites';
+
+const { t } = useI18n();
 
 const activeTab = ref<TabId>('records');
 const recordsRef = ref<InstanceType<typeof RecordsTab> | null>(null);
@@ -46,7 +49,7 @@ const themeOverrides: GlobalThemeOverrides = {
         <NLayout class="options-layout">
           <NLayoutHeader bordered class="options-header">
             <NH1 style="margin: 0">📹 VideoTracker</NH1>
-            <NText depth="3">管理你的视频观看记录和插件设置</NText>
+            <NText depth="3">{{ t('options.headerSubtitle') }}</NText>
           </NLayoutHeader>
 
           <NLayoutContent content-style="padding: 24px 32px 80px;">
@@ -57,13 +60,13 @@ const themeOverrides: GlobalThemeOverrides = {
               animated
               style="margin-bottom: 16px"
             >
-              <NTabPane name="records" tab="📋 记录管理">
+              <NTabPane name="records" :tab="t('options.tabs.records')">
                 <RecordsTab ref="recordsRef" />
               </NTabPane>
-              <NTabPane name="settings" tab="⚙️ 插件设置">
+              <NTabPane name="settings" :tab="t('options.tabs.settings')">
                 <SettingsTab />
               </NTabPane>
-              <NTabPane name="sites" tab="🌐 站点管理">
+              <NTabPane name="sites" :tab="t('options.tabs.sites')">
                 <SitesTab />
               </NTabPane>
             </NTabs>
@@ -71,7 +74,7 @@ const themeOverrides: GlobalThemeOverrides = {
 
           <NLayoutFooter bordered position="absolute" style="text-align: center; padding: 12px;">
             <NText depth="3" style="font-size: 12px">
-              VideoTracker v0.0.1 · 自动记录你的视频观看进度
+              {{ t('options.footerVersion') }}
             </NText>
           </NLayoutFooter>
         </NLayout>

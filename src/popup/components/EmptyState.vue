@@ -1,15 +1,14 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 </script>
 
 <template>
   <div class="empty-state">
     <div class="empty-icon">📭</div>
-    <div class="empty-title">暂无观看记录</div>
-    <div class="empty-desc">
-      观看视频超过阈值时间后将自动记录
-      <br />
-      或使用 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> 手动记录
-    </div>
+    <div class="empty-title">{{ t('popup.emptyTitle') }}</div>
+    <div class="empty-desc" v-html="t('popup.emptyDesc')"></div>
   </div>
 </template>
 

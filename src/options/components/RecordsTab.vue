@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, h } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   NInput, NSelect, NDatePicker, NButton, NCheckbox,
   NPagination, NSpace, NEmpty, NTag, NProgress, NIcon,
@@ -9,6 +10,7 @@ import type { WatchRecord } from '../../shared/types';
 import { api } from '../composables/useApi';
 import { formatTime, formatDate, platformIcons } from '../utils/format';
 
+const { t } = useI18n();
 const message = useMessage();
 const dialog = useDialog();
 
@@ -21,13 +23,13 @@ const currentPage = ref(1);
 const PAGE_SIZE = 20;
 const selected = ref<Set<string>>(new Set());
 
-const platformOptions = [
-  { label: '全部平台', value: 'all' },
-  { label: 'B站', value: 'bilibili' },
-  { label: 'YouTube', value: 'youtube' },
-  { label: '爱奇艺', value: 'iqiyi' },
-  { label: '腾讯视频', value: 'vqq' },
-];
+const platformOptions = computed(() => [
+  { label: t('options.records.allPlatforms'), value: 'all' },
+  { label: t('popup.platforms.bilibili'), value: 'bilibili' },
+  { label: t('popup.platforms.youtube'), value: 'youtube' },
+  { label: t('popup.platforms.iqiyi'), value: 'iqiyi' },
+  { label: t('popup.platforms.vqq'), value: 'vqq' },
+]);
 
 const filteredRecords = computed(() =>
   records.value.filter((r) => {
@@ -101,15 +103,15 @@ function confirmBatchDelete() {
   const ids = Array.from(selected.value);
   if (!ids.length) return;
   dialog.warning({
-    title: '确认删除',
-    content: `确认删除选中的 ${ids.length} 条记录？此操作不可撤销。`,
-    positiveText: '确认删除',
-    negativeText: '取消',
+    title: t('options.records.confirmDeleteTitle'),
+    content: t('options.records.confirmDeleteContent', { count: ids.length }),
+    positiveText: t('options.records.confirmDeletePositive'),
+    negativeText: t('options.records.confirmDeleteNegative'),
     onPositiveClick: async () => {
       await api.deleteRecords(ids);
       records.value = records.value.filter((r) => !selected.value.has(r.id));
       clearSelection();
-      message.success(`已删除 ${ids.length} 条记录`);
+      message.success(t('options.records.deleteSuccess', { count: ids.length }));
     },
   });
 }
@@ -118,7 +120,7 @@ async function deleteRecord(id: string) {
   await api.deleteRecord(id);
   records.value = records.value.filter((r) => r.id !== id);
   selected.value.delete(id);
-  message.success('已删除');
+  message.success(t('options.records.deleteSingleSuccess'));
 }
 
 function openRecord(record: WatchRecord) {
@@ -133,7 +135,7 @@ defineExpose({ reload: loadRecords });
     <NSpace align="center" wrap style="margin-bottom: 16px">
       <NInput
         v-model:value="searchQuery"
-        placeholder="搜索视频标题..."
+        :placeholder="t('options.records.searchPlaceholder')"
         clearable
         style="width: 240px"
       >
@@ -150,23 +152,23 @@ defineExpose({ reload: loadRecords });
         clearable
         placement="bottom-start"
         :shortcuts="{
-          '今天': () => { const t = Date.now(); return [t, t]; },
-          '最近7天': () => [Date.now() - 7 * 86400000, Date.now()],
-          '最近30天': () => [Date.now() - 30 * 86400000, Date.now()],
-          '最近90天': () => [Date.now() - 90 * 86400000, Date.now()],
+          [t('options.records.dateShortcuts.today')]: () => { const t = Date.now(); return [t, t]; },
+          [t('options.records.dateShortcuts.last7Days')]: () => [Date.now() - 7 * 86400000, Date.now()],
+          [t('options.records.dateShortcuts.last30Days')]: () => [Date.now() - 30 * 86400000, Date.now()],
+          [t('options.records.dateShortcuts.last90Days')]: () => [Date.now() - 90 * 86400000, Date.now()],
         }"
       />
-      <NButton @click="resetFilters">🔄 重置</NButton>
+      <NButton @click="resetFilters">{{ t('options.records.reset') }}</NButton>
     </NSpace>
 
     <NSpace align="center" justify="space-between" style="margin-bottom: 12px">
       <NText depth="3" style="font-size: 12px">
-        共 {{ filteredRecords.length }} 条记录，第 {{ currentPage }}/{{ totalPages }} 页
+        {{ t('options.records.totalCount', { count: filteredRecords.length, current: currentPage, total: totalPages }) }}
       </NText>
       <NSpace v-if="selectedCount > 0" align="center">
-        <NTag type="info">已选 {{ selectedCount }} 条</NTag>
-        <NButton type="error" size="small" @click="confirmBatchDelete">🗑️ 删除选中</NButton>
-        <NButton size="small" @click="clearSelection">取消选择</NButton>
+        <NTag type="info">{{ t('options.records.selectedCount', { count: selectedCount }) }}</NTag>
+        <NButton type="error" size="small" @click="confirmBatchDelete">{{ t('options.records.deleteSelected') }}</NButton>
+        <NButton size="small" @click="clearSelection">{{ t('options.records.clearSelection') }}</NButton>
       </NSpace>
     </NSpace>
 
@@ -175,7 +177,7 @@ defineExpose({ reload: loadRecords });
         <NCheckbox
           :checked="allCurrentSelected"
           @update:checked="toggleSelectAll"
-        >全选当前页</NCheckbox>
+        >{{ t('options.records.selectAllCurrent') }}</NCheckbox>
       </NCard>
 
       <NSpace vertical :size="8">
@@ -201,7 +203,7 @@ defineExpose({ reload: loadRecords });
               </div>
               <div class="record-title">{{ record.title }}</div>
               <NText
-                v-if="record.episode !== '正片'"
+                v-if="record.episode !== t('popup.mainFilm')"
                 depth="3"
                 style="font-size: 12px; display: block; margin-bottom: 4px"
               >{{ record.episode }}</NText>
@@ -216,12 +218,12 @@ defineExpose({ reload: loadRecords });
               </NText>
             </div>
             <div class="record-actions">
-              <NButton size="small" quaternary class="record-action-btn" @click="openRecord(record)" title="打开">🔗</NButton>
+              <NButton size="small" quaternary class="record-action-btn" @click="openRecord(record)" :title="t('options.records.openTooltip')">🔗</NButton>
               <NPopconfirm @positive-click="deleteRecord(record.id)">
                 <template #trigger>
-                  <NButton size="small" quaternary type="error" class="record-action-btn" title="删除">🗑️</NButton>
+                  <NButton size="small" quaternary type="error" class="record-action-btn" :title="t('options.records.deleteTooltip')">🗑️</NButton>
                 </template>
-                确认删除这条记录？
+                {{ t('options.records.confirmDeleteSingle') }}
               </NPopconfirm>
             </div>
           </div>
@@ -236,12 +238,12 @@ defineExpose({ reload: loadRecords });
       />
     </template>
 
-    <NEmpty v-else description="暂无记录" style="padding: 60px 0">
+    <NEmpty v-else :description="t('options.records.emptyDescription')" style="padding: 60px 0">
       <template #icon>
         <div style="font-size: 48px">📭</div>
       </template>
       <template #extra>
-        <NText depth="3">观看视频超过阈值时间后将自动记录</NText>
+        <NText depth="3">{{ t('options.records.emptyExtra') }}</NText>
       </template>
     </NEmpty>
   </div>

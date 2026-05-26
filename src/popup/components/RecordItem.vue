@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { WatchRecord } from '../../shared/types';
+
+const { t, locale } = useI18n();
 
 const props = defineProps<{
   record: WatchRecord;
@@ -25,12 +28,12 @@ function formatDate(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  if (days < 7) return `${days}天前`;
+  if (minutes < 1) return t('popup.timeAgo.justNow');
+  if (minutes < 60) return `${minutes} ${t('popup.timeAgo.minutes')}`;
+  if (hours < 24) return `${hours} ${t('popup.timeAgo.hours')}`;
+  if (days < 7) return `${days} ${t('popup.timeAgo.days')}`;
 
-  return new Date(timestamp).toLocaleDateString('zh-CN');
+  return new Date(timestamp).toLocaleDateString(locale.value === 'zh-CN' ? 'zh-CN' : 'en-US');
 }
 
 const platformIcons: Record<string, string> = {
@@ -49,11 +52,11 @@ const progressPercent = (props.record.progress * 100).toFixed(1);
       <span class="platform-icon">{{ platformIcons[record.platform] || '📹' }}</span>
       <span class="platform-name">{{ record.platformName }}</span>
       <span class="time">{{ formatDate(record.lastWatchedAt) }}</span>
-      <button class="delete-btn" @click.stop="emit('delete')" title="删除记录">✕</button>
+      <button class="delete-btn" @click.stop="emit('delete')" :title="t('popup.deleteTooltip')">✕</button>
     </div>
 
     <div class="record-title">{{ record.title }}</div>
-    <div class="record-episode" v-if="record.episode !== '正片'">{{ record.episode }}</div>
+    <div class="record-episode" v-if="record.episode !== t('popup.mainFilm')">{{ record.episode }}</div>
 
     <div class="record-progress">
       <div class="progress-bar">
