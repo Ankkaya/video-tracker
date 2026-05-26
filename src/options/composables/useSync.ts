@@ -5,6 +5,10 @@ export function useSync() {
   const isSyncing = ref(false);
 
   async function uploadRecords(localRecords: LocalRecord[]) {
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
     try {
       isSyncing.value = true;
 
@@ -42,6 +46,10 @@ export function useSync() {
   }
 
   async function downloadRecords(): Promise<LocalRecord[]> {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+
     try {
       isSyncing.value = true;
 
@@ -78,6 +86,10 @@ export function useSync() {
   }
 
   async function syncRecords(localRecords: LocalRecord[]) {
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
     try {
       isSyncing.value = true;
 

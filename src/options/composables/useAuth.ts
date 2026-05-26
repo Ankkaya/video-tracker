@@ -8,6 +8,12 @@ export function useAuth() {
   const user = ref<any>(null);
 
   async function checkSession() {
+    if (!supabase) {
+      isLoggedIn.value = false;
+      user.value = null;
+      return;
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -27,6 +33,10 @@ export function useAuth() {
   }
 
   async function signInWithOAuth(provider: 'github' | 'google') {
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -44,6 +54,10 @@ export function useAuth() {
   }
 
   async function signInWithEmail(email: string, password: string) {
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -60,6 +74,10 @@ export function useAuth() {
   }
 
   async function signUpWithEmail(email: string, password: string) {
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -75,6 +93,13 @@ export function useAuth() {
   }
 
   async function signOut() {
+    if (!supabase) {
+      isLoggedIn.value = false;
+      user.value = null;
+      localStorage.removeItem(STORAGE_KEY);
+      return { success: true };
+    }
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
