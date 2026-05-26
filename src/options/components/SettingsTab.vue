@@ -2,16 +2,24 @@
 import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  NCard, NSwitch, NSelect, NSpace, NText, NDivider, useMessage,
+  NCard, NSwitch, NSelect, NSpace, NText, NDivider, useMessage, NButton, NTag,
 } from 'naive-ui';
 import type { Settings } from '../../shared/types';
 import { THRESHOLD_OPTIONS, DEFAULT_SETTINGS } from '../../shared/constants';
 import { api } from '../composables/useApi';
 import { setLanguage, type Language, SUPPORTED_LANGUAGES } from '../../locales';
+import { useAuth } from '../composables/useAuth';
+import { useSync } from '../composables/useSync';
 
 const { t, locale } = useI18n();
 const message = useMessage();
 const settings = ref<Settings>({ ...DEFAULT_SETTINGS });
+
+const { isLoggedIn, user, checkSession, signOut } = useAuth();
+const { isSyncing, syncRecords } = useSync();
+const syncStatus = ref<'not-logged-in' | 'logged-in' | 'syncing' | 'success' | 'error'>('not-logged-in');
+const lastSyncTime = ref<string | null>(null);
+const autoSyncEnabled = ref(true);
 
 const thresholdOptions = computed(() => THRESHOLD_OPTIONS.map((threshold) => ({
   label: threshold === 0 ? t('options.settings.immediateRecord') : `${threshold} ${t('common.seconds')}`,
@@ -27,6 +35,8 @@ const currentLanguage = ref<Language>(locale.value as Language);
 onMounted(async () => {
   const s = await api.getSettings();
   if (s) settings.value = s;
+  await checkSession();
+  updateSyncStatus();
 });
 
 function onLanguageChange(lang: Language) {
@@ -48,6 +58,98 @@ async function onThresholdChange(val: number) {
 async function persist() {
   await api.updateSettings(settings.value);
   message.success(t('options.settings.saveSuccess'));
+}
+
+function updateSyncStatus() {
+  if (!isLoggedIn.value) {
+    syncStatus.value = 'not-logged-in';
+  } else {
+    syncStatus.value = 'logged-in';
+  }
+}
+
+async function handleLogin() {
+  // Open Supabase auth in a new window/tab
+  const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+  message.info('Please configure Supabase credentials first. Create a project at https://supabase.com');
+}
+
+async function handleLogout() {
+  const result = await signOut();
+  if (result.success) {
+    message.success(t('options.settings.logoutSuccess'));
+    updateSyncStatus();
+  } else {
+    message.error(result.error || t('options.settings.loginFailed'));
+  }
+}
+
+async function handleAutoSyncChange(val: boolean) {
+  autoSyncEnabled.value = val;
+  // TODO: Persist auto sync setting
+}
+
+async function handleSync() {
+  if (!isLoggedIn.value) {
+    message.warning(t('options.settings.syncStatusNotLoggedIn'));
+    return;
+  }
+
+  syncStatus.value = 'syncing';
+
+  // Get local records
+  const localRecords = await api.getRecords();
+
+  // Sync with cloud
+  const result = await syncRecords(localRecords || []);
+
+  if (result.success) {
+    syncStatus.value = 'success';
+    lastSyncTime.value = new Date().toLocaleString();
+    message.success(t('options.settings.syncStatusSuccess'));
+
+    // Update local records with synced data
+    if (result.records) {
+      // TODO: Merge cloud records with local records
+    }
+
+    setTimeout(() => {
+      updateSyncStatus();
+    }, 3000);
+  } else {
+    syncStatus.value = 'error';
+    message.error(result.error || t('options.settings.syncFailed'));
+  }
+}
+
+function getSyncStatusText() {
+  switch (syncStatus.value) {
+    case 'not-logged-in':
+      return t('options.settings.syncStatusNotLoggedIn');
+    case 'logged-in':
+      return t('options.settings.syncStatusLoggedIn');
+    case 'syncing':
+      return t('options.settings.syncStatusSyncing');
+    case 'success':
+      return t('options.settings.syncStatusSuccess');
+    case 'error':
+      return t('options.settings.syncStatusError');
+  }
+}
+
+function getSyncStatusType() {
+  switch (syncStatus.value) {
+    case 'not-logged-in':
+      return 'default';
+    case 'logged-in':
+      return 'info';
+    case 'syncing':
+      return 'warning';
+    case 'success':
+      return 'success';
+    case 'error':
+      return 'error';
+  }
 }
 </script>
 
@@ -115,6 +217,64 @@ async function persist() {
           <kbd>V</kbd>
         </NSpace>
       </div>
+
+      <NDivider style="margin: 16px 0" />
+
+      <div class="setting-section">
+        <div class="section-header">
+          <div class="setting-info">
+            <div class="setting-label">{{ t('options.settings.syncTitle') }}</div>
+            <NText depth="3" style="font-size: 13px">
+              {{ t('options.settings.syncDesc') }}
+            </NText>
+          </div>
+        </div>
+        <NSpace vertical :size="12">
+          <div class="setting-row">
+            <div class="setting-info">
+              <NText depth="3" style="font-size: 13px">
+                {{ t('options.settings.syncStatus') }}
+              </NText>
+            </div>
+            <NTag :type="getSyncStatusType()">{{ getSyncStatusText() }}</NTag>
+          </div>
+          <div class="setting-row" v-if="lastSyncTime">
+            <div class="setting-info">
+              <NText depth="3" style="font-size: 13px">
+                {{ t('options.settings.lastSync') }}
+              </NText>
+            </div>
+            <NText depth="3" style="font-size: 13px">
+              {{ lastSyncTime }}
+            </NText>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <NText depth="3" style="font-size: 13px">
+                {{ t('options.settings.autoSync') }}
+              </NText>
+              <NText depth="3" style="font-size: 12px">
+                {{ t('options.settings.autoSyncDesc') }}
+              </NText>
+            </div>
+            <NSwitch :value="autoSyncEnabled" @update:value="handleAutoSyncChange" />
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"></div>
+            <NSpace :size="8">
+              <NButton v-if="isLoggedIn" @click="handleSync" :loading="isSyncing">
+                {{ t('common.save') }}
+              </NButton>
+              <NButton v-if="!isLoggedIn" type="primary" @click="handleLogin">
+                {{ t('options.settings.login') }}
+              </NButton>
+              <NButton v-else @click="handleLogout">
+                {{ t('options.settings.logout') }}
+              </NButton>
+            </NSpace>
+          </div>
+        </NSpace>
+      </div>
     </NSpace>
   </NCard>
 </template>
@@ -144,5 +304,11 @@ kbd {
   font-size: 12px;
   font-family: monospace;
   font-weight: 600;
+}
+.setting-section {
+  padding: 4px 0;
+}
+.section-header {
+  margin-bottom: 8px;
 }
 </style>
