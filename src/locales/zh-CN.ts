@@ -96,6 +96,7 @@ export default {
       syncTitle: '云端同步',
       syncDesc: '将观看记录同步到云端，实现跨设备访问',
       syncStatus: '同步状态',
+      syncStatusNotSynced: '未同步',
       syncStatusNotLoggedIn: '未登录',
       syncStatusLoggedIn: '已登录',
       syncStatusSyncing: '同步中...',

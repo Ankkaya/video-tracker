@@ -17,7 +17,7 @@ const settings = ref<Settings>({ ...DEFAULT_SETTINGS });
 
 const { isLoggedIn, user, checkSession, signOut } = useAuth();
 const { isSyncing, syncRecords } = useSync();
-const syncStatus = ref<'not-logged-in' | 'logged-in' | 'syncing' | 'success' | 'error'>('not-logged-in');
+const syncStatus = ref<'not-synced' | 'logged-in' | 'syncing' | 'success' | 'error'>('not-synced');
 const lastSyncTime = ref<string | null>(null);
 const autoSyncEnabled = ref(true);
 
@@ -62,7 +62,7 @@ async function persist() {
 
 function updateSyncStatus() {
   if (!isLoggedIn.value) {
-    syncStatus.value = 'not-logged-in';
+    syncStatus.value = 'not-synced';
   } else {
     syncStatus.value = 'logged-in';
   }
@@ -91,7 +91,7 @@ async function handleAutoSyncChange(val: boolean) {
 
 async function handleSync() {
   if (!isLoggedIn.value) {
-    message.warning(t('options.settings.syncStatusNotLoggedIn'));
+    message.warning(t('options.settings.syncStatusNotSynced'));
     return;
   }
 
@@ -100,8 +100,20 @@ async function handleSync() {
   // Get local records
   const localRecords = await api.getRecords();
 
+  // Convert WatchRecord to LocalRecord
+  const convertedRecords = (localRecords || []).map(record => ({
+    id: record.id,
+    platform: record.platform,
+    videoId: record.id, // Use id as videoId for now
+    title: record.title,
+    thumbnail: record.thumbnail,
+    progress: record.progress,
+    duration: record.duration,
+    watchedAt: record.lastWatchedAt,
+  }));
+
   // Sync with cloud
-  const result = await syncRecords(localRecords || []);
+  const result = await syncRecords(convertedRecords);
 
   if (result.success) {
     syncStatus.value = 'success';
@@ -124,8 +136,8 @@ async function handleSync() {
 
 function getSyncStatusText() {
   switch (syncStatus.value) {
-    case 'not-logged-in':
-      return t('options.settings.syncStatusNotLoggedIn');
+    case 'not-synced':
+      return t('options.settings.syncStatusNotSynced');
     case 'logged-in':
       return t('options.settings.syncStatusLoggedIn');
     case 'syncing':
@@ -139,7 +151,7 @@ function getSyncStatusText() {
 
 function getSyncStatusType() {
   switch (syncStatus.value) {
-    case 'not-logged-in':
+    case 'not-synced':
       return 'default';
     case 'logged-in':
       return 'info';
@@ -248,7 +260,7 @@ function getSyncStatusType() {
               {{ lastSyncTime }}
             </NText>
           </div>
-          <div class="setting-row">
+          <div class="setting-row" v-if="isLoggedIn">
             <div class="setting-info">
               <NText depth="3" style="font-size: 13px">
                 {{ t('options.settings.autoSync') }}
@@ -265,10 +277,7 @@ function getSyncStatusType() {
               <NButton v-if="isLoggedIn" @click="handleSync" :loading="isSyncing">
                 {{ t('common.save') }}
               </NButton>
-              <NButton v-if="!isLoggedIn" type="primary" @click="handleLogin">
-                {{ t('options.settings.login') }}
-              </NButton>
-              <NButton v-else @click="handleLogout">
+              <NButton v-if="isLoggedIn" @click="handleLogout">
                 {{ t('options.settings.logout') }}
               </NButton>
             </NSpace>

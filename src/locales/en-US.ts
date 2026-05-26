@@ -96,6 +96,7 @@ export default {
       syncTitle: 'Cloud Sync',
       syncDesc: 'Sync watch records to the cloud for cross-device access',
       syncStatus: 'Sync Status',
+      syncStatusNotSynced: 'Not synced',
       syncStatusNotLoggedIn: 'Not logged in',
       syncStatusLoggedIn: 'Logged in',
       syncStatusSyncing: 'Syncing...',
