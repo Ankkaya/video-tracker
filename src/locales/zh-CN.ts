@@ -51,7 +51,7 @@ export default {
   },
   options: {
     headerSubtitle: '管理你的视频观看记录和插件设置',
-    footerVersion: 'VideoTracker v0.0.1 · 自动记录你的视频观看进度',
+    footerVersion: 'VideoTracker v0.0.2 · 自动记录你的视频观看进度',
     tabs: {
       records: '📋 记录管理',
       settings: '⚙️ 插件设置',

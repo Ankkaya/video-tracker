@@ -2,6 +2,28 @@
 
 本文件记录 VideoTracker 的所有版本更新。格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.0.2] - 2026-05-26
+
+### 🌍 国际化支持
+
+新增中英文双语支持，覆盖官网和浏览器插件。
+
+### ✨ 新功能
+
+#### 官网国际化
+- 新增英文版官网页面 `landing/en/index.html`
+- 添加中英文语言切换按钮
+- SEO 优化：添加 `hreflang`、`lang` 属性和 Open Graph meta 标签
+
+#### 插件国际化
+- 集成 Vue I18n，支持动态语言切换
+- 新增 `src/locales/` 翻译文件目录（zh-CN、en-US）
+- 默认根据浏览器语言自动选择
+- 在设置页面新增语言切换功能，选择会持久化保存
+
+### 🐛 修复
+- 修复 `SettingsTab` 中 `thresholdOptions` computed 属性的命名冲突，导致设置/站点 tab 切换报错
+
 ## [0.0.1] - 2026-05-11
 
 ### 🎉 首次发布
