@@ -4,11 +4,12 @@ import { useI18n } from 'vue-i18n';
 import {
   NInput, NSelect, NDatePicker, NButton, NCheckbox,
   NPagination, NSpace, NEmpty, NTag, NProgress, NIcon,
-  NCard, NPopconfirm, useMessage, useDialog,
+  NCard, NPopconfirm, useMessage, useDialog, NText,
 } from 'naive-ui';
 import type { WatchRecord } from '../../shared/types';
 import { api } from '../composables/useApi';
 import { formatTime, formatDate, platformIcons } from '../utils/format';
+import { STORAGE_KEYS } from '../../shared/constants';
 
 const { t } = useI18n();
 const message = useMessage();
@@ -65,11 +66,21 @@ function onVisibilityChange() {
   if (document.visibilityState === 'visible') loadRecords();
 }
 
+function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>, areaName: string) {
+  if (areaName === 'local' && changes[STORAGE_KEYS.RECORDS]) {
+    void loadRecords();
+  }
+}
+
 onMounted(() => {
   loadRecords();
   document.addEventListener('visibilitychange', onVisibilityChange);
+  chrome.storage.onChanged.addListener(onStorageChanged);
 });
-onUnmounted(() => document.removeEventListener('visibilitychange', onVisibilityChange));
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  chrome.storage.onChanged.removeListener(onStorageChanged);
+});
 
 watch([searchQuery, platformFilter, dateRange], () => {
   currentPage.value = 1;
@@ -310,7 +321,7 @@ defineExpose({ reload: loadRecords });
 .record-title {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--n-text-color);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;

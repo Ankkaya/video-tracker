@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   NCard, NInput, NButton, NSpace, NTag, NText, NList, NListItem,
@@ -8,13 +8,28 @@ import {
 import type { CustomSite } from '../../shared/types';
 import { api } from '../composables/useApi';
 import { BUILTIN_SITES, isValidDomain } from '../utils/format';
+import { STORAGE_KEYS } from '../../shared/constants';
 
 const { t } = useI18n();
 const message = useMessage();
+
 const customSites = ref<CustomSite[]>([]);
 const newSiteDomain = ref('');
 
 onMounted(loadSites);
+onMounted(() => {
+  chrome.storage.onChanged.addListener(onStorageChanged);
+});
+
+onUnmounted(() => {
+  chrome.storage.onChanged.removeListener(onStorageChanged);
+});
+
+function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>, areaName: string) {
+  if (areaName === 'local' && changes[STORAGE_KEYS.SETTINGS]) {
+    void loadSites();
+  }
+}
 
 async function loadSites() {
   const s = await api.getSettings();
@@ -47,6 +62,7 @@ async function removeCustomSite(domain: string) {
     message.success(t('options.sites.deleteSuccess'));
   }
 }
+
 </script>
 
 <template>

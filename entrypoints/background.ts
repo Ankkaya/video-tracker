@@ -1,7 +1,9 @@
 import { StorageManager } from '../src/shared/storage';
 import type { VideoInfo, WatchRecord } from '../src/shared/types';
-import { MSG } from '../src/shared/constants';
+import { MSG, STORAGE_KEYS } from '../src/shared/constants';
 import { ICON_SIZES, drawVideoTrackerIcon } from '../src/shared/icon';
+import { logger } from '../src/shared/logger';
+import { supabase, type Record as CloudRecord } from '../src/supabase';
 
 interface TimerEntry {
   url: string;
@@ -14,6 +16,106 @@ interface TimerEntry {
 export default defineBackground(() => {
   /** 阈值计时器 Map<normalizedUrl, TimerEntry> */
   const timers = new Map<string, TimerEntry>();
+  let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
+  let autoSyncRunning = false;
+
+  async function setSyncMeta(partial: { state: 'idle' | 'syncing' | 'success' | 'error'; lastSyncAt?: number | null; lastError?: string }) {
+    const current = await chrome.storage.local.get(STORAGE_KEYS.SYNC_META);
+    const next = {
+      state: 'idle',
+      lastSyncAt: null,
+      ...(current[STORAGE_KEYS.SYNC_META] ?? {}),
+      ...partial,
+    };
+
+    if (!next.lastError) {
+      delete next.lastError;
+    }
+
+    await chrome.storage.local.set({ [STORAGE_KEYS.SYNC_META]: next });
+  }
+
+  async function getAuthenticatedUser() {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+
+    const data = await chrome.storage.local.get(STORAGE_KEYS.AUTH_META);
+    const authMeta = data[STORAGE_KEYS.AUTH_META];
+    if (!authMeta?.isLoggedIn || !authMeta?.accessToken) {
+      throw new Error('User not authenticated');
+    }
+
+    await supabase.auth.setSession({
+      access_token: authMeta.accessToken,
+      refresh_token: authMeta.refreshToken || '',
+    });
+
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    return user;
+  }
+
+  async function runAutoSync() {
+    if (autoSyncRunning) return;
+
+    const settings = await StorageManager.getSettings();
+    if (!settings.autoSync) return;
+
+    const authData = await chrome.storage.local.get(STORAGE_KEYS.AUTH_META);
+    const authMeta = authData[STORAGE_KEYS.AUTH_META];
+    if (!authMeta?.isLoggedIn || !authMeta?.accessToken) return;
+
+    autoSyncRunning = true;
+    await setSyncMeta({ state: 'syncing', lastError: undefined });
+
+    try {
+      const user = await getAuthenticatedUser();
+      const records = await StorageManager.getRecords();
+      const recordsToUpload: CloudRecord[] = records.map(record => ({
+        id: `${record.platform}::${record.url}`,
+        user_id: user.id,
+        platform: record.platform,
+        video_id: record.id,
+        url: record.url,
+        title: record.title,
+        thumbnail: record.thumbnail,
+        progress: record.progress,
+        duration: record.duration,
+        watched_at: new Date(record.lastWatchedAt).toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+
+      if (recordsToUpload.length > 0) {
+        const { error } = await supabase!
+          .from('records')
+          .upsert(recordsToUpload, { onConflict: 'id' });
+        if (error) throw error;
+      }
+
+      await setSyncMeta({ state: 'success', lastSyncAt: Date.now(), lastError: undefined });
+    } catch (error: any) {
+      logger.error('[VideoTracker] 自动同步失败:', error);
+      await setSyncMeta({ state: 'error', lastError: error?.message || String(error) });
+    } finally {
+      autoSyncRunning = false;
+    }
+  }
+
+  function scheduleAutoSync() {
+    if (autoSyncTimer) {
+      clearTimeout(autoSyncTimer);
+    }
+
+    autoSyncTimer = setTimeout(() => {
+      autoSyncTimer = null;
+      void runAutoSync();
+    }, 15000);
+  }
 
   function createActionIcon(size: number, enabled: boolean): ImageData | undefined {
     if (typeof OffscreenCanvas === 'undefined') return undefined;
@@ -217,7 +319,8 @@ export default defineBackground(() => {
     };
 
     await StorageManager.saveRecord(record);
-    console.log(`[VideoTracker] 记录已保存: ${record.title} - ${record.episode}`);
+    scheduleAutoSync();
+    logger.log(`[VideoTracker] 记录已保存: ${record.title} - ${record.episode}`);
     return { isNew };
   }
 
@@ -651,19 +754,29 @@ export default defineBackground(() => {
 
   chrome.runtime.onInstalled?.addListener(() => {
     void updateActionState();
+    scheduleAutoSync();
   });
   chrome.runtime.onStartup?.addListener(() => {
     void updateActionState();
+    scheduleAutoSync();
   });
   chrome.storage?.onChanged?.addListener((changes, areaName) => {
     if (areaName !== 'local') return;
-    const settingsChange = changes['video_tracker_settings'];
+    const settingsChange = changes[STORAGE_KEYS.SETTINGS];
     const autoRecord = settingsChange?.newValue?.autoRecord;
     if (typeof autoRecord === 'boolean') {
       void updateActionState(autoRecord);
     }
+    if (settingsChange?.newValue?.autoSync === true) {
+      scheduleAutoSync();
+    }
+    const authChange = changes[STORAGE_KEYS.AUTH_META];
+    if (authChange?.newValue?.isLoggedIn === true) {
+      scheduleAutoSync();
+    }
   });
   void updateActionState();
+  scheduleAutoSync();
 
-  console.log('[VideoTracker] Background service worker 已启动');
+  logger.log('[VideoTracker] Background service worker 已启动');
 });

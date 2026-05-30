@@ -12,6 +12,7 @@ export interface Record {
   user_id: string;
   platform: string;
   video_id: string;
+  url: string;
   title: string;
   thumbnail?: string;
   progress: number;
@@ -20,13 +21,11 @@ export interface Record {
   updated_at: string;
 }
 
-export interface LocalRecord {
+export interface CustomSite {
   id: string;
-  platform: string;
-  videoId: string;
-  title: string;
-  thumbnail?: string;
-  progress: number;
-  duration: number;
-  watchedAt: number;
+  user_id: string;
+  domain: string;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }

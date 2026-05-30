@@ -8,9 +8,9 @@ export default defineConfig({
   }),
   manifest: {
     name: 'VideoTracker',
-    description: '视频观看进度记录插件 - 自动记录你在各视频网站的观看进度',
+    description: 'Automatically save and resume your watch progress across video sites',
     version: '0.0.3',
-    permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting'],
+    permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],
     icons: {
       16: 'icon-16.png',
@@ -38,7 +38,7 @@ export default defineConfig({
           default: 'Ctrl+Shift+V',
           mac: 'Command+Shift+V',
         },
-        description: '手动保存当前视频记录',
+        description: 'Manually save current video record',
       },
     },
   },

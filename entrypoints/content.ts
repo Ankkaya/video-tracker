@@ -7,6 +7,7 @@ import { genericAdapter } from '../src/content/adapters/generic';
 import type { VideoAdapter } from '../src/content/adapters/types';
 import type { VideoInfo, CustomSite } from '../src/shared/types';
 import { MSG, HEARTBEAT_INTERVAL } from '../src/shared/constants';
+import { logger } from '../src/shared/logger';
 import { startPicker, parseTimePair } from '../src/content/picker';
 import { findVideoElements } from '../src/content/videoProbe';
 
@@ -97,7 +98,7 @@ export default defineContentScript({
       contextInvalidated = true;
       isActivated = false;
       mainWorldBridgeEnabled = false;
-      console.warn('[VideoTracker] 扩展上下文已失效，已停止所有后台任务（请刷新页面恢复）');
+      logger.warn('[VideoTracker] 扩展上下文已失效，已停止所有后台任务（请刷新页面恢复）');
       stopHeartbeat();
       stopRetryDetection();
       stopVideoDiscoveryObserver();
@@ -164,7 +165,7 @@ export default defineContentScript({
 
       isActivated = true;
       lastVideoInfo = videoInfo;
-      console.log(`[VideoTracker][main-bridge] 💓 ${data.source || 'player'}: ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
+      logger.log(`[VideoTracker][main-bridge] 💓 ${data.source || 'player'}: ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
       void safeSendMessage({
         type: MSG.HEARTBEAT,
         data: videoInfo,
@@ -194,24 +195,24 @@ export default defineContentScript({
       mainWorldBridgeEnabled = false;
 
       const frameLabel = isInIframe ? '[iframe]' : '[top]';
-      console.log(`[VideoTracker]${frameLabel} === 初始化开始 ===`);
-      console.log(`[VideoTracker]${frameLabel} location.href: ${location.href}`);
-      console.log(`[VideoTracker]${frameLabel} location.hostname: ${location.hostname}`);
-      console.log(`[VideoTracker]${frameLabel} getTopDomain(): ${getTopDomain()}`);
-      console.log(`[VideoTracker]${frameLabel} document.referrer: ${document.referrer}`);
+      logger.log(`[VideoTracker]${frameLabel} === 初始化开始 ===`);
+      logger.log(`[VideoTracker]${frameLabel} location.href: ${location.href}`);
+      logger.log(`[VideoTracker]${frameLabel} location.hostname: ${location.hostname}`);
+      logger.log(`[VideoTracker]${frameLabel} getTopDomain(): ${getTopDomain()}`);
+      logger.log(`[VideoTracker]${frameLabel} document.referrer: ${document.referrer}`);
 
       // 检测页面中的 video 元素
       const allVideos = findVideoElements();
-      console.log(`[VideoTracker]${frameLabel} 当前文档 video 元素数量: ${allVideos.length}`);
+      logger.log(`[VideoTracker]${frameLabel} 当前文档 video 元素数量: ${allVideos.length}`);
       allVideos.forEach((v, i) => {
-        console.log(`[VideoTracker]${frameLabel}   video[${i}]: src=${v.src || v.currentSrc || '(无src)'}, duration=${v.duration}, paused=${v.paused}`);
+        logger.log(`[VideoTracker]${frameLabel}   video[${i}]: src=${v.src || v.currentSrc || '(无src)'}, duration=${v.duration}, paused=${v.paused}`);
       });
 
       // 检测 iframe 数量
       const allIframes = document.querySelectorAll('iframe');
-      console.log(`[VideoTracker]${frameLabel} 当前文档 iframe 数量: ${allIframes.length}`);
+      logger.log(`[VideoTracker]${frameLabel} 当前文档 iframe 数量: ${allIframes.length}`);
       allIframes.forEach((iframe, i) => {
-        console.log(`[VideoTracker]${frameLabel}   iframe[${i}]: src=${iframe.src || '(无src)'}`);
+        logger.log(`[VideoTracker]${frameLabel}   iframe[${i}]: src=${iframe.src || '(无src)'}`);
       });
 
       // 在 iframe 中时，跳过内置适配器检测（内置适配器基于域名，iframe 域名通常是 CDN）
@@ -221,40 +222,40 @@ export default defineContentScript({
 
         if (currentAdapter) {
           // 内置站点匹配成功
-          console.log(`[VideoTracker]${frameLabel} ✅ 内置适配器匹配: ${currentAdapter.platformName}`);
+          logger.log(`[VideoTracker]${frameLabel} ✅ 内置适配器匹配: ${currentAdapter.platformName}`);
           isActivated = true;
           startHeartbeat();
           return;
         }
-        console.log(`[VideoTracker]${frameLabel} ❌ 内置适配器未匹配`);
+        logger.log(`[VideoTracker]${frameLabel} ❌ 内置适配器未匹配`);
       } else {
-        console.log(`[VideoTracker]${frameLabel} 跳过内置适配器检测（在 iframe 中）`);
+        logger.log(`[VideoTracker]${frameLabel} 跳过内置适配器检测（在 iframe 中）`);
       }
 
       // 内置适配器未匹配（或在 iframe 中），检查自定义站点
       const response = await safeSendMessage({ type: MSG.GET_CUSTOM_SITES });
       const customSites: CustomSite[] = response?.customSites ?? [];
-      console.log(`[VideoTracker]${frameLabel} 自定义站点列表:`, customSites.map(s => `${s.domain}(${s.enabled !== false ? '启用' : '禁用'})`));
+      logger.log(`[VideoTracker]${frameLabel} 自定义站点列表:`, customSites.map(s => `${s.domain}(${s.enabled !== false ? '启用' : '禁用'})`));
 
       const domain = getCurrentDomain();
-      console.log(`[VideoTracker]${frameLabel} 用于匹配的域名: ${domain}`);
+      logger.log(`[VideoTracker]${frameLabel} 用于匹配的域名: ${domain}`);
 
       if (isInCustomSites(domain, customSites)) {
         // 注册并使用通用适配器
         currentAdapter = genericAdapter;
         const video = currentAdapter.getVideoElement();
-        console.log(`[VideoTracker]${frameLabel} ✅ 自定义站点匹配成功: ${domain}`);
-        console.log(`[VideoTracker]${frameLabel} genericAdapter.getVideoElement(): ${video ? '找到 video' : '未找到 video'}`);
+        logger.log(`[VideoTracker]${frameLabel} ✅ 自定义站点匹配成功: ${domain}`);
+        logger.log(`[VideoTracker]${frameLabel} genericAdapter.getVideoElement(): ${video ? '找到 video' : '未找到 video'}`);
         if (video) {
-          console.log(`[VideoTracker]${frameLabel}   video.src: ${video.src || video.currentSrc || '(无src)'}`);
-          console.log(`[VideoTracker]${frameLabel}   video.duration: ${video.duration}`);
-          console.log(`[VideoTracker]${frameLabel}   video.currentTime: ${video.currentTime}`);
-          console.log(`[VideoTracker]${frameLabel}   video.paused: ${video.paused}`);
+          logger.log(`[VideoTracker]${frameLabel}   video.src: ${video.src || video.currentSrc || '(无src)'}`);
+          logger.log(`[VideoTracker]${frameLabel}   video.duration: ${video.duration}`);
+          logger.log(`[VideoTracker]${frameLabel}   video.currentTime: ${video.currentTime}`);
+          logger.log(`[VideoTracker]${frameLabel}   video.paused: ${video.paused}`);
           isActivated = true;
           startHeartbeat({ enableBridge: true });
         } else {
           // 本地没有 video，尝试通过 background 探测 iframe 中的 video
-          console.log(`[VideoTracker]${frameLabel} 本地无 video，启动 iframe 探测模式...`);
+          logger.log(`[VideoTracker]${frameLabel} 本地无 video，启动 iframe 探测模式...`);
           isActivated = true;
           startIframeProbeHeartbeat();
         }
@@ -263,25 +264,25 @@ export default defineContentScript({
 
       // iframe 中如果顶层域名匹配自定义站点，也尝试用通用适配器（直接检测 video）
       if (isInIframe) {
-        console.log(`[VideoTracker]${frameLabel} 顶层域名未匹配，尝试 iframe 自身域名...`);
+        logger.log(`[VideoTracker]${frameLabel} 顶层域名未匹配，尝试 iframe 自身域名...`);
         const video = genericAdapter.getVideoElement();
-        console.log(`[VideoTracker]${frameLabel} iframe 内 genericAdapter.getVideoElement(): ${video ? '找到 video' : '未找到 video'}`);
+        logger.log(`[VideoTracker]${frameLabel} iframe 内 genericAdapter.getVideoElement(): ${video ? '找到 video' : '未找到 video'}`);
         if (video) {
           // iframe 内有 video 元素，检查顶层域名是否在自定义站点中
           // 这里 domain 已经是 getTopDomain() 的结果
           // 如果顶层域名不在列表中，再用 iframe 自身域名试一次
           const iframeDomain = location.hostname;
-          console.log(`[VideoTracker]${frameLabel} iframe 自身域名: ${iframeDomain}`);
+          logger.log(`[VideoTracker]${frameLabel} iframe 自身域名: ${iframeDomain}`);
           if (isInCustomSites(iframeDomain, customSites)) {
             currentAdapter = genericAdapter;
-            console.log(`[VideoTracker]${frameLabel} ✅ iframe 域名匹配成功: ${iframeDomain}`);
+            logger.log(`[VideoTracker]${frameLabel} ✅ iframe 域名匹配成功: ${iframeDomain}`);
             isActivated = true;
             startHeartbeat({ enableBridge: true });
             return;
           }
-          console.log(`[VideoTracker]${frameLabel} ❌ iframe 域名也未匹配自定义站点`);
+          logger.log(`[VideoTracker]${frameLabel} ❌ iframe 域名也未匹配自定义站点`);
           // 新增：如果 iframe 中有 video 且顶层域名在自定义站点中（通过 referrer 判断），直接激活
-          console.log(`[VideoTracker]${frameLabel} 🔄 尝试无条件激活（iframe 中有 video 元素）...`);
+          logger.log(`[VideoTracker]${frameLabel} 🔄 尝试无条件激活（iframe 中有 video 元素）...`);
           currentAdapter = genericAdapter;
           isActivated = true;
           startHeartbeat({ enableBridge: true });
@@ -291,9 +292,9 @@ export default defineContentScript({
 
       // 不在任何列表中，不激活
       if (!isInIframe) {
-        console.log(`[VideoTracker]${frameLabel} ❌ 当前站点不在支持列表中，不激活: ${getCurrentDomain()}`);
+        logger.log(`[VideoTracker]${frameLabel} ❌ 当前站点不在支持列表中，不激活: ${getCurrentDomain()}`);
       } else {
-        console.log(`[VideoTracker]${frameLabel} ❌ iframe 中未找到 video 元素，不激活`);
+        logger.log(`[VideoTracker]${frameLabel} ❌ iframe 中未找到 video 元素，不激活`);
       }
 
       // 启动重试机制：每2秒检测一次，最多重试10次（20秒）
@@ -315,11 +316,11 @@ export default defineContentScript({
       const frameLabel = isInIframe ? '[iframe]' : '[top]';
       retryTimer = setInterval(async () => {
         retryCount++;
-        console.log(`[VideoTracker]${frameLabel} 重试检测 (${retryCount}/${MAX_RETRIES})...`);
+        logger.log(`[VideoTracker]${frameLabel} 重试检测 (${retryCount}/${MAX_RETRIES})...`);
 
         // 检测当前 video 元素状态
         const videos = findVideoElements();
-        console.log(`[VideoTracker]${frameLabel}   当前 video 数量: ${videos.length}`);
+        logger.log(`[VideoTracker]${frameLabel}   当前 video 数量: ${videos.length}`);
 
         // 先尝试内置适配器
         if (!isInIframe) {
@@ -336,7 +337,7 @@ export default defineContentScript({
           } else if (isInIframe) {
             // iframe 中：如果有 video 元素就直接用通用适配器
             if (videos.length > 0) {
-              console.log(`[VideoTracker]${frameLabel}   iframe 中发现 video，无条件激活`);
+              logger.log(`[VideoTracker]${frameLabel}   iframe 中发现 video，无条件激活`);
               currentAdapter = genericAdapter;
             }
           }
@@ -346,19 +347,19 @@ export default defineContentScript({
           // 验证是否有 video 元素
           const video = currentAdapter.getVideoElement();
           if (video) {
-            console.log(`[VideoTracker]${frameLabel} ✅ 重试成功！video.duration=${video.duration}, paused=${video.paused}`);
+            logger.log(`[VideoTracker]${frameLabel} ✅ 重试成功！video.duration=${video.duration}, paused=${video.paused}`);
             isActivated = true;
             startHeartbeat({ enableBridge: currentAdapter === genericAdapter });
             stopRetryDetection();
             stopVideoDiscoveryObserver();
           } else {
-            console.log(`[VideoTracker]${frameLabel}   适配器存在但 getVideoElement() 返回 null`);
+            logger.log(`[VideoTracker]${frameLabel}   适配器存在但 getVideoElement() 返回 null`);
             currentAdapter = null;
           }
         }
 
         if (retryCount >= MAX_RETRIES) {
-          console.log(`[VideoTracker]${frameLabel} ❌ 重试已达最大次数，停止`);
+          logger.log(`[VideoTracker]${frameLabel} ❌ 重试已达最大次数，停止`);
           stopRetryDetection();
         }
       }, RETRY_INTERVAL);
@@ -481,7 +482,7 @@ export default defineContentScript({
       enableMainWorldBridge();
       preferredIframeProbeFrameId = undefined;
       const frameLabel = '[top/probe]';
-      console.log(`[VideoTracker]${frameLabel} 启动 iframe 探测心跳`);
+      logger.log(`[VideoTracker]${frameLabel} 启动 iframe 探测心跳`);
 
       iframeProbeTimer = setInterval(async () => {
         if (!isActivated || contextInvalidated) return;
@@ -493,7 +494,7 @@ export default defineContentScript({
             : undefined,
         });
         if (!response?.success || !response.videoData) {
-          console.log(`[VideoTracker]${frameLabel} 探测: 未找到 video`);
+          logger.log(`[VideoTracker]${frameLabel} 探测: 未找到 video`);
           preferredIframeProbeFrameId = undefined;
           return;
         }
@@ -519,7 +520,7 @@ export default defineContentScript({
         };
 
         lastVideoInfo = videoInfo;
-        console.log(`[VideoTracker]${frameLabel} 💓 探测心跳: ${title} | ${Math.floor(vd.currentTime)}/${Math.floor(vd.duration)}s`);
+        logger.log(`[VideoTracker]${frameLabel} 💓 探测心跳: ${title} | ${Math.floor(vd.currentTime)}/${Math.floor(vd.duration)}s`);
 
         void safeSendMessage({
           type: MSG.HEARTBEAT,
@@ -534,7 +535,7 @@ export default defineContentScript({
 
       const videoInfo = currentAdapter.extract();
       if (!videoInfo) {
-        console.log(`[VideoTracker]${isInIframe ? '[iframe]' : '[top]'} 心跳: extract() 返回 null`);
+        logger.log(`[VideoTracker]${isInIframe ? '[iframe]' : '[top]'} 心跳: extract() 返回 null`);
         return;
       }
 
@@ -542,7 +543,7 @@ export default defineContentScript({
       if (!video || video.paused) return;
 
       lastVideoInfo = videoInfo;
-      console.log(`[VideoTracker]${isInIframe ? '[iframe]' : '[top]'} 💓 心跳: ${videoInfo.title} | ${Math.floor(videoInfo.currentTime)}/${Math.floor(videoInfo.duration)}s | url=${videoInfo.url.substring(0, 80)}`);
+      logger.log(`[VideoTracker]${isInIframe ? '[iframe]' : '[top]'} 💓 心跳: ${videoInfo.title} | ${Math.floor(videoInfo.currentTime)}/${Math.floor(videoInfo.duration)}s | url=${videoInfo.url.substring(0, 80)}`);
 
       void safeSendMessage({
         type: MSG.HEARTBEAT,
@@ -633,7 +634,7 @@ export default defineContentScript({
           currentAdapter = null;
         }
 
-        console.log(`[VideoTracker] URL 变化: ${oldUrl} -> ${location.href}`);
+        logger.log(`[VideoTracker] URL 变化: ${oldUrl} -> ${location.href}`);
 
         // 重新检测适配器（包括重新获取自定义站点列表）
         await init();
@@ -686,11 +687,11 @@ export default defineContentScript({
             }
             startPicker(
               (result) => {
-                console.log('[VideoTracker] 选择器结果:', result);
+                logger.log('[VideoTracker] 选择器结果:', result);
 
                 if (result.isIframe) {
                   // 用户点击了 iframe 区域 → 启动 iframe 时间探测心跳
-                  console.log('[VideoTracker] 用户选中了 iframe，启动 iframe 时间探测模式');
+                  logger.log('[VideoTracker] 用户选中了 iframe，启动 iframe 时间探测模式');
                   showToast('已锁定播放器区域，正在探测进度...', '🎯');
                   startIframeTimeProbeHeartbeat(result.selector);
                 } else {
@@ -710,7 +711,7 @@ export default defineContentScript({
                 }
               },
               () => {
-                console.log('[VideoTracker] 选择器已取消');
+                logger.log('[VideoTracker] 选择器已取消');
               }
             );
             sendResponse({ success: true });
@@ -740,7 +741,7 @@ export default defineContentScript({
         clearInterval(selectorHeartbeatTimer);
       }
 
-      console.log(`[VideoTracker][selector] 启动选择器心跳, selector: ${selector}`);
+      logger.log(`[VideoTracker][selector] 启动选择器心跳, selector: ${selector}`);
 
       selectorHeartbeatTimer = setInterval(() => {
         if (contextInvalidated) {
@@ -750,14 +751,14 @@ export default defineContentScript({
 
         const el = document.querySelector(selector);
         if (!el) {
-          console.log(`[VideoTracker][selector] 元素未找到: ${selector}`);
+          logger.log(`[VideoTracker][selector] 元素未找到: ${selector}`);
           return;
         }
 
         const text = el.textContent?.trim() || '';
         const timePair = parseTimePair(text);
         if (!timePair) {
-          console.log(`[VideoTracker][selector] 无法解析时间: "${text}"`);
+          logger.log(`[VideoTracker][selector] 无法解析时间: "${text}"`);
           return;
         }
 
@@ -775,7 +776,7 @@ export default defineContentScript({
         };
 
         lastVideoInfo = videoInfo;
-        console.log(`[VideoTracker][selector] 💓 心跳: ${title} | ${Math.floor(timePair.current)}/${Math.floor(timePair.duration)}s`);
+        logger.log(`[VideoTracker][selector] 💓 心跳: ${title} | ${Math.floor(timePair.current)}/${Math.floor(timePair.duration)}s`);
 
         void safeSendMessage({
           type: MSG.HEARTBEAT,
@@ -801,7 +802,7 @@ export default defineContentScript({
         clearInterval(iframeTimeProbeTimer);
       }
 
-      console.log(`[VideoTracker][iframe-probe] 启动 iframe 时间探测心跳`);
+      logger.log(`[VideoTracker][iframe-probe] 启动 iframe 时间探测心跳`);
 
       // 立即执行一次
       void doIframeTimeProbe();
@@ -837,7 +838,7 @@ export default defineContentScript({
         currentTime = response.videoData.currentTime;
         duration = response.videoData.duration;
         found = true;
-        console.log(`[VideoTracker][iframe-probe] 从 video 元素获取: ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
+        logger.log(`[VideoTracker][iframe-probe] 从 video 元素获取: ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
       }
 
       if (!found) {
@@ -857,13 +858,13 @@ export default defineContentScript({
             currentTime = timePair.current;
             duration = timePair.duration;
             found = true;
-            console.log(`[VideoTracker][iframe-probe] 从时间文本获取: "${textResponse.timeText}" → ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
+            logger.log(`[VideoTracker][iframe-probe] 从时间文本获取: "${textResponse.timeText}" → ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
           }
         }
       }
 
       if (!found) {
-        console.log(`[VideoTracker][iframe-probe] 未能获取进度`);
+        logger.log(`[VideoTracker][iframe-probe] 未能获取进度`);
         return;
       }
 
@@ -886,7 +887,7 @@ export default defineContentScript({
       };
 
       lastVideoInfo = videoInfo;
-      console.log(`[VideoTracker][iframe-probe] 💓 心跳: ${title} | ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
+      logger.log(`[VideoTracker][iframe-probe] 💓 心跳: ${title} | ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
 
       void safeSendMessage({
         type: MSG.HEARTBEAT,

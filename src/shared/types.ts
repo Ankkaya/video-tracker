@@ -26,6 +26,7 @@ export interface CustomSite {
 /** 插件设置 */
 export interface Settings {
   autoRecord: boolean;
+  autoSync: boolean;
   threshold: number; // 最低观看时长阈值（秒）
   shortcut: string;
   customSites: CustomSite[];

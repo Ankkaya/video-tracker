@@ -3,6 +3,7 @@ import type { Settings } from './types';
 /** 默认设置 */
 export const DEFAULT_SETTINGS: Settings = {
   autoRecord: false,
+  autoSync: true,
   threshold: 30,
   shortcut: 'Ctrl+Shift+V',
   customSites: [],
@@ -26,6 +27,8 @@ export const PLATFORM_NAMES: Record<string, string> = {
 export const STORAGE_KEYS = {
   RECORDS: 'video_tracker_records',
   SETTINGS: 'video_tracker_settings',
+  SYNC_META: 'video_tracker_sync_meta',
+  AUTH_META: 'video_tracker_auth_meta',
 } as const;
 
 /** 消息类型 */

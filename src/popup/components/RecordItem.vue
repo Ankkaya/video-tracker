@@ -195,3 +195,49 @@ const progressPercent = (props.record.progress * 100).toFixed(1);
   color: #999;
 }
 </style>
+
+<style>
+html.dark .record-item {
+  background: #222238;
+  border-color: #383852;
+}
+
+html.dark .record-item:hover {
+  border-color: #6c8cff;
+  box-shadow: 0 2px 10px rgba(108, 140, 255, 0.18);
+}
+
+html.dark .platform-name {
+  color: #c7ccda;
+  background: #2d2d44;
+}
+
+html.dark .time {
+  color: #9aa3b5;
+}
+
+html.dark .delete-btn {
+  color: #7f8698;
+}
+
+html.dark .delete-btn:hover {
+  color: #ff8f9a;
+  background: rgba(255, 71, 87, 0.14);
+}
+
+html.dark .record-title {
+  color: #f3f6ff;
+}
+
+html.dark .record-episode {
+  color: #b9bdd0;
+}
+
+html.dark .progress-bar {
+  background: #34344d;
+}
+
+html.dark .progress-text {
+  color: #9aa3b5;
+}
+</style>
