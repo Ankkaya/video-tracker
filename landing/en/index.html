@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - Video Watch Progress Tracker</title>
-  <meta name="description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Pure local storage, privacy protected.">
+  <meta name="description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, optional account sync across devices.">
   <link rel="alternate" hreflang="zh-CN" href="../index.html">
   <link rel="alternate" hreflang="en" href="./index.html">
   <link rel="canonical" href="./index.html">
   <meta property="og:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta property="og:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Pure local storage, privacy protected.">
+  <meta property="og:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, optional account sync across devices.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://video-tracker.ankkaya.top/en/">
   <meta property="og:image" content="http://video-tracker.ankkaya.top/og-image.png">
@@ -18,7 +18,7 @@
   <meta property="og:locale:alternate" content="zh_CN">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta name="twitter:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Pure local storage, privacy protected.">
+  <meta name="twitter:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, optional account sync across devices.">
   <meta name="twitter:image" content="http://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
           <span class="gradient-text">Where You Left Off</span>
         </h1>
         <p class="hero-desc">
-          VideoTracker automatically records your watch progress across video sites with one-click resume. Pure local storage, privacy guaranteed.
+          VideoTracker automatically records your watch progress across video sites with one-click resume. Local by default, with optional account sync across devices.
         </p>
         <div class="hero-actions">
           <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
@@ -140,6 +140,11 @@
           <p>Support keyword search and platform filtering to quickly find videos you want to continue watching.</p>
         </div>
         <div class="feature-card">
+          <div class="feature-icon">☁️</div>
+          <h3>Login Sync</h3>
+          <p>Sign in to sync watch records to the cloud and restore progress across devices. Without login, records stay local.</p>
+        </div>
+        <div class="feature-card">
           <div class="feature-icon">🌐</div>
           <h3>Custom Sites</h3>
           <p>Besides built-in platforms, manually add any video website domain. Universal adapter auto-detects HTML5 players.</p>
@@ -206,8 +211,8 @@
         </div>
         <div class="step">
           <div class="step-num">4</div>
-          <h3>Resume Anytime</h3>
-          <p>View records in Popup or Options page, click to jump and continue watching.</p>
+          <h3>Resume or Sync</h3>
+          <p>View records in Popup or Options page, click to continue, or sign in to upload, download, and two-way sync records.</p>
         </div>
       </div>
     </div>
@@ -219,19 +224,19 @@
       <div class="privacy-card">
         <div class="privacy-icon">🔒</div>
         <h2>Privacy First</h2>
-        <p class="privacy-desc">Your watch records belong only to you</p>
+        <p class="privacy-desc">Local-first, sync only when you choose</p>
         <div class="privacy-points">
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>All data stored locally, no network connection</span>
+            <span>Without login, all data stays in the current browser's local storage</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>No personal data collection or transmission</span>
+            <span>Account sync is optional and must be triggered by you</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>No communication with any external services</span>
+            <span>When syncing, watch records are sent only to the configured Supabase project</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
