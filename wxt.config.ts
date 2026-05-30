@@ -1,5 +1,9 @@
 import { defineConfig } from 'wxt';
 import UnoCSS from 'unocss/vite';
+import { loadEnv } from 'vite';
+
+const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
+const extensionKey = env.WXT_EXTENSION_KEY;
 
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
@@ -10,6 +14,7 @@ export default defineConfig({
     name: 'VideoTracker',
     description: 'Automatically save and resume your watch progress across video sites',
     version: '0.0.3',
+    ...(extensionKey ? { key: extensionKey } : {}),
     permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],
     icons: {
