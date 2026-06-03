@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - VideoTracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .highlight { background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        a { color: #3498db; }
+        .updated { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Privacy Policy for VideoTracker</h1>
+    <p class="updated"><strong>Last Updated:</strong> June 3, 2026</p>
+
+    <h2>Overview</h2>
+    <p>VideoTracker is a browser extension that helps you track and resume your video watching progress across websites. We are committed to protecting your privacy.</p>
+
+    <div class="highlight">
+        <strong>We do NOT collect any personal data.</strong>
+    </div>
+
+    <h2>Data Collection</h2>
+    <p>VideoTracker does not:</p>
+    <ul>
+        <li>Collect personally identifiable information (PII)</li>
+        <li>Track your browsing history</li>
+        <li>Monitor your online activity</li>
+        <li>Use analytics or tracking services</li>
+        <li>Send data to external servers</li>
+    </ul>
+
+    <h2>Data Storage</h2>
+    <p>All data is stored <strong>locally</strong> on your device using the browser's built-in storage API. This includes:</p>
+    <ul>
+        <li>Video watch progress (timestamps, video URLs)</li>
+        <li>User preferences and settings</li>
+        <li>Sync configuration (if you enable optional cloud sync)</li>
+    </ul>
+    <p>This data never leaves your device unless you explicitly enable the optional Supabase cloud sync feature.</p>
+
+    <h2>Permissions Usage</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Permission</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>storage</code></td>
+                <td>Save video watch progress locally</td>
+            </tr>
+            <tr>
+                <td><code>activeTab</code></td>
+                <td>Detect the current video page</td>
+            </tr>
+            <tr>
+                <td><code>tabs</code></td>
+                <td>Track video playback across tabs</td>
+            </tr>
+            <tr>
+                <td><code>scripting</code></td>
+                <td>Inject content scripts to detect video elements</td>
+            </tr>
+            <tr>
+                <td><code>host_permissions: *://*/*</code></td>
+                <td>Support video sites across all domains</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Third-Party Services</h2>
+    <p><strong>Optional Cloud Sync:</strong></p>
+    <p>If you choose to enable cloud synchronization, your data will be stored in your own Supabase account. We do not have access to your Supabase credentials or data.</p>
+
+    <h2>Data Security</h2>
+    <ul>
+        <li>All data is stored locally on your device</li>
+        <li>No data is transmitted to our servers</li>
+        <li>Cloud sync (if enabled) uses your own secure Supabase account</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>VideoTracker does not knowingly collect any personal information from children under 13.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this privacy policy from time to time. Any changes will be reflected in the "Last Updated" date above.</p>
+
+    <h2>Contact Us</h2>
+    <p>If you have any questions about this privacy policy, please open an issue on our GitHub repository:</p>
+    <p><a href="https://github.com/Ankkaya/video-tracker">https://github.com/Ankkaya/video-tracker</a></p>
+
+    <hr>
+    <p><strong>Summary:</strong> VideoTracker is a privacy-friendly extension that stores all data locally on your device. We do not collect, transmit, or share any of your personal data.</p>
+</body>
+</html>
