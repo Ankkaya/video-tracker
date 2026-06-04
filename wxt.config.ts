@@ -5,6 +5,9 @@ import { loadEnv } from 'vite';
 const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
 const extensionKey = env.WXT_EXTENSION_KEY;
 
+// 只在开发环境包含 key，生产构建不包含（商店不允许 key 字段）
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
   vite: () => ({
@@ -14,7 +17,7 @@ export default defineConfig({
     name: 'VideoTracker',
     description: 'Automatically save and resume your watch progress across video sites',
     version: '0.0.3',
-    ...(extensionKey ? { key: extensionKey } : {}),
+    ...(isDevelopment && extensionKey ? { key: extensionKey } : {}),
     permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],
     icons: {

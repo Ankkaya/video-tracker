@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - 'landing/**'
+      - 'public/auth-redirect.html'
       - '.github/workflows/deploy-landing.yml'
 
 jobs:
@@ -24,6 +25,13 @@ jobs:
           SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             landing/ \
+            root@124.70.160.134:/var/www/video-tracker/
+
+      - name: Deploy auth-redirect.html
+        run: |
+          SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e rsync -avz \
+            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+            public/auth-redirect.html \
             root@124.70.160.134:/var/www/video-tracker/
 
       - name: Set permissions

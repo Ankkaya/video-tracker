@@ -7,6 +7,7 @@
     "dev": "wxt",
     "dev:firefox": "wxt --browser firefox",
     "build": "wxt build",
+    "build:prod": "cross-env NODE_ENV=production wxt build",
     "build:firefox": "wxt build --browser firefox",
     "compile": "wxt prepare",
     "generate:icons": "node scripts/generate-icons.mjs",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/chrome": "^0.0.306",
     "@vue/test-utils": "^2.4.10",
+    "cross-env": "^7.0.3",
     "happy-dom": "^20.9.0",
     "typescript": "^5.7.3",
     "unocss": "^66.1.0-beta.3",
