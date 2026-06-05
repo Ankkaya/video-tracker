@@ -139,7 +139,15 @@ onUnmounted(() => {
 
 function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>, areaName: string) {
   if (areaName === 'local' && changes[STORAGE_KEYS.AUTH_META]) {
+    const oldValue = changes[STORAGE_KEYS.AUTH_META].oldValue;
+    const newValue = changes[STORAGE_KEYS.AUTH_META].newValue;
     void loadAuthMeta();
+
+    // 检测从未登录变为已登录，自动刷新页面加载最新数据
+    if (!oldValue?.isLoggedIn && newValue?.isLoggedIn) {
+      showLoginView.value = false;
+      window.location.reload();
+    }
   }
 }
 

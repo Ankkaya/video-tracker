@@ -735,6 +735,7 @@ export default defineBackground(() => {
 
       case MSG.AUTH_CALLBACK: {
         const authData = data as { accessToken: string; refreshToken: string; type?: string };
+        const tabId = sender.tab?.id;
         logger.log('[VideoTracker] 收到认证回调 token，存储到 AUTH_PENDING');
         chrome.storage.local.set({
           [STORAGE_KEYS.AUTH_PENDING]: {
@@ -744,7 +745,13 @@ export default defineBackground(() => {
             receivedAt: Date.now(),
           },
         })
-          .then(() => sendResponse({ success: true }))
+          .then(() => {
+            sendResponse({ success: true });
+            // 存储成功后，跳转到扩展页面完成登录
+            if (tabId) {
+              chrome.tabs.update(tabId, { url: chrome.runtime.getURL('/options.html') });
+            }
+          })
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
       }

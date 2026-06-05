@@ -128,6 +128,7 @@ export default {
       autoSync: '自动同步',
       autoSyncDesc: '自动将本地记录同步到云端',
       loginSuccess: '登录成功',
+      loginStateChanged: '检测到登录状态变化，页面将刷新以加载最新数据。',
       logoutSuccess: '已登出',
       loginFailed: '登录失败',
       syncFailed: '同步失败，请检查网络',

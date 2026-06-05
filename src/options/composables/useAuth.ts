@@ -4,7 +4,11 @@ import { STORAGE_KEYS } from '../../shared/constants';
 import { logger } from '../../shared/logger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const redirectBaseUrl = import.meta.env.VITE_REDIRECT_BASE_URL;
+
+// 开发环境用 localhost，生产环境用线上域名
+const REDIRECT_BASE_URL = import.meta.env.DEV
+  ? 'http://localhost:3000'
+  : 'https://video-tracker.ankkaya.top';
 
 const STORAGE_KEY = 'supabase_session';
 
@@ -12,13 +16,7 @@ const isLoggedIn = ref(false);
 const user = ref<any>(null);
 
 function getExtensionRedirectUrl() {
-  // 如果配置了外部跳转页地址，使用 HTTPS 跳转页（解决邮件客户端无法打开 chrome-extension:// 的问题）
-  if (redirectBaseUrl) {
-    const base = redirectBaseUrl.replace(/\/+$/, '');
-    return `${base}/auth-redirect.html`;
-  }
-  // 未配置时回退到扩展内部地址
-  return chrome.runtime.getURL('/options.html?login=true');
+  return `${REDIRECT_BASE_URL}/auth-redirect.html`;
 }
 
 async function persistAuthState(session?: any) {

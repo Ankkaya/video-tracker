@@ -128,6 +128,7 @@ export default {
       autoSync: 'Auto Sync',
       autoSyncDesc: 'Automatically sync local records to the cloud',
       loginSuccess: 'Login successful',
+      loginStateChanged: 'Login state changed. The page will refresh to load the latest data.',
       logoutSuccess: 'Logged out',
       loginFailed: 'Login failed',
       syncFailed: 'Sync failed, please check network',
