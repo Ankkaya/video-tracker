@@ -906,6 +906,24 @@ export default defineContentScript({
       stopHeartbeat();
     });
 
+    // ===== 认证回调检测 =====
+    (function handleAuthCallback() {
+      if (!location.pathname.includes('auth-redirect.html')) return;
+
+      const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+
+      if (accessToken) {
+        logger.log('[VideoTracker] 检测到认证回调，发送 token 到 background');
+        void safeSendMessage({
+          type: MSG.AUTH_CALLBACK,
+          data: { accessToken, refreshToken, type },
+        });
+      }
+    })();
+
     // ===== 启动 =====
     init();
   },

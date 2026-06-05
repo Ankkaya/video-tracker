@@ -34,7 +34,7 @@ import { logger } from '../shared/logger';
 type TabId = 'records' | 'settings' | 'sites';
 
 const { t, locale } = useI18n();
-const { isLoggedIn, user, loadAuthMeta, checkSession, handleAuthCallback, signOut } = useAuth();
+const { isLoggedIn, user, loadAuthMeta, checkSession, consumePendingAuth, handleAuthCallback, signOut } = useAuth();
 const { theme, toggleTheme, naiveTheme } = useTheme();
 const { syncRecords, syncCustomSites } = useSync();
 
@@ -114,6 +114,15 @@ onMounted(async () => {
       chrome.storage.onChanged.addListener(onStorageChanged);
       return;
     }
+  }
+
+  // 检查是否有 content script 从回调页面提取的 pending token
+  const consumed = await consumePendingAuth();
+  if (consumed) {
+    showLoginView.value = false;
+    await runInitialSync();
+    chrome.storage.onChanged.addListener(onStorageChanged);
+    return;
   }
 
   await checkSession();

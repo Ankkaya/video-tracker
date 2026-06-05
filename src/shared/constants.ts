@@ -29,6 +29,7 @@ export const STORAGE_KEYS = {
   SETTINGS: 'video_tracker_settings',
   SYNC_META: 'video_tracker_sync_meta',
   AUTH_META: 'video_tracker_auth_meta',
+  AUTH_PENDING: 'video_tracker_auth_pending',
 } as const;
 
 /** 消息类型 */
@@ -58,4 +59,6 @@ export const MSG = {
   START_PICKER: 'START_PICKER',
   /** Content Script 通知 Background 选择完成的结果 */
   PICKER_RESULT: 'PICKER_RESULT',
+  /** Content Script 从回调页面提取的认证 token */
+  AUTH_CALLBACK: 'AUTH_CALLBACK',
 } as const;

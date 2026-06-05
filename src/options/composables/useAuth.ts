@@ -15,7 +15,7 @@ function getExtensionRedirectUrl() {
   // 如果配置了外部跳转页地址，使用 HTTPS 跳转页（解决邮件客户端无法打开 chrome-extension:// 的问题）
   if (redirectBaseUrl) {
     const base = redirectBaseUrl.replace(/\/+$/, '');
-    return `${base}/auth-redirect.html?ext_id=${chrome.runtime.id}`;
+    return `${base}/auth-redirect.html`;
   }
   // 未配置时回退到扩展内部地址
   return chrome.runtime.getURL('/options.html?login=true');
@@ -87,6 +87,42 @@ export function useAuth() {
       isLoggedIn.value = false;
       user.value = null;
       await persistAuthState();
+    }
+  }
+
+  /**
+   * 消费 content script 从回调页面提取并存储的 pending token。
+   * 应在 options 页面加载时调用。
+   */
+  async function consumePendingAuth(): Promise<boolean> {
+    if (!supabase) return false;
+
+    const data = await chrome.storage.local.get(STORAGE_KEYS.AUTH_PENDING);
+    const pending = data[STORAGE_KEYS.AUTH_PENDING];
+    if (!pending?.accessToken) return false;
+
+    logger.log('发现 pending auth token，正在建立会话...');
+
+    // 消费后立即清除，避免重复使用
+    await chrome.storage.local.remove(STORAGE_KEYS.AUTH_PENDING);
+
+    try {
+      const { data: { session }, error } = await supabase.auth.setSession({
+        access_token: pending.accessToken,
+        refresh_token: pending.refreshToken || '',
+      });
+
+      if (error) throw error;
+      if (!session) return false;
+
+      isLoggedIn.value = true;
+      user.value = session.user;
+      await persistAuthState(session);
+      logger.log('pending auth 消费成功，已登录');
+      return true;
+    } catch (error) {
+      logger.error('消费 pending auth 失败:', error);
+      return false;
     }
   }
 
@@ -240,11 +276,13 @@ export function useAuth() {
     }
 
     try {
+      const redirectUrl = getExtensionRedirectUrl();
+      logger.log('Sign up emailRedirectTo:', redirectUrl);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: getExtensionRedirectUrl(),
+          emailRedirectTo: redirectUrl,
         },
       });
 
@@ -338,6 +376,7 @@ export function useAuth() {
     user,
     loadAuthMeta,
     checkSession,
+    consumePendingAuth,
     handleAuthCallback,
     signInWithOAuth,
     signInWithEmail,

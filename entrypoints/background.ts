@@ -733,6 +733,22 @@ export default defineBackground(() => {
         return true;
       }
 
+      case MSG.AUTH_CALLBACK: {
+        const authData = data as { accessToken: string; refreshToken: string; type?: string };
+        logger.log('[VideoTracker] 收到认证回调 token，存储到 AUTH_PENDING');
+        chrome.storage.local.set({
+          [STORAGE_KEYS.AUTH_PENDING]: {
+            accessToken: authData.accessToken,
+            refreshToken: authData.refreshToken,
+            type: authData.type,
+            receivedAt: Date.now(),
+          },
+        })
+          .then(() => sendResponse({ success: true }))
+          .catch((err: Error) => sendResponse({ success: false, error: err.message }));
+        return true;
+      }
+
       default:
         sendResponse({ error: 'Unknown message type' });
     }
