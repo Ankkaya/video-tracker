@@ -62,6 +62,7 @@ describe('阈值计时逻辑', () => {
 
   const defaultSettings: Settings = {
     autoRecord: true,
+    autoSync: false,
     threshold: 30,
     shortcut: 'Ctrl+Shift+V',
     customSites: [],

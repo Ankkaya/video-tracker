@@ -3,7 +3,9 @@ import type { VideoInfo, WatchRecord } from '../src/shared/types';
 import { MSG, STORAGE_KEYS } from '../src/shared/constants';
 import { ICON_SIZES, drawVideoTrackerIcon } from '../src/shared/icon';
 import { logger } from '../src/shared/logger';
-import { supabase, type Record as CloudRecord } from '../src/supabase';
+import { supabase } from '../src/supabase';
+import { restoreRememberedDataKey } from '../src/shared/keyManager';
+import { syncEncryptedData } from '../src/shared/encryptedSync';
 
 interface TimerEntry {
   url: string;
@@ -19,7 +21,7 @@ export default defineBackground(() => {
   let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
   let autoSyncRunning = false;
 
-  async function setSyncMeta(partial: { state: 'idle' | 'syncing' | 'success' | 'error'; lastSyncAt?: number | null; lastError?: string }) {
+  async function setSyncMeta(partial: { state?: 'idle' | 'syncing' | 'success' | 'error'; lastSyncAt?: number | null; lastError?: string }) {
     const current = await chrome.storage.local.get(STORAGE_KEYS.SYNC_META);
     const next = {
       state: 'idle',
@@ -60,6 +62,19 @@ export default defineBackground(() => {
     return user;
   }
 
+  async function hasEncryptedSyncEnabled(userId: string): Promise<boolean> {
+    if (!supabase) return false;
+
+    const { data, error } = await supabase
+      .from('user_encryption_keys')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return Boolean(data);
+  }
+
   async function runAutoSync() {
     if (autoSyncRunning) return;
 
@@ -71,33 +86,29 @@ export default defineBackground(() => {
     if (!authMeta?.isLoggedIn || !authMeta?.accessToken) return;
 
     autoSyncRunning = true;
-    await setSyncMeta({ state: 'syncing', lastError: undefined });
 
     try {
       const user = await getAuthenticatedUser();
-      const records = await StorageManager.getRecords();
-      const recordsToUpload: CloudRecord[] = records.map(record => ({
-        id: `${record.platform}::${record.url}`,
-        user_id: user.id,
-        platform: record.platform,
-        video_id: record.id,
-        url: record.url,
-        title: record.title,
-        thumbnail: record.thumbnail,
-        progress: record.progress,
-        duration: record.duration,
-        watched_at: new Date(record.lastWatchedAt).toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
+      if (await hasEncryptedSyncEnabled(user.id)) {
+        const restoredKey = await restoreRememberedDataKey();
+        if (!restoredKey) {
+          logger.log('[VideoTracker] 已启用加密云同步，但本设备未解锁，跳过自动同步');
+          await StorageManager.updateSettings({ autoSync: false });
+          return;
+        }
 
-      if (recordsToUpload.length > 0) {
-        const { error } = await supabase!
-          .from('records')
-          .upsert(recordsToUpload, { onConflict: 'id' });
-        if (error) throw error;
+        await setSyncMeta({ state: 'syncing', lastError: undefined });
+        const records = await StorageManager.getRecords();
+        const customSites = await StorageManager.getCustomSites();
+        const synced = await syncEncryptedData(records, customSites);
+        await chrome.storage.local.set({ [STORAGE_KEYS.RECORDS]: synced.records });
+        await StorageManager.updateSettings({ customSites: synced.customSites });
+        await setSyncMeta({ state: 'success', lastSyncAt: Date.now(), lastError: undefined });
+        return;
       }
 
-      await setSyncMeta({ state: 'success', lastSyncAt: Date.now(), lastError: undefined });
+      logger.log('[VideoTracker] 未初始化加密云同步，跳过自动同步');
+      await StorageManager.updateSettings({ autoSync: false });
     } catch (error: any) {
       logger.error('[VideoTracker] 自动同步失败:', error);
       await setSyncMeta({ state: 'error', lastError: error?.message || String(error) });

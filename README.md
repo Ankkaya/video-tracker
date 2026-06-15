@@ -1,6 +1,8 @@
 # VideoTracker - 视频观看进度记录器
 
-一款浏览器扩展，自动记录你在 B站、YouTube、爱奇艺、腾讯视频等平台的视频观看进度，支持一键跳转继续观看，并可登录账号在多设备间同步记录。
+当前版本：`0.0.5`
+
+一款浏览器扩展，自动记录你在 B站、YouTube、爱奇艺、腾讯视频等平台的视频观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步，在多设备间安全同步记录。
 
 ## 功能特性
 
@@ -10,24 +12,31 @@
 - **记录列表** — 点击插件图标查看所有记录，按最近观看时间排序
 - **一键跳转** — 点击记录直接打开对应页面并定位到上次播放位置
 - **搜索筛选** — 支持关键词搜索、按平台筛选记录
-- **登录同步** — 可登录账号将观看记录同步到云端，在多台设备间保持一致
+- **自定义站点** — 可添加任意 HTML5 视频网站域名，由通用适配器记录进度
+- **加密云同步** — 登录后可设置同步加密密码，记录和自定义站点会加密后再上传到 Supabase
 - **删除记录** — 可删除单条记录
 - **灵活设置** — 自动记录开关、阈值时间自定义（0/10/30/60/120 秒）
 
 ## 安装方法
 
-### 开发者模式加载（推荐）
+### 从 Release 安装
 
-1. 下载或构建项目，获取 `.output/chrome-mv3/` 目录
-2. 打开 Chrome 浏览器，访问 `chrome://extensions/`
-3. 开启右上角的 **开发者模式**
-4. 点击 **加载已解压的扩展程序**
-5. 选择项目中的 `.output/chrome-mv3/` 目录
-6. 扩展安装完成，工具栏会出现 VideoTracker 图标
+1. 打开 [GitHub Releases](https://github.com/Ankkaya/video-tracker/releases)
+2. 下载 `video-tracker-0.0.5-chrome-mv3.zip`
+3. 解压 zip，得到 Chrome MV3 扩展目录
+4. 打开 Chrome 或 Edge，访问 `chrome://extensions/`
+5. 开启右上角的 **开发者模式**
+6. 点击 **加载已解压的扩展程序**
+7. 选择解压后的目录
 
-### 从构建产物安装
+### 从源码构建
 
-如果你已经通过 `npm run build` 构建了项目，构建产物位于 `.output/chrome-mv3/`，直接按上述步骤加载即可。
+```bash
+npm install
+npm run build
+```
+
+构建产物位于 `.output/chrome-mv3/`，可直接在浏览器开发者模式中加载。
 
 ## 使用说明
 
@@ -47,18 +56,12 @@
 - 按快捷键 `Ctrl+Shift+V`（Mac: `Cmd+Shift+V`）
 - 当前视频会立即被记录，包括标题、进度等信息
 
-### 查看记录
+### 查看记录与继续观看
 
 1. 点击浏览器工具栏中的 VideoTracker 图标
 2. 弹出窗口中显示所有记录的视频列表
 3. 列表按最近观看时间排序，最新的在最上面
-4. 每条记录显示：视频标题、平台图标、观看进度、记录时间
-
-### 跳转继续观看
-
-1. 在记录列表中找到想继续观看的视频
-2. 点击该记录
-3. 浏览器会自动打开对应视频页面，并定位到上次播放位置
+4. 点击任意记录即可打开视频页面，并定位到上次播放位置
 
 ### 搜索筛选
 
@@ -67,20 +70,21 @@
 - **关键词搜索** — 输入视频标题关键词，实时过滤记录
 - **平台筛选** — 选择特定平台（B站/YouTube/爱奇艺/腾讯视频），只显示该平台的记录
 
-### 登录与同步
+### 加密云同步
 
-VideoTracker 支持可选的云同步能力：
+VideoTracker 的同步功能是可选的，并且采用端到端加密设计：
 
-1. 在 Popup 或选项页点击登录入口
-2. 使用账号登录后，当前本地记录可同步到云端
-3. 在另一台设备安装扩展并登录同一账号
-4. 点击同步后即可拉取云端记录，继续从上次进度观看
+1. 在 Popup 或选项页登录账号
+2. 开启云端同步时，首次使用需要设置同步加密密码并确认两次
+3. 之后当前设备会记住本地 Data Key，重启浏览器后通常不需要再次输入同步密码
+4. 换设备、退出登录、卸载浏览器或清除本地数据后，需要重新输入同步密码解锁
+5. 点击“立即同步”会合并本地和云端的观看记录、自定义站点，并上传加密后的数据
 
-同步功能默认不会开启；未登录时，记录仍只保存在当前浏览器本地。你可以在同步弹窗中手动触发上传、下载或双向同步。
+同步密码只用于解锁加密密钥，不会上传。请妥善保存同步密码；忘记后无法解密云端旧数据，只能重新初始化同步数据。
 
 ### 设置
 
-点击 Popup 中的设置图标或右键扩展图标选择"选项"：
+点击 Popup 中的设置图标或右键扩展图标选择“选项”：
 
 - **自动记录开关** — 开启/关闭自动记录功能
 - **阈值设置** — 设置自动记录的观看时长阈值：
@@ -89,6 +93,7 @@ VideoTracker 支持可选的云同步能力：
   - `30 秒` — 观看 30 秒后自动记录（默认）
   - `60 秒` — 观看 1 分钟后自动记录
   - `120 秒` — 观看 2 分钟后自动记录
+- **云端同步** — 登录后开启加密同步，自动同步打开后每次记录变更会触发同步
 - **快捷键说明** — 显示当前可用的快捷键
 
 ## 支持的平台
@@ -99,6 +104,7 @@ VideoTracker 支持可选的云同步能力：
 | YouTube | youtube.com | 支持普通视频、Shorts 等 |
 | 爱奇艺 | iqiyi.com | 支持电影、电视剧、综艺等 |
 | 腾讯视频 | v.qq.com | 支持电影、电视剧、综艺等 |
+| 自定义站点 | 任意 HTML5 视频网站 | 可在选项页手动添加域名 |
 
 ## 快捷键说明
 
@@ -113,12 +119,23 @@ VideoTracker 支持可选的云同步能力：
 VideoTracker 高度重视你的隐私：
 
 - **默认本地存储** — 未登录时，所有数据存储在浏览器本地（`chrome.storage.local`）
-- **同步需主动登录** — 只有登录并触发同步时，观看记录才会发送到配置的 Supabase 项目
+- **同步需主动开启** — 只有登录并开启云端同步后，加密密文才会发送到配置的 Supabase 项目
+- **端到端加密** — 观看记录和自定义站点在上传前已经加密，云端只保存密文
+- **不保存同步密码** — 同步密码不上传；当前设备仅保存可用于解锁的本地 Data Key
 - **不收集数据** — 不收集、不传输、不分析你的任何个人信息或浏览数据
 - **权限最小化** — 仅请求必要的浏览器权限，不获取多余权限
-- **可控删除** — 可删除本地记录，也可通过同步设置管理云端数据
+- **可控删除** — 可删除本地记录；退出登录会清除本地同步解锁状态
 
-如果不使用登录同步，你的观看记录只存在于当前浏览器本地。
+如果不使用云端同步，你的观看记录只存在于当前浏览器本地。
+
+## Supabase 数据表
+
+加密云同步只需要两张表：
+
+- `user_encryption_keys` — 保存每个用户的加密密钥元数据、盐值、KDF 参数和被同步密码保护的 Data Key 密文
+- `encrypted_sync_blobs` — 保存每个用户的加密同步数据包，包含观看记录和自定义站点的密文
+
+旧版明文同步表 `records`、`custom_sites` 已在 `0.0.5` 中移除，不再被插件读取或写入。
 
 ## 技术栈
 
@@ -126,7 +143,7 @@ VideoTracker 高度重视你的隐私：
 - **前端**: [Vue 3](https://vuejs.org/) + [TypeScript](https://www.typescriptlang.org/)
 - **状态管理**: Vue 3 Composition API
 - **存储**: Chrome Storage API (`chrome.storage.local`)
-- **云同步**: Supabase Auth + Database
+- **云同步**: Supabase Auth + Database + WebCrypto 加密
 - **构建工具**: Vite（WXT 内置）
 
 ## 开发指南
@@ -139,7 +156,6 @@ VideoTracker 高度重视你的隐私：
 ### 安装依赖
 
 ```bash
-cd video-tracker
 npm install
 ```
 
@@ -159,75 +175,11 @@ npm run build
 
 构建产物位于 `.output/chrome-mv3/`，可直接在 Chrome 中加载。
 
-### 添加新平台适配器
+### 测试
 
-VideoTracker 使用适配器模式支持多平台，添加新平台只需以下步骤：
-
-#### 1. 创建平台适配器文件
-
-在 `src/adapters/` 目录下创建新文件，例如 `douyin.ts`：
-
-```typescript
-import { VideoAdapter } from './types'
-
-export const douyinAdapter: VideoAdapter = {
-  platform: 'douyin',
-  platformName: '抖音',
-  platformIcon: '🎵',
-  
-  // URL 匹配规则
-  match(url: string): boolean {
-    return url.includes('douyin.com/video/')
-  },
-  
-  // 提取视频信息
-  async extractVideoInfo(): Promise<VideoInfo | null> {
-    const title = document.querySelector('.video-info-detail')?.textContent
-    const video = document.querySelector('video')
-    if (!title || !video) return null
-    
-    return {
-      title: title.trim(),
-      platform: 'douyin',
-      url: window.location.href,
-      currentTime: video.currentTime,
-      duration: video.duration,
-      timestamp: Date.now(),
-    }
-  },
-  
-  // 跳转到指定进度
-  seekTo(time: number): void {
-    const video = document.querySelector('video')
-    if (video) {
-      video.currentTime = time
-    }
-  }
-}
+```bash
+npm test
 ```
-
-#### 2. 注册适配器
-
-在 `src/adapters/index.ts` 中导入并注册：
-
-```typescript
-import { douyinAdapter } from './douyin'
-
-export const adapters = [
-  bilibiliAdapter,
-  youtubeAdapter,
-  iqiyiAdapter,
-  qqliveAdapter,
-  douyinAdapter,  // 新增
-]
-```
-
-#### 3. 测试
-
-运行 `npm run dev`，访问新平台的视频页面，验证：
-- 视频信息能否正确提取
-- 播放进度能否正确记录
-- 跳转功能是否正常
 
 ## 许可证
 

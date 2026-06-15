@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { h, ref, onMounted, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  NCard, NSwitch, NSelect, NSpace, NText, NDivider, useMessage,
+  NCard, NSwitch, NSelect, NSpace, NText, NDivider, NInput, useDialog, useMessage,
 } from 'naive-ui';
 import type { Settings } from '../../shared/types';
 import { THRESHOLD_OPTIONS, DEFAULT_SETTINGS, STORAGE_KEYS } from '../../shared/constants';
@@ -13,13 +13,29 @@ import { logger } from '../../shared/logger';
 
 const { t } = useI18n();
 const message = useMessage();
+const dialog = useDialog();
 const settings = ref<Settings>({ ...DEFAULT_SETTINGS });
 const emit = defineEmits<{
   loginRequired: []
 }>();
 
 const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
-const { isSyncing, syncMeta, loadSyncMeta, syncRecords, syncCustomSites } = useSync();
+const {
+  isSyncing,
+  syncMeta,
+  loadSyncMeta,
+  hasEncryptedCloudSync,
+  isEncryptedSyncUnlocked,
+  restoreEncryptedSyncUnlock,
+  initializeEncryptedSync,
+  unlockEncryptedSync,
+  syncEncryptedRecordsAndSites,
+} = useSync();
+const encryptionInitialized = ref(false);
+const encryptionUnlocked = ref(false);
+const encryptionBusy = ref(false);
+const encryptionStateLoading = ref(false);
+const encryptionDialogOpen = ref(false);
 
 const thresholdOptions = computed(() => THRESHOLD_OPTIONS.map((threshold) => ({
   label: threshold === 0 ? t('options.settings.immediateRecord') : `${threshold} ${t('common.seconds')}`,
@@ -32,6 +48,7 @@ onMounted(async () => {
   if (s) settings.value = s;
   await checkSession();
   await loadSyncMeta();
+  await refreshEncryptionState();
   chrome.storage.onChanged.addListener(onStorageChanged);
 });
 
@@ -45,6 +62,9 @@ function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>,
   }
   if (areaName === 'local' && changes[STORAGE_KEYS.SYNC_META]) {
     void loadSyncMeta();
+  }
+  if (areaName === 'local' && changes[STORAGE_KEYS.AUTH_META]) {
+    void refreshEncryptionState();
   }
 }
 
@@ -65,8 +85,61 @@ async function persist() {
 }
 
 async function handleAutoSyncChange(val: boolean) {
-  settings.value.autoSync = val;
-  await persist();
+  if (encryptionBusy.value || encryptionDialogOpen.value || encryptionStateLoading.value) return;
+
+  if (!val) {
+    settings.value.autoSync = false;
+    await persist();
+    return;
+  }
+
+  if (!isLoggedIn.value) {
+    emit('loginRequired');
+    return;
+  }
+
+  const password = await promptEncryptionPassword(
+    encryptionInitialized.value
+      ? t('options.settings.unlockEncryptedSync')
+      : t('options.settings.enableEncryptedSync'),
+    !encryptionInitialized.value,
+  );
+  if (!password) return;
+
+  encryptionBusy.value = true;
+  try {
+    const localRecords = await api.getRecords();
+    const localSites = settings.value.customSites ?? [];
+    const result = encryptionInitialized.value
+      ? await unlockEncryptedSync(password)
+      : await initializeEncryptedSync(password, localRecords || [], localSites);
+
+    if (!result.success) {
+      message.error(result.error || t('options.settings.encryptedSyncUnlockFailed'));
+      return;
+    }
+
+    encryptionInitialized.value = true;
+    encryptionUnlocked.value = true;
+    settings.value.autoSync = true;
+    await persist();
+
+    if (encryptionInitialized.value) {
+      const syncResult = await syncEncryptedRecordsAndSites(localRecords || [], localSites);
+      if (!syncResult.success) {
+        message.error(syncResult.error || t('options.settings.syncFailed'));
+        return;
+      }
+      if ('customSites' in syncResult && syncResult.customSites) {
+        settings.value.customSites = syncResult.customSites;
+        await api.updateSettings({ customSites: syncResult.customSites });
+      }
+    }
+
+    message.success(t('options.settings.encryptedSyncSuccess'));
+  } finally {
+    encryptionBusy.value = false;
+  }
 }
 
 async function handleSync() {
@@ -75,30 +148,158 @@ async function handleSync() {
     return;
   }
 
-  const localRecords = await api.getRecords();
-  const recordsResult = await syncRecords(localRecords || []);
-  if (!recordsResult.success) {
-    message.error(recordsResult.error || t('options.settings.syncFailed'));
+  await refreshEncryptionState();
+  if (!encryptionInitialized.value) {
+    await handleAutoSyncChange(true);
     return;
   }
 
-  const sitesResult = await syncCustomSites(settings.value.customSites ?? []);
-  if (!sitesResult.success) {
-    message.error(sitesResult.error || t('options.settings.syncFailed'));
-    return;
-  }
-
-  if (sitesResult.customSites) {
-    settings.value.customSites = sitesResult.customSites;
-    try {
-      await api.updateSettings({ customSites: sitesResult.customSites });
-    } catch (error) {
-      logger.error('Failed to persist synced custom sites locally:', error);
+  if (encryptionInitialized.value) {
+    if (!encryptionUnlocked.value) {
+      if (encryptionDialogOpen.value) return;
+      const password = await promptEncryptionPassword(t('options.settings.unlockEncryptedSync'));
+      if (!password) return;
+      const unlockResult = await unlockEncryptedSync(password);
+      if (!unlockResult.success) {
+        message.error(unlockResult.error || t('options.settings.encryptedSyncUnlockFailed'));
+        return;
+      }
+      encryptionUnlocked.value = true;
     }
+
+    await handleEncryptedSync();
+    return;
+  }
+}
+
+async function refreshEncryptionState() {
+  if (!isLoggedIn.value) {
+    encryptionInitialized.value = false;
+    encryptionUnlocked.value = false;
+    return;
   }
 
-  // TODO: Merge cloud records with local records when the cloud schema includes full WatchRecord fields.
-  message.success(t('options.settings.syncStatusSuccess'));
+  encryptionStateLoading.value = true;
+  try {
+    encryptionInitialized.value = await hasEncryptedCloudSync();
+    encryptionUnlocked.value = encryptionInitialized.value
+      ? isEncryptedSyncUnlocked() || await restoreEncryptedSyncUnlock()
+      : false;
+
+    if (encryptionInitialized.value && !encryptionUnlocked.value && settings.value.autoSync) {
+      settings.value.autoSync = false;
+      await api.updateSettings({ autoSync: false });
+    }
+  } finally {
+    encryptionStateLoading.value = false;
+  }
+}
+
+function promptEncryptionPassword(title: string, requireConfirm = false): Promise<string | null> {
+  const password = ref('');
+  const passwordConfirm = ref('');
+  encryptionDialogOpen.value = true;
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const settle = (value: string | null) => {
+      if (settled) return;
+      settled = true;
+      encryptionDialogOpen.value = false;
+      resolve(value);
+    };
+    const submit = () => {
+      if (!password.value) {
+        message.error(t('options.settings.pleaseEnterEncryptionPassword'));
+        return false;
+      }
+      if (requireConfirm && password.value !== passwordConfirm.value) {
+        message.error(t('options.settings.passwordMismatch'));
+        return false;
+      }
+      settle(password.value);
+      return true;
+    };
+    const instance = dialog.create({
+      title,
+      content: () => h('div', { class: 'encryption-password-dialog' }, [
+        h('p', { class: 'encryption-password-tip' }, t('options.settings.encryptionPasswordTip')),
+        h(NInput, {
+          value: password.value,
+          type: 'password',
+          showPasswordOn: 'click',
+          autofocus: true,
+          placeholder: t('options.settings.encryptionPassword'),
+          'onUpdate:value': (value: string) => {
+            password.value = value;
+          },
+          onKeydown: (event: KeyboardEvent) => {
+            if (event.key === 'Enter' && !requireConfirm) {
+              if (submit()) {
+                instance.destroy();
+              }
+            }
+          },
+        }),
+        requireConfirm ? h(NInput, {
+          value: passwordConfirm.value,
+          type: 'password',
+          showPasswordOn: 'click',
+          placeholder: t('options.settings.confirmEncryptionPassword'),
+          style: 'margin-top: 8px',
+          'onUpdate:value': (value: string) => {
+            passwordConfirm.value = value;
+          },
+          onKeydown: (event: KeyboardEvent) => {
+            if (event.key === 'Enter' && submit()) {
+              instance.destroy();
+            }
+          },
+        }) : null,
+      ]),
+      positiveText: t('common.confirm'),
+      negativeText: t('common.cancel'),
+      onPositiveClick: () => {
+        return submit();
+      },
+      onNegativeClick: () => settle(null),
+      onClose: () => settle(null),
+      onEsc: () => settle(null),
+      onMaskClick: () => settle(null),
+      onAfterLeave: () => settle(null),
+    });
+  });
+}
+
+async function handleEncryptedSync() {
+  if (!isLoggedIn.value) {
+    emit('loginRequired');
+    return;
+  }
+
+  if (!encryptionUnlocked.value) {
+    message.error(t('options.settings.encryptedSyncLocked'));
+    return;
+  }
+
+  encryptionBusy.value = true;
+  try {
+    const localRecords = await api.getRecords();
+    const result = await syncEncryptedRecordsAndSites(localRecords || [], settings.value.customSites ?? []);
+    if (!result.success) {
+      message.error(result.error || t('options.settings.syncFailed'));
+      return;
+    }
+
+    if ('customSites' in result && result.customSites) {
+      settings.value.customSites = result.customSites;
+      await api.updateSettings({ customSites: result.customSites });
+    }
+
+    message.success(t('options.settings.encryptedSyncSuccess'));
+  } finally {
+    encryptionBusy.value = false;
+  }
 }
 
 const syncStatus = computed(() => {
@@ -255,7 +456,11 @@ function getSyncStatusActionText() {
                 {{ t('options.settings.autoSyncDesc') }}
               </NText>
             </div>
-            <NSwitch :value="settings.autoSync" @update:value="handleAutoSyncChange" />
+            <NSwitch
+              :value="settings.autoSync"
+              :loading="encryptionBusy || encryptionDialogOpen || encryptionStateLoading || isSyncing"
+              @update:value="handleAutoSyncChange"
+            />
           </div>
         </NSpace>
       </div>
@@ -407,5 +612,20 @@ html.dark .sync-status-error {
   background: rgba(217, 72, 15, 0.16);
   border-color: rgba(255, 146, 43, 0.45);
   color: #ffa94d;
+}
+
+.encryption-password-dialog {
+  min-width: min(360px, 72vw);
+}
+
+.encryption-password-tip {
+  margin: 0 0 12px;
+  color: #606575;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+html.dark .encryption-password-tip {
+  color: #b9bdd0;
 }
 </style>

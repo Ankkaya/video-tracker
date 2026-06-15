@@ -7,25 +7,29 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-export interface Record {
-  id: string;
+export interface EncryptedPayload {
+  version: 1;
+  algorithm: 'AES-GCM';
+  iv: string;
+  data: string;
+}
+
+export interface UserEncryptionKey {
   user_id: string;
-  platform: string;
-  video_id: string;
-  url: string;
-  title: string;
-  thumbnail?: string;
-  progress: number;
-  duration: number;
-  watched_at: string;
+  kdf: 'PBKDF2';
+  kdf_hash: 'SHA-256';
+  kdf_iterations: number;
+  salt: string;
+  encrypted_data_key: EncryptedPayload;
+  created_at: string;
   updated_at: string;
 }
 
-export interface CustomSite {
-  id: string;
+export interface EncryptedSyncBlob {
   user_id: string;
-  domain: string;
-  enabled: boolean;
+  schema_version: number;
+  encryption_version: number;
+  encrypted_blob: EncryptedPayload;
   created_at: string;
   updated_at: string;
 }

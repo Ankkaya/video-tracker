@@ -136,7 +136,7 @@ describe('StorageManager', () => {
   describe('getSettings', () => {
     it('无存储时返回默认设置', async () => {
       const settings = await StorageManager.getSettings();
-      expect(settings.autoRecord).toBe(true);
+      expect(settings.autoRecord).toBe(false);
       expect(settings.threshold).toBe(30);
       expect(settings.shortcut).toBe('Ctrl+Shift+V');
     });
@@ -145,7 +145,7 @@ describe('StorageManager', () => {
       mockStorage['video_tracker_settings'] = { threshold: 60 };
       const settings = await StorageManager.getSettings();
       expect(settings.threshold).toBe(60);
-      expect(settings.autoRecord).toBe(true); // 默认值
+      expect(settings.autoRecord).toBe(false); // 默认值
     });
 
     it('完全自定义设置', async () => {

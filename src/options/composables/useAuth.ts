@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { supabase } from '../../supabase';
 import { STORAGE_KEYS } from '../../shared/constants';
 import { logger } from '../../shared/logger';
+import { clearRememberedDataKey } from '../../shared/keyManager';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
@@ -39,12 +40,23 @@ async function persistAuthState(session?: any) {
 }
 
 async function clearSyncState() {
+  const currentSettings = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+  if (currentSettings[STORAGE_KEYS.SETTINGS]) {
+    await chrome.storage.local.set({
+      [STORAGE_KEYS.SETTINGS]: {
+        ...currentSettings[STORAGE_KEYS.SETTINGS],
+        autoSync: false,
+      },
+    });
+  }
+
   await chrome.storage.local.set({
     [STORAGE_KEYS.SYNC_META]: {
       state: 'idle',
       lastSyncAt: null,
     },
   });
+  await clearRememberedDataKey();
 }
 
 export function useAuth() {

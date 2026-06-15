@@ -36,7 +36,11 @@ type TabId = 'records' | 'settings' | 'sites';
 const { t, locale } = useI18n();
 const { isLoggedIn, user, loadAuthMeta, checkSession, consumePendingAuth, handleAuthCallback, signOut } = useAuth();
 const { theme, toggleTheme, naiveTheme } = useTheme();
-const { syncRecords, syncCustomSites } = useSync();
+const {
+  hasEncryptedCloudSync,
+  restoreEncryptedSyncUnlock,
+  syncEncryptedRecordsAndSites,
+} = useSync();
 
 const activeTab = ref<TabId>('records');
 const recordsRef = ref<InstanceType<typeof RecordsTab> | null>(null);
@@ -73,20 +77,24 @@ async function runInitialSync() {
     const settings = await api.getSettings();
     const localSites = settings?.customSites ?? [];
 
-    const recordsResult = await syncRecords(localRecords || []);
-    if (!recordsResult.success) {
-      logger.warn('Initial record sync skipped:', recordsResult.error);
+    if (!await hasEncryptedCloudSync()) {
+      logger.log('Initial sync skipped: encrypted sync is not initialized');
       return;
     }
 
-    const sitesResult = await syncCustomSites(localSites);
-    if (!sitesResult.success) {
-      logger.warn('Initial custom sites sync skipped:', sitesResult.error);
+    if (!await restoreEncryptedSyncUnlock()) {
+      logger.log('Initial encrypted sync skipped: device is locked');
       return;
     }
 
-    if (sitesResult.customSites) {
-      await api.updateSettings({ customSites: sitesResult.customSites });
+    const result = await syncEncryptedRecordsAndSites(localRecords || [], localSites);
+    if (!result.success) {
+      logger.warn('Initial encrypted sync skipped:', result.error);
+      return;
+    }
+
+    if ('customSites' in result && Array.isArray(result.customSites)) {
+      await api.updateSettings({ customSites: result.customSites });
     }
 
     recordsRef.value?.reload();

@@ -27,8 +27,8 @@ describe('消息类型定义完整性', () => {
     expect(MSG.UPDATE_SETTINGS).toBe('UPDATE_SETTINGS');
   });
 
-  it('MSG 常量共 15 个消息类型', () => {
-    expect(Object.keys(MSG)).toHaveLength(15);
+  it('MSG 常量共 21 个消息类型', () => {
+    expect(Object.keys(MSG)).toHaveLength(21);
   });
 
   it('包含 AUTO_SAVED 通知消息', () => {
@@ -99,6 +99,7 @@ describe('类型定义完整性', () => {
   it('Settings 包含所有必要字段', () => {
     const settings: Settings = {
       autoRecord: true,
+      autoSync: false,
       threshold: 30,
       shortcut: 'Ctrl+Shift+V',
       customSites: [],

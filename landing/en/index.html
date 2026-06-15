@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - Video Watch Progress Tracker</title>
-  <meta name="description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, optional account sync across devices.">
+  <meta name="description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.">
   <link rel="alternate" hreflang="zh-CN" href="../index.html">
   <link rel="alternate" hreflang="en" href="./index.html">
   <link rel="canonical" href="./index.html">
   <meta property="og:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta property="og:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, optional account sync across devices.">
+  <meta property="og:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://video-tracker.ankkaya.top/en/">
   <meta property="og:image" content="http://video-tracker.ankkaya.top/og-image.png">
@@ -18,7 +18,7 @@
   <meta property="og:locale:alternate" content="zh_CN">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta name="twitter:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, optional account sync across devices.">
+  <meta name="twitter:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.">
   <meta name="twitter:image" content="http://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
           <span class="gradient-text">Where You Left Off</span>
         </h1>
         <p class="hero-desc">
-          VideoTracker automatically records your watch progress across video sites with one-click resume. Local by default, with optional account sync across devices.
+          VideoTracker automatically records your watch progress across video sites with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.
         </p>
         <div class="hero-actions">
           <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
@@ -141,8 +141,8 @@
         </div>
         <div class="feature-card">
           <div class="feature-icon">☁️</div>
-          <h3>Login Sync</h3>
-          <p>Sign in to sync watch records to the cloud and restore progress across devices. Without login, records stay local.</p>
+          <h3>Encrypted Sync</h3>
+          <p>Sign in, set a sync encryption password, and upload encrypted watch records and custom sites for safe cross-device restore.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
@@ -211,8 +211,8 @@
         </div>
         <div class="step">
           <div class="step-num">4</div>
-          <h3>Resume or Sync</h3>
-          <p>View records in Popup or Options page, click to continue, or sign in to upload, download, and two-way sync records.</p>
+          <h3>Resume or Encrypted Sync</h3>
+          <p>View records in Popup or Options page, click to continue, or sign in and unlock encrypted sync with your sync password.</p>
         </div>
       </div>
     </div>
@@ -224,7 +224,7 @@
       <div class="privacy-card">
         <div class="privacy-icon">🔒</div>
         <h2>Privacy First</h2>
-        <p class="privacy-desc">Local-first, sync only when you choose</p>
+        <p class="privacy-desc">Local-first, encrypted sync only when you choose</p>
         <div class="privacy-points">
           <div class="privacy-point">
             <span class="check">✓</span>
@@ -232,11 +232,11 @@
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>Account sync is optional and must be triggered by you</span>
+            <span>Cloud sync is optional and must be enabled after sign-in</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>When syncing, watch records are sent only to the configured Supabase project</span>
+            <span>When syncing, Supabase stores encrypted data only</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
@@ -258,7 +258,7 @@
       <p>Free, open source, no ads. Make binge-watching easier.</p>
       <div class="cta-actions">
         <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
-          Download Latest Version
+          Download v0.0.5
         </a>
         <a href="https://github.com/Ankkaya/video-tracker" class="btn btn-secondary" target="_blank" rel="noopener">
           ⭐ Star on GitHub

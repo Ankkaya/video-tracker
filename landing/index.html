@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - 视频观看进度记录器</title>
-  <meta name="description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可跨设备同步。">
+  <meta name="description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。">
   <link rel="alternate" hreflang="zh-CN" href="./index.html">
   <link rel="alternate" hreflang="en" href="./en/index.html">
   <link rel="canonical" href="./index.html">
   <meta property="og:title" content="VideoTracker - 视频观看进度记录器">
-  <meta property="og:description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可跨设备同步。">
+  <meta property="og:description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://video-tracker.ankkaya.top/">
   <meta property="og:image" content="http://video-tracker.ankkaya.top/og-image.png">
@@ -18,7 +18,7 @@
   <meta property="og:locale:alternate" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - 视频观看进度记录器">
-  <meta name="twitter:description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可跨设备同步。">
+  <meta name="twitter:description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。">
   <meta name="twitter:image" content="http://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
           <span class="gradient-text">看到哪一集了</span>
         </h1>
         <p class="hero-desc">
-          VideoTracker 自动记录你在各视频网站的观看进度，支持一键跳转继续观看。默认本地存储，登录后可跨设备同步。
+          VideoTracker 自动记录你在各视频网站的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。
         </p>
         <div class="hero-actions">
           <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
@@ -141,8 +141,8 @@
         </div>
         <div class="feature-card">
           <div class="feature-icon">☁️</div>
-          <h3>登录同步</h3>
-          <p>可登录账号将观看记录同步到云端，在多台设备之间恢复进度。未登录时仍保持本地存储。</p>
+          <h3>加密同步</h3>
+          <p>登录后设置同步加密密码，观看记录和自定义站点会加密后上传，在多台设备之间安全恢复进度。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
@@ -211,8 +211,8 @@
         </div>
         <div class="step">
           <div class="step-num">4</div>
-          <h3>继续或同步</h3>
-          <p>在 Popup 或 Options 页面查看记录，点击继续观看；登录后可手动上传、下载或双向同步记录。</p>
+          <h3>继续或加密同步</h3>
+          <p>在 Popup 或 Options 页面查看记录，点击继续观看；登录后输入同步密码即可加密同步记录。</p>
         </div>
       </div>
     </div>
@@ -224,7 +224,7 @@
       <div class="privacy-card">
         <div class="privacy-icon">🔒</div>
         <h2>隐私优先</h2>
-        <p class="privacy-desc">本地优先，同步可控</p>
+        <p class="privacy-desc">本地优先，加密同步可控</p>
         <div class="privacy-points">
           <div class="privacy-point">
             <span class="check">✓</span>
@@ -232,11 +232,11 @@
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>登录同步为可选功能，需要你主动触发</span>
+            <span>云端同步为可选功能，需要登录并主动开启</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
-            <span>同步时仅将观看记录发送到配置的 Supabase 项目</span>
+            <span>同步时上传的是加密数据，Supabase 只保存密文</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>
@@ -258,7 +258,7 @@
       <p>免费、开源、无广告。让追剧更轻松。</p>
       <div class="cta-actions">
         <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
-          下载最新版本
+          下载 v0.0.5
         </a>
         <a href="https://github.com/Ankkaya/video-tracker" class="btn btn-secondary" target="_blank" rel="noopener">
           ⭐ Star on GitHub

@@ -12,7 +12,14 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const { isLoggedIn } = useAuth();
-const { isSyncing, syncMeta, loadSyncMeta, syncRecords } = useSync();
+const {
+  isSyncing,
+  syncMeta,
+  loadSyncMeta,
+  hasEncryptedCloudSync,
+  restoreEncryptedSyncUnlock,
+  syncEncryptedRecordsAndSites,
+} = useSync();
 
 const show = defineModel<boolean>('show', { default: false });
 
@@ -71,9 +78,31 @@ async function handleSync() {
   }
 
   const localRecords = await api.getRecords();
-  const result = await syncRecords(localRecords || []);
+  const encryptedSyncEnabled = await hasEncryptedCloudSync();
+  if (!encryptedSyncEnabled) {
+    emit('message', t('options.settings.encryptedSyncNotInitialized'), 'error');
+    chrome.tabs.create({ url: chrome.runtime.getURL('/options.html') });
+    close();
+    return;
+  }
+
+  if (!await restoreEncryptedSyncUnlock()) {
+    emit('message', t('options.settings.encryptedSyncLocked'), 'error');
+    chrome.tabs.create({ url: chrome.runtime.getURL('/options.html') });
+    close();
+    return;
+  }
+
+  const settings = await api.getSettings();
+  const localSites = Array.isArray(settings?.customSites) ? settings.customSites : [];
+  const result = await syncEncryptedRecordsAndSites(localRecords || [], localSites);
   if (result.success) {
+    if ('customSites' in result && Array.isArray(result.customSites)) {
+      await api.updateSettings({ customSites: result.customSites });
+    }
+    await loadSyncMeta();
     emit('message', t('popup.sync.syncSuccess'), 'success');
+    close();
   } else {
     emit('message', result.error || t('popup.sync.syncFailed'), 'error');
   }
