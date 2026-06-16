@@ -25,10 +25,11 @@ describe('消息类型定义完整性', () => {
     expect(MSG.DELETE_RECORD).toBe('DELETE_RECORD');
     expect(MSG.GET_SETTINGS).toBe('GET_SETTINGS');
     expect(MSG.UPDATE_SETTINGS).toBe('UPDATE_SETTINGS');
+    expect(MSG.ADD_SAMPLE_RECORD).toBe('ADD_SAMPLE_RECORD');
   });
 
-  it('MSG 常量共 21 个消息类型', () => {
-    expect(Object.keys(MSG)).toHaveLength(21);
+  it('MSG 常量共 22 个消息类型', () => {
+    expect(Object.keys(MSG)).toHaveLength(22);
   });
 
   it('包含 AUTO_SAVED 通知消息', () => {

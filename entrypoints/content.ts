@@ -10,6 +10,7 @@ import { MSG, HEARTBEAT_INTERVAL } from '../src/shared/constants';
 import { logger } from '../src/shared/logger';
 import { startPicker, parseTimePair } from '../src/content/picker';
 import { findVideoElements } from '../src/content/videoProbe';
+import { parseResumeTimeFromUrl } from '../src/shared/resume';
 
 export default defineContentScript({
   matches: ['*://*/*'],
@@ -78,6 +79,8 @@ export default defineContentScript({
     let isActivated = false;
     let lastAutoSavedToastKey = '';
     let lastAutoSavedToastAt = 0;
+    let resumeAttemptStarted = false;
+    let resumeToastShown = false;
     let mainWorldBridgeEnabled = false;
     let mainWorldBridgeInstalled = false;
     /** 扩展上下文是否已失效（重载/更新/禁用后为 true） */
@@ -426,15 +429,68 @@ export default defineContentScript({
       void safeSendMessage({ type: MSG.HEARTBEAT, data: videoInfo });
     }
 
+    function formatResumeTime(seconds: number): string {
+      const total = Math.max(0, Math.floor(seconds));
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      return `${minutes}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function startResumeAttempt() {
+      if (resumeAttemptStarted || isInIframe || contextInvalidated) return;
+
+      const resumeTime = parseResumeTimeFromUrl(location.href);
+      if (!resumeTime) return;
+
+      resumeAttemptStarted = true;
+      let attempts = 0;
+      const maxAttempts = 40;
+
+      const trySeek = () => {
+        if (contextInvalidated) return;
+        attempts += 1;
+
+        const video = currentAdapter?.getVideoElement() ?? document.querySelector('video');
+        if (video) {
+          try {
+            const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : resumeTime + 1;
+            const target = Math.min(resumeTime, Math.max(duration - 1, 0));
+            if (Math.abs(video.currentTime - target) > 2) {
+              video.currentTime = target;
+            }
+
+            if (!resumeToastShown && Math.abs(video.currentTime - target) <= 3) {
+              resumeToastShown = true;
+              showToast(`Resume from ${formatResumeTime(target)}`, '▶️');
+            }
+
+            if (resumeToastShown) return;
+          } catch (error) {
+            logger.warn('[VideoTracker] Resume seek failed:', error);
+          }
+        }
+
+        if (attempts < maxAttempts) {
+          setTimeout(trySeek, 500);
+        }
+      };
+
+      trySeek();
+    }
+
     /** 启动心跳 */
     function startHeartbeat(options: { enableBridge?: boolean } = {}) {
       stopVideoDiscoveryObserver();
       stopHeartbeat();
       if (options.enableBridge) enableMainWorldBridge();
       attachVideoListeners();
+      startResumeAttempt();
       heartbeatTimer = setInterval(() => {
         // 适配器可能在 SPA 切换后被替换；每次尝试重新绑定
         attachVideoListeners();
+        startResumeAttempt();
         sendHeartbeat();
       }, HEARTBEAT_INTERVAL);
     }
@@ -632,6 +688,8 @@ export default defineContentScript({
           stopHeartbeat();
           isActivated = false;
           currentAdapter = null;
+          resumeAttemptStarted = false;
+          resumeToastShown = false;
         }
 
         logger.log(`[VideoTracker] URL 变化: ${oldUrl} -> ${location.href}`);

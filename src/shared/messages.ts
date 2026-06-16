@@ -52,6 +52,13 @@ export type DeleteRecordsMessage = BaseMessage<typeof MSG.DELETE_RECORDS, { ids:
 /** Content -> Background: 获取自定义站点列表 */
 export type GetCustomSitesMessage = BaseMessage<typeof MSG.GET_CUSTOM_SITES, void>;
 
+/** Popup -> Background: 添加示例记录 */
+export type AddSampleRecordMessage = BaseMessage<typeof MSG.ADD_SAMPLE_RECORD, {
+  title?: string;
+  episode?: string;
+  platformName?: string;
+}>;
+
 /** 所有消息联合类型 */
 export type Message =
   | HeartbeatMessage
@@ -68,7 +75,8 @@ export type Message =
   | AddCustomSiteMessage
   | RemoveCustomSiteMessage
   | GetAllRecordsMessage
-  | GetCustomSitesMessage;
+  | GetCustomSitesMessage
+  | AddSampleRecordMessage;
 
 /** 创建消息辅助函数 */
 export function createMessage<T extends typeof MSG[keyof typeof MSG]>(

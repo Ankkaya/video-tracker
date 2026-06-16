@@ -10,6 +10,7 @@ import SyncModal from './components/SyncModal.vue';
 import { useAuth } from '../options/composables/useAuth';
 import { useTheme } from '../shared/composables/useTheme';
 import { useSync } from '../options/composables/useSync';
+import { buildRecordResumeUrl } from '../shared/resume';
 
 const { t } = useI18n();
 const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
@@ -69,7 +70,7 @@ async function deleteRecord(id: string) {
 }
 
 function openRecord(record: WatchRecord) {
-  chrome.tabs.create({ url: record.url });
+  chrome.tabs.create({ url: buildRecordResumeUrl(record) });
 }
 
 function openSettings() {
@@ -104,6 +105,31 @@ async function manualAddCurrentPage() {
     }
   } catch (err) {
     logger.error('手动添加失败:', err);
+    manualSaveStatus.value = 'error';
+  }
+  setTimeout(() => { manualSaveStatus.value = 'idle'; }, 2000);
+}
+
+async function addSampleRecord() {
+  manualSaveStatus.value = 'saving';
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: MSG.ADD_SAMPLE_RECORD,
+      data: {
+        title: 'YouTube sample - resume at 10:00',
+        episode: 'Sample video',
+        platformName: 'YouTube',
+      },
+    });
+
+    if (response?.success) {
+      manualSaveStatus.value = 'success';
+      await loadRecords();
+    } else {
+      manualSaveStatus.value = 'error';
+    }
+  } catch (err) {
+    logger.error('添加示例记录失败:', err);
     manualSaveStatus.value = 'error';
   }
   setTimeout(() => { manualSaveStatus.value = 'idle'; }, 2000);
@@ -240,7 +266,7 @@ function handleSyncClick() {
       @open="openRecord"
     />
 
-    <EmptyState v-else />
+    <EmptyState v-else @add-sample="addSampleRecord" />
 
     <button class="view-all-btn" @click="openAllRecords">
       {{ t('popup.viewAllRecords') }}

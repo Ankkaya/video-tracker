@@ -10,6 +10,7 @@ import type { WatchRecord } from '../../shared/types';
 import { api } from '../composables/useApi';
 import { formatTime, formatDate, platformIcons } from '../utils/format';
 import { STORAGE_KEYS } from '../../shared/constants';
+import { buildRecordResumeUrl } from '../../shared/resume';
 
 const { t } = useI18n();
 const message = useMessage();
@@ -135,7 +136,7 @@ async function deleteRecord(id: string) {
 }
 
 function openRecord(record: WatchRecord) {
-  chrome.tabs.create({ url: record.url });
+  chrome.tabs.create({ url: buildRecordResumeUrl(record) });
 }
 
 defineExpose({ reload: loadRecords });

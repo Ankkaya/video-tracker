@@ -16,7 +16,7 @@ export default defineConfig({
   manifest: {
     name: 'VideoTracker',
     description: 'Automatically save and resume your watch progress across video sites',
-    version: '0.0.5',
+    version: '0.0.7',
     ...(isDevelopment && extensionKey ? { key: extensionKey } : {}),
     permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],
@@ -35,7 +35,6 @@ export default defineConfig({
         128: 'icon-128.png',
       },
     },
-    options_page: 'options.html',
     options_ui: {
       page: 'options.html',
       open_in_tab: true,
@@ -48,6 +47,13 @@ export default defineConfig({
         },
         description: 'Manually save current video record',
       },
+    },
+  },
+  hooks: {
+    'build:manifestGenerated': (_, manifest) => {
+      if (manifest.options_ui) {
+        manifest.options_ui.open_in_tab = true;
+      }
     },
   },
 });

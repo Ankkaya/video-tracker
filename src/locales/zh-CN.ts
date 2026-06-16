@@ -33,9 +33,11 @@ export default {
     recording: '⏳ 记录中',
     recorded: '✅ 已记录',
     failed: '❌ 失败',
+    addSampleRecord: '添加示例记录',
+    sampleRecordAdded: '示例记录已添加',
     selectTime: '🎯 选择时间',
     emptyTitle: '暂无观看记录',
-    emptyDesc: '观看视频超过阈值时间后将自动记录<br />或使用 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> 手动记录',
+    emptyDesc: '观看视频超过阈值时间后将自动记录<br />也可以先添加示例记录验证列表、打开和删除功能',
     searchPlaceholder: '搜索视频标题...',
     platforms: {
       all: '全部',
@@ -70,7 +72,7 @@ export default {
   },
   options: {
     headerSubtitle: '管理你的视频观看记录和插件设置',
-    footerVersion: 'VideoTracker v0.0.5 · 自动记录你的视频观看进度',
+    footerVersion: 'VideoTracker v0.0.7 · 自动记录你的视频观看进度',
     tabs: {
       records: '📋 记录管理',
       settings: '⚙️ 插件设置',

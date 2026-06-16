@@ -2,6 +2,22 @@
 
 本文件记录 VideoTracker 的所有版本更新。格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)。
 
+## [0.0.7] - 2026-06-15
+
+### ▶️ 恢复播放修复
+
+- 点击 Popup 或 Options 中的记录时，会根据平台生成带播放进度参数的恢复 URL
+- 页面加载后会读取 `t` / `start` 参数并主动将播放器定位到上次进度
+- 成功定位后显示包含 “Resume” 的页面提示，满足 Edge 审核的可见反馈要求
+
+## [0.0.6] - 2026-06-15
+
+### 🛒 Edge 商店审核改进
+
+- 修复 WXT 生成 manifest 时将 `options_ui.open_in_tab` 覆盖为 `false` 的问题，确保选项页在独立标签页中打开
+- 空记录状态新增“添加示例记录”，审核员和新用户无需先观看视频即可验证记录列表、打开记录、删除记录等核心功能
+- 新增 `docs/edge-certification-notes.md`，提供可粘贴到 Partner Center 的审核复现步骤
+
 ## [0.0.5] - 2026-06-15
 
 ### 🔒 加密云同步

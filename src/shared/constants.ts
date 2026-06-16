@@ -52,6 +52,8 @@ export const MSG = {
   GET_CUSTOM_SITES: 'GET_CUSTOM_SITES',
   /** Popup 手动添加当前页面记录（不依赖 content script） */
   MANUAL_ADD_RECORD: 'MANUAL_ADD_RECORD',
+  /** Popup 添加示例记录，便于首次使用和商店审核验证 */
+  ADD_SAMPLE_RECORD: 'ADD_SAMPLE_RECORD',
   /** Content Script 请求 Background 探测 iframe 中的 video */
   PROBE_IFRAME_VIDEO: 'PROBE_IFRAME_VIDEO',
   /** Content Script 请求 Background 在当前 frame 的 MAIN world 安装播放器桥接 */

@@ -1,6 +1,6 @@
 {
   "name": "video-tracker",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "build": "wxt build",
     "build:prod": "cross-env NODE_ENV=production wxt build",
     "build:firefox": "wxt build --browser firefox",
+    "release:zip": "npm run build:prod && node scripts/package-release.mjs",
     "compile": "wxt prepare",
     "generate:icons": "node scripts/generate-icons.mjs",
     "test": "vitest run",

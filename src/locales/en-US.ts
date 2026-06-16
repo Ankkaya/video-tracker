@@ -33,9 +33,11 @@ export default {
     recording: '⏳ Recording',
     recorded: '✅ Recorded',
     failed: '❌ Failed',
+    addSampleRecord: 'Add sample record',
+    sampleRecordAdded: 'Sample record added',
     selectTime: '🎯 Select Time',
     emptyTitle: 'No watch records yet',
-    emptyDesc: 'Records will be automatically saved after watching for the threshold time<br />Or use <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> to record manually',
+    emptyDesc: 'Records are saved automatically after the watch threshold<br />You can add a sample record first to test list, open, and delete flows',
     searchPlaceholder: 'Search video title...',
     platforms: {
       all: 'All',
@@ -70,7 +72,7 @@ export default {
   },
   options: {
     headerSubtitle: 'Manage your video watch records and extension settings',
-    footerVersion: 'VideoTracker v0.0.5 · Automatically record your video watch progress',
+    footerVersion: 'VideoTracker v0.0.7 · Automatically record your video watch progress',
     tabs: {
       records: '📋 Records',
       settings: '⚙️ Settings',

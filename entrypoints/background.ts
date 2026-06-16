@@ -440,6 +440,23 @@ export default defineBackground(() => {
         return true;
       }
 
+      case MSG.ADD_SAMPLE_RECORD: {
+        const sample = data as { title?: string; episode?: string; platformName?: string } | undefined;
+        const videoInfo: VideoInfo = {
+          url: 'https://www.youtube.com/watch?v=_P9dU-BT_3c',
+          title: sample?.title || 'YouTube sample - resume at 10:00',
+          episode: sample?.episode || 'Sample video',
+          platform: 'youtube',
+          platformName: sample?.platformName || 'YouTube',
+          currentTime: 600,
+          duration: 1200,
+        };
+        saveRecord(videoInfo, 600)
+          .then(() => sendResponse({ success: true }))
+          .catch((err: Error) => sendResponse({ success: false, error: err.message }));
+        return true;
+      }
+
       case MSG.INSTALL_MAIN_BRIDGE: {
         const tabId = sender.tab?.id;
         const frameId = sender.frameId;
