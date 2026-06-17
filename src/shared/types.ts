@@ -16,6 +16,12 @@ export interface WatchRecord {
   notes?: string;
 }
 
+/** 已删除记录的同步墓碑 */
+export interface DeletedRecord {
+  key: string;
+  deletedAt: number;
+}
+
 /** 自定义站点 */
 export interface CustomSite {
   domain: string;

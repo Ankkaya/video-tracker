@@ -26,6 +26,7 @@ export const PLATFORM_NAMES: Record<string, string> = {
 /** 存储键名 */
 export const STORAGE_KEYS = {
   RECORDS: 'video_tracker_records',
+  DELETED_RECORDS: 'video_tracker_deleted_records',
   SETTINGS: 'video_tracker_settings',
   SYNC_META: 'video_tracker_sync_meta',
   AUTH_META: 'video_tracker_auth_meta',

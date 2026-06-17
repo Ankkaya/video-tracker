@@ -1,6 +1,6 @@
 # VideoTracker - 视频观看进度记录器
 
-当前版本：`0.0.7`
+当前版本：`0.0.8`
 
 一款浏览器扩展，自动记录你在 B站、YouTube、爱奇艺、腾讯视频等平台的视频观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步，在多设备间安全同步记录。
 
@@ -22,7 +22,7 @@
 ### 从 Release 安装
 
 1. 打开 [GitHub Releases](https://github.com/Ankkaya/video-tracker/releases)
-2. 下载 `video-tracker-0.0.7-chrome-mv3.zip`
+2. 下载 `video-tracker-0.0.8-chrome-mv3.zip`
 3. 解压 zip，得到 Chrome MV3 扩展目录
 4. 打开 Chrome 或 Edge，访问 `chrome://extensions/`
 5. 开启右上角的 **开发者模式**

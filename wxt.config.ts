@@ -16,7 +16,7 @@ export default defineConfig({
   manifest: {
     name: 'VideoTracker',
     description: 'Automatically save and resume your watch progress across video sites',
-    version: '0.0.7',
+    version: '0.0.8',
     ...(isDevelopment && extensionKey ? { key: extensionKey } : {}),
     permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],

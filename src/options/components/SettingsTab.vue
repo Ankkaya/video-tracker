@@ -98,29 +98,34 @@ async function handleAutoSyncChange(val: boolean) {
     return;
   }
 
-  const password = await promptEncryptionPassword(
-    encryptionInitialized.value
-      ? t('options.settings.unlockEncryptedSync')
-      : t('options.settings.enableEncryptedSync'),
-    !encryptionInitialized.value,
-  );
-  if (!password) return;
-
   encryptionBusy.value = true;
   try {
+    await refreshEncryptionState();
     const localRecords = await api.getRecords();
     const localSites = settings.value.customSites ?? [];
-    const result = encryptionInitialized.value
-      ? await unlockEncryptedSync(password)
-      : await initializeEncryptedSync(password, localRecords || [], localSites);
 
-    if (!result.success) {
-      message.error(result.error || t('options.settings.encryptedSyncUnlockFailed'));
-      return;
+    if (!encryptionInitialized.value || !encryptionUnlocked.value) {
+      const password = await promptEncryptionPassword(
+        encryptionInitialized.value
+          ? t('options.settings.unlockEncryptedSync')
+          : t('options.settings.enableEncryptedSync'),
+        !encryptionInitialized.value,
+      );
+      if (!password) return;
+
+      const result = encryptionInitialized.value
+        ? await unlockEncryptedSync(password)
+        : await initializeEncryptedSync(password, localRecords || [], localSites);
+
+      if (!result.success) {
+        message.error(result.error || t('options.settings.encryptedSyncUnlockFailed'));
+        return;
+      }
+
+      encryptionInitialized.value = true;
+      encryptionUnlocked.value = true;
     }
 
-    encryptionInitialized.value = true;
-    encryptionUnlocked.value = true;
     settings.value.autoSync = true;
     await persist();
 

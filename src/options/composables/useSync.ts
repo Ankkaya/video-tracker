@@ -13,6 +13,7 @@ import {
   unlockEncryption,
 } from '../../shared/keyManager';
 import { syncEncryptedData, uploadEncryptedSyncBlob } from '../../shared/encryptedSync';
+import { StorageManager } from '../../shared/storage';
 
 export type SyncState = 'idle' | 'syncing' | 'success' | 'error';
 
@@ -103,8 +104,9 @@ export function useSync() {
 
     try {
       await withSyncState(async () => {
+        const localDeletedRecords = await StorageManager.getDeletedRecords();
         await initializeEncryption(password);
-        await uploadEncryptedSyncBlob(localRecords, localSites);
+        await uploadEncryptedSyncBlob(localRecords, localSites, localDeletedRecords);
       });
 
       return { success: true, syncedAt: syncMeta.value.lastSyncAt };
@@ -134,8 +136,10 @@ export function useSync() {
     }
 
     try {
-      const synced = await withSyncState(() => syncEncryptedData(localRecords, localSites));
+      const localDeletedRecords = await StorageManager.getDeletedRecords();
+      const synced = await withSyncState(() => syncEncryptedData(localRecords, localSites, localDeletedRecords));
       await chrome.storage.local.set({ [STORAGE_KEYS.RECORDS]: synced.records });
+      await StorageManager.setDeletedRecords(synced.deletedRecords);
       return { success: true, ...synced, syncedAt: syncMeta.value.lastSyncAt };
     } catch (error: any) {
       logger.error('Encrypted sync failed:', error);

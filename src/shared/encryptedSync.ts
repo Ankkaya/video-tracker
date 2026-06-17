@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { CustomSite, WatchRecord } from './types';
+import type { CustomSite, DeletedRecord, WatchRecord } from './types';
 import { decryptJson, encryptJson, type EncryptedPayload } from './crypto';
 import { requireSessionDataKey } from './keyManager';
 
@@ -7,6 +7,7 @@ export interface SyncPlaintext {
   version: 1;
   exportedAt: number;
   records: WatchRecord[];
+  deletedRecords?: DeletedRecord[];
   customSites: CustomSite[];
 }
 
@@ -21,6 +22,10 @@ export interface EncryptedSyncBlobRow {
 
 function getRecordKey(record: Pick<WatchRecord, 'platform' | 'url'>): string {
   return `${record.platform}::${record.url}`;
+}
+
+function getRecordUpdatedAt(record: WatchRecord): number {
+  return Math.max(record.lastWatchedAt, record.createdAt);
 }
 
 function preferText(newer?: string, older?: string): string | undefined {
@@ -51,20 +56,55 @@ function mergeRecordPair(localRecord: WatchRecord, cloudRecord: WatchRecord): Wa
   };
 }
 
-export function mergeEncryptedRecords(localRecords: WatchRecord[], cloudRecords: WatchRecord[]): WatchRecord[] {
+export function mergeEncryptedDeletedRecords(localDeletedRecords: DeletedRecord[], cloudDeletedRecords: DeletedRecord[]): DeletedRecord[] {
+  const merged = new Map<string, DeletedRecord>();
+
+  for (const deletedRecord of [...localDeletedRecords, ...cloudDeletedRecords]) {
+    const existing = merged.get(deletedRecord.key);
+    if (!existing || deletedRecord.deletedAt > existing.deletedAt) {
+      merged.set(deletedRecord.key, deletedRecord);
+    }
+  }
+
+  return Array.from(merged.values());
+}
+
+export function mergeEncryptedRecords(
+  localRecords: WatchRecord[],
+  cloudRecords: WatchRecord[],
+  deletedRecords: DeletedRecord[] = [],
+): WatchRecord[] {
   const merged = new Map<string, WatchRecord>();
+  const deletedByKey = new Map(deletedRecords.map((record) => [record.key, record.deletedAt]));
+
+  function setIfNotDeleted(record: WatchRecord) {
+    const key = getRecordKey(record);
+    const deletedAt = deletedByKey.get(key) ?? 0;
+    if (deletedAt >= getRecordUpdatedAt(record)) {
+      return;
+    }
+
+    const existing = merged.get(key);
+    merged.set(key, existing ? mergeRecordPair(existing, record) : record);
+  }
 
   for (const localRecord of localRecords) {
-    merged.set(getRecordKey(localRecord), localRecord);
+    setIfNotDeleted(localRecord);
   }
 
   for (const cloudRecord of cloudRecords) {
-    const key = getRecordKey(cloudRecord);
-    const existing = merged.get(key);
-    merged.set(key, existing ? mergeRecordPair(existing, cloudRecord) : cloudRecord);
+    setIfNotDeleted(cloudRecord);
   }
 
   return Array.from(merged.values()).sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
+}
+
+export function pruneSupersededDeletedRecords(records: WatchRecord[], deletedRecords: DeletedRecord[]): DeletedRecord[] {
+  const recordUpdatedByKey = new Map(records.map((record) => [getRecordKey(record), getRecordUpdatedAt(record)]));
+  return deletedRecords.filter((deletedRecord) => {
+    const recordUpdatedAt = recordUpdatedByKey.get(deletedRecord.key) ?? 0;
+    return deletedRecord.deletedAt >= recordUpdatedAt;
+  });
 }
 
 export function mergeEncryptedCustomSites(localSites: CustomSite[], cloudSites: CustomSite[]): CustomSite[] {
@@ -97,23 +137,32 @@ async function getCurrentUserId(): Promise<string> {
   return user.id;
 }
 
-export function createSyncPlaintext(records: WatchRecord[], customSites: CustomSite[]): SyncPlaintext {
+export function createSyncPlaintext(
+  records: WatchRecord[],
+  customSites: CustomSite[],
+  deletedRecords: DeletedRecord[] = [],
+): SyncPlaintext {
   return {
     version: 1,
     exportedAt: Date.now(),
     records,
+    deletedRecords,
     customSites,
   };
 }
 
-export async function uploadEncryptedSyncBlob(records: WatchRecord[], customSites: CustomSite[]): Promise<EncryptedSyncBlobRow> {
+export async function uploadEncryptedSyncBlob(
+  records: WatchRecord[],
+  customSites: CustomSite[],
+  deletedRecords: DeletedRecord[] = [],
+): Promise<EncryptedSyncBlobRow> {
   if (!supabase) {
     throw new Error('Supabase not configured');
   }
 
   const userId = await getCurrentUserId();
   const dataKey = await requireSessionDataKey();
-  const encryptedBlob = await encryptJson(createSyncPlaintext(records, customSites), dataKey);
+  const encryptedBlob = await encryptJson(createSyncPlaintext(records, customSites, deletedRecords), dataKey);
   const row = {
     user_id: userId,
     schema_version: 1,
@@ -167,15 +216,22 @@ export async function downloadEncryptedSyncBlob(): Promise<SyncPlaintext | null>
   }
 }
 
-export async function syncEncryptedData(localRecords: WatchRecord[], localSites: CustomSite[]) {
+export async function syncEncryptedData(
+  localRecords: WatchRecord[],
+  localSites: CustomSite[],
+  localDeletedRecords: DeletedRecord[] = [],
+) {
   const cloudPlaintext = await downloadEncryptedSyncBlob();
-  const mergedRecords = mergeEncryptedRecords(localRecords, cloudPlaintext?.records ?? []);
+  const mergedDeletedRecords = mergeEncryptedDeletedRecords(localDeletedRecords, cloudPlaintext?.deletedRecords ?? []);
+  const mergedRecords = mergeEncryptedRecords(localRecords, cloudPlaintext?.records ?? [], mergedDeletedRecords);
+  const activeDeletedRecords = pruneSupersededDeletedRecords(mergedRecords, mergedDeletedRecords);
   const mergedSites = mergeEncryptedCustomSites(localSites, cloudPlaintext?.customSites ?? []);
 
-  await uploadEncryptedSyncBlob(mergedRecords, mergedSites);
+  await uploadEncryptedSyncBlob(mergedRecords, mergedSites, activeDeletedRecords);
 
   return {
     records: mergedRecords,
+    deletedRecords: activeDeletedRecords,
     customSites: mergedSites,
   };
 }

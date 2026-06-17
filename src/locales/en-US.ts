@@ -72,7 +72,7 @@ export default {
   },
   options: {
     headerSubtitle: 'Manage your video watch records and extension settings',
-    footerVersion: 'VideoTracker v0.0.7 · Automatically record your video watch progress',
+    footerVersion: 'VideoTracker v0.0.8 · Automatically record your video watch progress',
     tabs: {
       records: '📋 Records',
       settings: '⚙️ Settings',

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   createSyncPlaintext,
   mergeEncryptedCustomSites,
+  mergeEncryptedDeletedRecords,
   mergeEncryptedRecords,
+  pruneSupersededDeletedRecords,
 } from '../src/shared/encryptedSync';
 import type { WatchRecord } from '../src/shared/types';
 
@@ -27,10 +29,12 @@ describe('encrypted sync data helpers', () => {
   it('creates the sync plaintext envelope', () => {
     const records = [record({ id: 'a' })];
     const customSites = [{ domain: 'example.com', enabled: true, addedAt: 1 }];
-    const plaintext = createSyncPlaintext(records, customSites);
+    const deletedRecords = [{ key: 'youtube::https://example.com/video', deletedAt: 2 }];
+    const plaintext = createSyncPlaintext(records, customSites, deletedRecords);
 
     expect(plaintext.version).toBe(1);
     expect(plaintext.records).toBe(records);
+    expect(plaintext.deletedRecords).toBe(deletedRecords);
     expect(plaintext.customSites).toBe(customSites);
     expect(plaintext.exportedAt).toBeGreaterThan(0);
   });
@@ -44,6 +48,39 @@ describe('encrypted sync data helpers', () => {
     expect(merged[0].title).toBe('Local');
     expect(merged[0].currentTime).toBe(20);
     expect(merged[0].createdAt).toBe(1000);
+  });
+
+  it('does not restore a cloud record deleted after its last update', () => {
+    const cloud = record({ id: 'cloud', lastWatchedAt: 1500, createdAt: 1000 });
+    const merged = mergeEncryptedRecords([], [cloud], [
+      { key: 'youtube::https://example.com/video', deletedAt: 2000 },
+    ]);
+
+    expect(merged).toEqual([]);
+  });
+
+  it('keeps a record updated after an older deletion tombstone', () => {
+    const local = record({ id: 'local', lastWatchedAt: 2500, createdAt: 1000 });
+    const merged = mergeEncryptedRecords([local], [], [
+      { key: 'youtube::https://example.com/video', deletedAt: 2000 },
+    ]);
+
+    expect(merged).toEqual([local]);
+    expect(pruneSupersededDeletedRecords(merged, [
+      { key: 'youtube::https://example.com/video', deletedAt: 2000 },
+    ])).toEqual([]);
+  });
+
+  it('keeps the newest deletion tombstone for each record key', () => {
+    const merged = mergeEncryptedDeletedRecords(
+      [{ key: 'youtube::a', deletedAt: 1000 }],
+      [{ key: 'youtube::a', deletedAt: 2000 }, { key: 'youtube::b', deletedAt: 1500 }],
+    );
+
+    expect(merged).toEqual([
+      { key: 'youtube::a', deletedAt: 2000 },
+      { key: 'youtube::b', deletedAt: 1500 },
+    ]);
   });
 
   it('merges custom sites by domain', () => {

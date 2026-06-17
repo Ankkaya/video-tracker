@@ -118,6 +118,9 @@ describe('StorageManager', () => {
       const savedData = mockStorage['video_tracker_records'];
       expect(savedData).toHaveLength(1);
       expect(savedData[0].id).toBe('2');
+      expect(mockStorage['video_tracker_deleted_records']).toEqual([
+        { key: 'bilibili::url1', deletedAt: expect.any(Number) },
+      ]);
     });
 
     it('删除不存在的记录不报错', async () => {
@@ -130,6 +133,25 @@ describe('StorageManager', () => {
       mockStorage['video_tracker_records'] = [];
       await StorageManager.deleteRecord('any');
       expect(mockStorage['video_tracker_records']).toHaveLength(0);
+    });
+
+    it('保存更新晚于墓碑的记录时清除删除标记', async () => {
+      mockStorage['video_tracker_deleted_records'] = [{ key: 'youtube::url1', deletedAt: 1000 }];
+      await StorageManager.saveRecord({
+        id: '1',
+        url: 'url1',
+        title: '视频1',
+        episode: '正片',
+        platform: 'youtube',
+        platformName: 'YouTube',
+        currentTime: 20,
+        duration: 200,
+        progress: 0.1,
+        lastWatchedAt: 2000,
+        createdAt: 1000,
+      });
+
+      expect(mockStorage['video_tracker_deleted_records']).toEqual([]);
     });
   });
 

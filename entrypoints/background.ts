@@ -100,8 +100,10 @@ export default defineBackground(() => {
         await setSyncMeta({ state: 'syncing', lastError: undefined });
         const records = await StorageManager.getRecords();
         const customSites = await StorageManager.getCustomSites();
-        const synced = await syncEncryptedData(records, customSites);
+        const deletedRecords = await StorageManager.getDeletedRecords();
+        const synced = await syncEncryptedData(records, customSites, deletedRecords);
         await chrome.storage.local.set({ [STORAGE_KEYS.RECORDS]: synced.records });
+        await StorageManager.setDeletedRecords(synced.deletedRecords);
         await StorageManager.updateSettings({ customSites: synced.customSites });
         await setSyncMeta({ state: 'success', lastSyncAt: Date.now(), lastError: undefined });
         return;
@@ -377,13 +379,19 @@ export default defineBackground(() => {
 
       case MSG.DELETE_RECORD:
         StorageManager.deleteRecord((data as { id: string }).id)
-          .then(() => sendResponse({ success: true }))
+          .then(() => {
+            scheduleAutoSync();
+            sendResponse({ success: true });
+          })
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
 
       case MSG.DELETE_RECORDS:
         StorageManager.deleteRecords((data as { ids: string[] }).ids)
-          .then(() => sendResponse({ success: true }))
+          .then(() => {
+            scheduleAutoSync();
+            sendResponse({ success: true });
+          })
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
 
