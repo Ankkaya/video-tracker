@@ -10,6 +10,7 @@ import { api } from '../composables/useApi';
 import { useAuth } from '../composables/useAuth';
 import { useSync } from '../composables/useSync';
 import { logger } from '../../shared/logger';
+import ShortcutStatus from '../../shared/components/ShortcutStatus.vue';
 
 const { t } = useI18n();
 const message = useMessage();
@@ -397,21 +398,7 @@ function getSyncStatusActionText() {
 
       <NDivider style="margin: 16px 0" />
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-label">{{ t('options.settings.shortcutLabel') }}</div>
-          <NText depth="3" style="font-size: 13px">
-            {{ t('options.settings.shortcutDesc') }}
-          </NText>
-        </div>
-        <NSpace :size="4">
-          <kbd>Ctrl</kbd>
-          <span>+</span>
-          <kbd>Shift</kbd>
-          <span>+</span>
-          <kbd>V</kbd>
-        </NSpace>
-      </div>
+      <ShortcutStatus />
 
       <NDivider style="margin: 16px 0" />
 
@@ -489,15 +476,6 @@ function getSyncStatusActionText() {
   font-weight: 600;
   color: #1a1a2e;
   margin-bottom: 4px;
-}
-kbd {
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-family: monospace;
-  font-weight: 600;
 }
 
 .sync-status-wrapper {

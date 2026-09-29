@@ -11,6 +11,7 @@ import { useAuth } from '../options/composables/useAuth';
 import { useTheme } from '../shared/composables/useTheme';
 import { useSync } from '../options/composables/useSync';
 import { buildRecordResumeUrl } from '../shared/resume';
+import ShortcutStatus from '../shared/components/ShortcutStatus.vue';
 
 const { t } = useI18n();
 const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
@@ -258,6 +259,7 @@ function handleSyncClick() {
         <button class="settings-btn" @click="openSettings" :title="t('common.settings')">⚙️</button>
       </div>
     </header>
+    <ShortcutStatus compact />
 
     <RecordList
       v-if="recentRecords.length > 0"

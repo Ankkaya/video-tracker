@@ -3,6 +3,7 @@ import { supabase } from '../../supabase';
 import { STORAGE_KEYS } from '../../shared/constants';
 import { logger } from '../../shared/logger';
 import { clearRememberedDataKey } from '../../shared/keyManager';
+import { watchAuthPopup } from './authPopup';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
@@ -200,60 +201,33 @@ export function useAuth() {
 
       if (urlError) throw urlError;
 
-      // Use chrome.identity API to launch auth flow
-      return new Promise((resolve) => {
-        chrome.identity.launchWebAuthFlow(
-          {
-            url: data.url,
-            interactive: true,
-          },
-          async (responseUrl) => {
-            logger.log('OAuth response URL:', responseUrl);
-            if (chrome.runtime.lastError) {
-              resolve({ success: false, error: chrome.runtime.lastError.message });
-              return;
-            }
+      // Chrome owns the OAuth flow; resize only its matching, newly opened popup.
+      const stopWatching = await watchAuthPopup(data.url, provider).catch(() => () => {});
+      let responseUrl: string | undefined;
+      try {
+        responseUrl = await chrome.identity.launchWebAuthFlow({
+          url: data.url,
+          interactive: true,
+        });
+      } finally {
+        stopWatching();
+      }
 
-            if (!responseUrl) {
-              resolve({ success: false, error: 'No response URL' });
-              return;
-            }
+      if (!responseUrl) throw new Error('No response URL');
+      const hashParams = new URLSearchParams(new URL(responseUrl).hash.substring(1));
+      const oauthError = hashParams.get('error_description') || hashParams.get('error');
+      if (oauthError) throw new Error(oauthError);
+      const accessToken = hashParams.get('access_token');
+      if (!accessToken) throw new Error('No access token in response');
 
-            // Parse the response URL - tokens are in the hash fragment
-            const url = new URL(responseUrl);
-            logger.log('Response URL hash:', url.hash);
-
-            // Extract tokens from hash fragment
-            const hashParams = new URLSearchParams(url.hash.substring(1));
-            const accessToken = hashParams.get('access_token');
-            const refreshToken = hashParams.get('refresh_token');
-            logger.log('Access token:', accessToken ? 'found' : 'not found');
-            logger.log('Refresh token:', refreshToken ? 'found' : 'not found');
-
-            if (accessToken) {
-              // Set the session manually
-              supabase?.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken || '',
-              }).then(({ data: { session }, error: sessionError }) => {
-                if (sessionError) {
-                  logger.error('Session error:', sessionError);
-                  resolve({ success: false, error: sessionError.message });
-                  return;
-                }
-                if (session) {
-                  checkSession();
-                  resolve({ success: true });
-                } else {
-                  resolve({ success: false, error: 'Failed to establish session' });
-                }
-              });
-            } else {
-              resolve({ success: false, error: 'No access token in response' });
-            }
-          }
-        );
+      const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: hashParams.get('refresh_token') || '',
       });
+      if (sessionError) throw sessionError;
+      if (!session) throw new Error('Failed to establish session');
+      await checkSession();
+      return { success: true };
     } catch (error: any) {
       logger.error('Login failed:', error);
       return { success: false, error: error.message };
