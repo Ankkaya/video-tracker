@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-30",
+  "storeListing": "https://partner.microsoft.com/en-us/dashboard/microsoftedge/2bde0ce0-d428-4856-8ccb-88928b21af54/listings",
+  "status": "Saved draft; both Chinese (China) and English (United States) show Complete. Not submitted for certification.",
+  "package": "../../releases/video-tracker-0.0.8-edge-localized.zip",
+  "packageValidation": "Partner Center verified version 0.0.8 and recognized English (United States) and Chinese (China).",
+  "tests": "95 tests passed across 9 files; production build passed.",
+  "locales": ["zh-CN", "en-US"],
+  "screenshotsPerLocale": 4,
+  "promotionalTilesPerLocale": 2,
+  "screenshotOrder": ["04-popup-1280x800.png", "01-records-1280x800.png", "02-settings-1280x800.png", "03-sites-1280x800.png"],
+  "promotionalTiles": ["promo-small-440x280.png", "promo-large-1400x560.png"],
+  "originalEnglishImages": "archive/",
+  "englishDescription": "Preserved and verified unchanged.",
+  "imageGeneration": "Built-in image_gen for promotional artwork. See image-prompts.json. Real Vue components with synthetic records for screenshots.",
+  "preview": "index.html",
+  "evidence": "listing-complete.jpg"
+}
