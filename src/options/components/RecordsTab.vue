@@ -10,12 +10,15 @@ import type { WatchRecord } from '../../shared/types';
 import { api } from '../composables/useApi';
 import { formatTime, formatDate, platformIcons } from '../utils/format';
 import { STORAGE_KEYS } from '../../shared/constants';
+import { customPlatformOptions, matchesPlatform } from '../../shared/platformFilter';
+import { useCustomSites } from '../../shared/composables/useCustomSites';
 import { buildRecordResumeUrl } from '../../shared/resume';
 
 const { t } = useI18n();
 const message = useMessage();
 const dialog = useDialog();
 
+const customSites = useCustomSites();
 const records = ref<WatchRecord[]>([]);
 const searchQuery = ref('');
 const platformFilter = ref<string>('all');
@@ -31,6 +34,7 @@ const platformOptions = computed(() => [
   { label: t('popup.platforms.youtube'), value: 'youtube' },
   { label: t('popup.platforms.iqiyi'), value: 'iqiyi' },
   { label: t('popup.platforms.vqq'), value: 'vqq' },
+  ...customPlatformOptions(customSites.value, records.value),
 ]);
 
 const filteredRecords = computed(() =>
@@ -38,7 +42,7 @@ const filteredRecords = computed(() =>
     const q = searchQuery.value.toLowerCase();
     const matchSearch =
       !q || r.title.toLowerCase().includes(q) || r.episode.toLowerCase().includes(q);
-    const matchPlatform = platformFilter.value === 'all' || r.platform === platformFilter.value;
+    const matchPlatform = matchesPlatform(r, platformFilter.value);
     if (dateRange.value) {
       const [start, end] = dateRange.value;
       if (r.lastWatchedAt < start || r.lastWatchedAt > end) return false;
@@ -81,6 +85,10 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', onVisibilityChange);
   chrome.storage.onChanged.removeListener(onStorageChanged);
+});
+
+watch(platformOptions, options => {
+  if (!options.some(option => option.value === platformFilter.value)) platformFilter.value = 'all';
 });
 
 watch([searchQuery, platformFilter, dateRange], () => {
@@ -143,7 +151,7 @@ defineExpose({ reload: loadRecords });
 </script>
 
 <template>
-  <div>
+  <NCard class="records-panel">
     <NSpace align="center" wrap style="margin-bottom: 16px">
       <NInput
         v-model:value="searchQuery"
@@ -156,7 +164,7 @@ defineExpose({ reload: loadRecords });
       <NSelect
         v-model:value="platformFilter"
         :options="platformOptions"
-        style="width: 140px"
+        filterable style="width: 200px"
       />
       <NDatePicker
         v-model:value="dateRange"
@@ -258,10 +266,19 @@ defineExpose({ reload: loadRecords });
         <NText depth="3">{{ t('options.records.emptyExtra') }}</NText>
       </template>
     </NEmpty>
-  </div>
+  </NCard>
 </template>
 
 <style scoped>
+.records-panel {
+  border: 1px solid var(--layout-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.records-panel :deep(> .n-card__content) { padding: 24px; }
+@media (max-width: 600px) {
+  .records-panel :deep(> .n-card__content) { padding: 16px; }
+}
 .record-card { cursor: default; }
 .record-row {
   display: flex;

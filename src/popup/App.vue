@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { WatchRecord } from '../shared/types';
 import { MSG, STORAGE_KEYS } from '../shared/constants';
 import { logger } from '../shared/logger';
+import SearchBar from './components/SearchBar.vue';
+import { useCustomSites } from '../shared/composables/useCustomSites';
+import { customPlatformOptions, matchesPlatform, builtinPlatforms } from '../shared/platformFilter';
 import RecordList from './components/RecordList.vue';
 import EmptyState from './components/EmptyState.vue';
 import SyncModal from './components/SyncModal.vue';
@@ -12,12 +15,16 @@ import { useTheme } from '../shared/composables/useTheme';
 import { useSync } from '../options/composables/useSync';
 import { buildRecordResumeUrl } from '../shared/resume';
 import ShortcutStatus from '../shared/components/ShortcutStatus.vue';
+import BrandIcon from '../shared/components/BrandIcon.vue';
 
 const { t } = useI18n();
 const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
 const { theme, toggleTheme } = useTheme();
 const { isSyncing, syncMeta, loadSyncMeta } = useSync();
 
+const customSites = useCustomSites();
+const query = ref('');
+const platform = ref('all');
 const records = ref<WatchRecord[]>([]);
 const manualSaveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
 const showSyncModal = ref(false);
@@ -27,8 +34,7 @@ async function loadRecords() {
     const response = await chrome.runtime.sendMessage({ type: MSG.GET_RECORDS });
     if (response?.records) {
       records.value = response.records
-        .sort((a: WatchRecord, b: WatchRecord) => b.lastWatchedAt - a.lastWatchedAt)
-        .slice(0, 3);
+        .sort((a: WatchRecord, b: WatchRecord) => b.lastWatchedAt - a.lastWatchedAt);
     }
   } catch (err) {
     logger.error('获取记录失败:', err);
@@ -59,7 +65,15 @@ onUnmounted(() => {
   chrome.storage.onChanged.removeListener(onStorageChanged);
 });
 
-const recentRecords = computed(() => records.value);
+const recentRecords = computed(() => records.value.filter(record =>
+  matchesPlatform(record, platform.value) &&
+  `${record.title} ${record.episode}`.toLowerCase().includes(query.value.trim().toLowerCase())
+).slice(0, 3));
+
+watch(() => customPlatformOptions(customSites.value, records.value), options => {
+  if (platform.value !== 'all' && !builtinPlatforms.includes(platform.value) &&
+      !options.some(option => option.value === platform.value)) platform.value = 'all';
+});
 
 async function deleteRecord(id: string) {
   try {
@@ -242,7 +256,7 @@ function handleSyncClick() {
 <template>
   <div class="popup-container">
     <header class="header">
-      <h1 class="title">{{ t('popup.title') }}</h1>
+      <h1 class="title"><BrandIcon /> {{ t('popup.title') }}</h1>
       <div class="header-actions">
         <button
           class="sync-btn"
@@ -261,6 +275,8 @@ function handleSyncClick() {
     </header>
     <ShortcutStatus compact />
 
+    <SearchBar v-model:query="query" v-model:platform="platform" :custom-sites="customSites" :records="records" />
+
     <RecordList
       v-if="recentRecords.length > 0"
       :records="recentRecords"
@@ -268,6 +284,7 @@ function handleSyncClick() {
       @open="openRecord"
     />
 
+    <p v-else-if="records.length" class="no-results">{{ t('options.records.emptyDescription') }}</p>
     <EmptyState v-else @add-sample="addSampleRecord" />
 
     <button class="view-all-btn" @click="openAllRecords">

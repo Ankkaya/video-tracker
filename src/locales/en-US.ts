@@ -25,7 +25,7 @@ export default {
     themeAuto: 'Auto',
   },
   popup: {
-    title: '📹 VideoTracker',
+    title: 'VideoTracker',
     settingsTooltip: 'Settings',
     viewAllRecords: '📋 View All Records →',
     fallbackLabel: 'When auto-detection fails',
@@ -71,8 +71,14 @@ export default {
     },
   },
   options: {
+    layout: {
+      brandSubtitle: 'Video watch history assistant', navigation: 'Admin navigation',
+      recordsSubtitle: 'Browse and manage your video watch history', settingsSubtitle: 'Manage recording preferences and cloud sync',
+      sitesSubtitle: 'Manage sites that support automatic recording', loginSubtitle: 'Sign in to configure encrypted cloud sync',
+      watchSettings: 'Watch history', shortcuts: 'Keyboard shortcuts', autoSave: 'Changes are saved automatically',
+    },
     headerSubtitle: 'Manage your video watch records and extension settings',
-    footerVersion: 'VideoTracker v0.0.8 · Automatically record your video watch progress',
+    footerVersion: 'VideoTracker v0.0.9 · Automatically record your video watch progress',
     tabs: {
       records: '📋 Records',
       settings: '⚙️ Settings',

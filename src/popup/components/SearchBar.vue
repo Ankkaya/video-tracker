@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { CustomSite, WatchRecord } from '../../shared/types';
+import { customPlatformOptions } from '../../shared/platformFilter';
 import { useI18n } from 'vue-i18n';
 
-defineProps<{
+const props = defineProps<{
+  customSites: CustomSite[];
+  records: WatchRecord[];
   query: string;
   platform: string;
 }>();
@@ -20,6 +24,7 @@ const platforms = computed(() => [
   { value: 'youtube', label: t('popup.platforms.youtube') },
   { value: 'iqiyi', label: t('popup.platforms.iqiyi') },
   { value: 'vqq', label: t('popup.platforms.vqq') },
+  ...customPlatformOptions(props.customSites, props.records),
 ]);
 </script>
 

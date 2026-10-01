@@ -7,6 +7,11 @@ $outputRoot = Join-Path $projectRoot 'output/edge-store'
 # Export existing artwork and captured screenshots at exact store dimensions.
 function Export-Png([string]$Source, [string]$Destination, [int]$Width, [int]$Height) {
     $sourceImage = [System.Drawing.Image]::FromFile($Source)
+    if ($sourceImage.Width -eq $Width -and $sourceImage.Height -eq $Height) {
+        try { $sourceImage.Save($Destination, [System.Drawing.Imaging.ImageFormat]::Png) }
+        finally { $sourceImage.Dispose() }
+        return
+    }
     $bitmap = [System.Drawing.Bitmap]::new($Width, $Height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
@@ -26,7 +31,12 @@ foreach ($locale in @('zh-CN','en-US')) {
     Export-Png (Join-Path $localeDir 'promo-large-original.png') (Join-Path $localeDir 'promo-large-1400x560.png') 1400 560
     Export-Png (Join-Path $localeDir 'promo-small-original.png') (Join-Path $localeDir 'promo-small-440x280.png') 440 280
     foreach ($name in @('01-records','02-settings','03-sites','04-popup')) {
-        $sourcePath = Join-Path $ScreenshotDirectory "$name-$locale.jpg"
+        $sourcePath = Join-Path $ScreenshotDirectory "$name-$locale.png"
+        if (-not (Test-Path -LiteralPath $sourcePath)) { throw "Missing lossless PNG screenshot: $sourcePath" }
+        $capture = [System.Drawing.Image]::FromFile($sourcePath)
+        try {
+            if ($capture.Width -ne 1280 -or $capture.Height -ne 800) { throw "Screenshot must be captured directly at 1280 x 800: $sourcePath" }
+        } finally { $capture.Dispose() }
         Export-Png $sourcePath (Join-Path $localeDir "$name-1280x800.png") 1280 800
     }
 }

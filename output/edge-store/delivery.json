@@ -1,18 +1,35 @@
 {
-  "date": "2026-09-30",
+  "date": "2026-10-01",
   "storeListing": "https://partner.microsoft.com/en-us/dashboard/microsoftedge/2bde0ce0-d428-4856-8ccb-88928b21af54/listings",
-  "status": "Saved draft; both Chinese (China) and English (United States) show Complete. Not submitted for certification.",
-  "package": "../../releases/video-tracker-0.0.8-edge-localized.zip",
-  "packageValidation": "Partner Center verified version 0.0.8 and recognized English (United States) and Chinese (China).",
-  "tests": "95 tests passed across 9 files; production build passed.",
-  "locales": ["zh-CN", "en-US"],
+  "status": "Submitted version 0.0.9 for certification; Partner Center shows In review. Previous in-review version 0.0.8 cancelled successfully.",
+  "package": "../../releases/video-tracker-0.0.9-chrome-mv3.zip",
+  "packageValidation": "Partner Center verified version 0.0.9 and recognized English (United States) and Chinese (China).",
+  "tests": "116 tests passed across 13 files; production build passed.",
+  "locales": [
+    "zh-CN",
+    "en-US"
+  ],
   "screenshotsPerLocale": 4,
   "promotionalTilesPerLocale": 2,
-  "screenshotOrder": ["04-popup-1280x800.png", "01-records-1280x800.png", "02-settings-1280x800.png", "03-sites-1280x800.png"],
-  "promotionalTiles": ["promo-small-440x280.png", "promo-large-1400x560.png"],
+  "screenshotOrder": [
+    "04-popup-1280x800.png",
+    "01-records-1280x800.png",
+    "02-settings-1280x800.png",
+    "03-sites-1280x800.png"
+  ],
+  "promotionalTiles": [
+    "promo-small-440x280.png",
+    "promo-large-1400x560.png"
+  ],
   "originalEnglishImages": "archive/",
-  "englishDescription": "Preserved and verified unchanged.",
+  "englishDescription": "Existing description retained with 0.0.9 release notes appended.",
   "imageGeneration": "Built-in image_gen for promotional artwork. See image-prompts.json. Real Vue components with synthetic records for screenshots.",
   "preview": "index.html",
-  "evidence": "listing-complete.jpg"
+  "evidence": "submission-status-20261001.png",
+  "localScreenshotUpdate": {
+    "date": "2026-10-01",
+    "format": "Direct 1280x800 lossless PNG captures of the current workspace UI; no JPEG conversion or resizing.",
+    "backup": "archive/before-clarity-20261001/",
+    "remoteStatus": "All four latest screenshots uploaded and saved for each locale with localized captions."
+  }
 }

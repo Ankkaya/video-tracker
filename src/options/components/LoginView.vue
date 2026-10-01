@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { NInput, NButton, NSpace, NText, NForm, NFormItem, FormRules, FormInst, useMessage } from 'naive-ui';
+import { NInput, NButton, NText, NForm, NFormItem, FormRules, FormInst, useMessage } from 'naive-ui';
 import { useAuth } from '../composables/useAuth';
 
 const emit = defineEmits<{
@@ -197,6 +197,24 @@ async function handleUpdatePassword() {
   }
 }
 
+const submitLabel = computed(() => t(`options.settings.${{
+  login: 'loginBtn', register: 'registerBtn', reset: 'resetPasswordBtn', updatePassword: 'updatePasswordBtn',
+}[authMode.value]}`));
+
+function handleBack() {
+  if (authMode.value === 'register' || authMode.value === 'reset') {
+    authMode.value = 'login';
+    formRef.value?.restoreValidation();
+    return;
+  }
+  emit('back');
+}
+
+function handleSubmit() {
+  const actions = { login: handleEmailLogin, register: handleRegister, reset: handleResetPassword, updatePassword: handleUpdatePassword };
+  return actions[authMode.value]();
+}
+
 function getFormRules(): FormRules {
   switch (authMode.value) {
     case 'login': return loginRules;
@@ -261,42 +279,15 @@ function getFormRules(): FormRules {
           />
         </NFormItem>
 
-        <NSpace vertical :size="16" style="margin-top: 8px">
+        <div class="login-actions">
           <NButton
-            v-if="authMode === 'login'"
+            :key="authMode"
             type="primary"
-            @click="handleEmailLogin"
+            @click="handleSubmit"
             :loading="isLoading"
             block
           >
-            {{ t('options.settings.loginBtn') }}
-          </NButton>
-          <NButton
-            v-if="authMode === 'register'"
-            type="primary"
-            @click="handleRegister"
-            :loading="isLoading"
-            block
-          >
-            {{ t('options.settings.registerBtn') }}
-          </NButton>
-          <NButton
-            v-if="authMode === 'reset'"
-            type="primary"
-            @click="handleResetPassword"
-            :loading="isLoading"
-            block
-          >
-            {{ t('options.settings.resetPasswordBtn') }}
-          </NButton>
-          <NButton
-            v-if="authMode === 'updatePassword'"
-            type="primary"
-            @click="handleUpdatePassword"
-            :loading="isLoading"
-            block
-          >
-            {{ t('options.settings.updatePasswordBtn') }}
+            {{ submitLabel }}
           </NButton>
           <NButton
             v-if="authMode === 'login'"
@@ -315,12 +306,12 @@ function getFormRules(): FormRules {
             {{ t('options.settings.googleLoginBtn') }}
           </NButton>
           <NButton
-            @click="emit('back')"
+            @click="handleBack"
             block
           >
             {{ t('common.back') }}
           </NButton>
-        </NSpace>
+        </div>
       </NForm>
 
       <div class="auth-links">
@@ -362,6 +353,13 @@ function getFormRules(): FormRules {
 </template>
 
 <style scoped>
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
 .login-container {
   display: flex;
   justify-content: center;

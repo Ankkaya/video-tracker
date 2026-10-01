@@ -367,7 +367,8 @@ function getSyncStatusActionText() {
 </script>
 
 <template>
-  <NCard>
+  <div class="settings-cards">
+  <NCard :title="t('options.layout.watchSettings')">
     <NSpace vertical :size="0">
       <div class="setting-row">
         <div class="setting-info">
@@ -396,16 +397,15 @@ function getSyncStatusActionText() {
         />
       </div>
 
-      <NDivider style="margin: 16px 0" />
-
-      <ShortcutStatus />
-
-      <NDivider style="margin: 16px 0" />
+    </NSpace>
+  </NCard>
+  <NCard class="shortcut-card" :title="t('options.layout.shortcuts')"><ShortcutStatus /></NCard>
+  <NCard :title="t('options.settings.syncTitle')">
+    <NSpace vertical :size="0">
 
       <div class="setting-section">
         <div class="section-header">
           <div class="setting-info">
-            <div class="setting-label">{{ t('options.settings.syncTitle') }}</div>
             <NText depth="3" style="font-size: 13px">
               {{ t('options.settings.syncDesc') }}
             </NText>
@@ -458,17 +458,35 @@ function getSyncStatusActionText() {
       </div>
     </NSpace>
   </NCard>
+  <NText depth="3" class="settings-save-note">ⓘ {{ t('options.layout.autoSave') }}</NText>
+  </div>
 </template>
 
 <style scoped>
+.settings-cards { display: grid; gap: 24px; text-align: left; }
+.settings-cards :deep(.n-card) { border-radius: 10px; }
+.settings-cards :deep(.n-card-header) { padding: 22px 24px 16px; font-weight: 600; }
+.settings-cards :deep(.n-card__content) { padding: 0 24px 24px; }
+.shortcut-card :deep(.shortcut-status:not(.warning)) { display: grid; grid-template-columns: minmax(0, 360px) auto; column-gap: 20px; align-items: center; justify-content: start; }
+.shortcut-card :deep(.shortcut-heading) { display: contents; }
+.shortcut-card :deep(.shortcut-heading > span) { grid-column: 1; grid-row: 1; }
+.shortcut-card :deep(kbd) { grid-column: 2; grid-row: 1; justify-self: start; }
+.shortcut-card :deep(.shortcut-status > p) { grid-column: 1; }
+.shortcut-card :deep(.shortcut-actions) { grid-column: 1 / -1; grid-row: 3; justify-content: flex-start; }
+.shortcut-card :deep(.shortcut-heading) { justify-content: flex-start; }
+@media (max-width: 600px) { .shortcut-card :deep(.shortcut-status:not(.warning)) { display: block; } .shortcut-card :deep(.shortcut-heading) { display: flex; } .shortcut-card :deep(.shortcut-actions) { justify-content: flex-start; } }
+.settings-save-note { font-size: 13px; }
+.setting-section > .n-space { background: var(--muted-panel); border-radius: 8px; padding: 16px; }
+@media (max-width: 600px) { .setting-row { gap: 12px; flex-wrap: wrap; } .setting-info { min-width: 170px; } }
+
 .setting-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 8px 0;
 }
 .setting-info {
-  flex: 1;
+  flex: 0 1 360px;
   margin-right: 20px;
 }
 .setting-label {

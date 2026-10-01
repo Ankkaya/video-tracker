@@ -1,0 +1,5 @@
+What's new in 0.0.9
+• Redesigned record management, settings, and sign-in pages with clearer navigation and layout.
+• Updated extension branding and toolbar icons.
+• Added custom-site filters to the popup and record management page, including historical records and live site-list updates.
+• Updated Chinese and English interface text and store screenshots.

@@ -25,7 +25,7 @@ export default {
     themeAuto: '自动',
   },
   popup: {
-    title: '📹 VideoTracker',
+    title: 'VideoTracker',
     settingsTooltip: '设置',
     viewAllRecords: '📋 查看全部记录 →',
     fallbackLabel: '自动识别失败时',
@@ -71,8 +71,14 @@ export default {
     },
   },
   options: {
+    layout: {
+      brandSubtitle: '视频观看记录助手', navigation: '后台导航',
+      recordsSubtitle: '浏览和管理你的视频观看记录', settingsSubtitle: '管理观看记录偏好与云端同步',
+      sitesSubtitle: '管理支持自动记录的视频站点', loginSubtitle: '登录账号，配置加密云端同步',
+      watchSettings: '观看记录', shortcuts: '快捷键', autoSave: '设置更改后自动保存',
+    },
     headerSubtitle: '管理你的视频观看记录和插件设置',
-    footerVersion: 'VideoTracker v0.0.8 · 自动记录你的视频观看进度',
+    footerVersion: 'VideoTracker v0.0.9 · 自动记录你的视频观看进度',
     tabs: {
       records: '📋 记录管理',
       settings: '⚙️ 插件设置',

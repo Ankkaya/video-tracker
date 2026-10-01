@@ -150,6 +150,9 @@ export default defineBackground(() => {
 
     if (Object.keys(imageData).length > 0) {
       await chrome.action.setIcon({ imageData });
+    } else {
+      const path = Object.fromEntries(ICON_SIZES.map(size => [size, enabled ? `icon-enabled-${size}.png` : `icon-${size}.png`]));
+      await chrome.action.setIcon({ path });
     }
   }
 
