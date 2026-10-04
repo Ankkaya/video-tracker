@@ -1,6 +1,3 @@
-What's new in 0.0.10
-• Generic recognition is enabled for other websites, with per-domain automatic recording controls.
-• Site filters use recorded domains; manual saving and playback recovery remain available independently.
-• Encrypted sync now uses the v2 site-rules format.
-• Added cloud reset for forgotten sync passwords, preserving local data and uploading it with new encryption.
-• Old keys cannot overwrite reset cloud data; other devices must unlock with the new password.
+What's new in 0.0.11
+• Fixed manual-save shortcuts for videos in cross-origin iframe players.
+• Saves the current page title and URL with playback progress, even when automatic recording is disabled.

@@ -40,6 +40,29 @@ afterEach(() => {
 });
 const heartbeats = () => sendMessage.mock.calls.filter(([m]) => m.type === MSG.HEARTBEAT);
 describe('generic content detection', () => {
+  it('manually saves cross-origin iframe progress while automatic recording is disabled', async () => {
+    document.body.innerHTML = '<iframe></iframe>';
+    settings = { ...settings, autoRecord: false };
+    sendMessage.mockImplementation(async (message: any) => {
+      if (message.type === MSG.GET_SETTINGS) return { settings, pageUrl: 'https://example.com/watch' };
+      if (message.type === MSG.PROBE_IFRAME_VIDEO) return {
+        success: true, frameId: 2,
+        videoData: { currentTime: 42, duration: 100, paused: false },
+      };
+      return { success: true };
+    });
+    changed({ [STORAGE_KEYS.SETTINGS]: { newValue: settings } }, 'local');
+    await flush();
+    messageListener({ type: MSG.MANUAL_SAVE_REQUEST }, {}, () => {});
+    await flush();
+    const saves = sendMessage.mock.calls.filter(([m]) => m.type === MSG.MANUAL_SAVE);
+    expect(saves).toHaveLength(1);
+    expect(saves[0][0].data).toMatchObject({
+      currentTime: 42, duration: 100, platform: 'generic',
+      url: location.origin + location.pathname + location.search,
+    });
+    expect(heartbeats()).toHaveLength(0);
+  });
   it('uses generic detection on a site without any custom registration', async () => {
     await vi.advanceTimersByTimeAsync(5000);
     expect(heartbeats()).toHaveLength(1);

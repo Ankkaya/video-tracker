@@ -551,7 +551,26 @@ export default defineContentScript({
     async function handleManualSave() {
       if (contextInvalidated) return;
 
-      const videoInfo = currentAdapter?.extract() ?? lastVideoInfo;
+      let videoInfo = currentAdapter?.extract() ?? null;
+      // 快捷键发给顶层页面；跨域播放器必须由后台在所有 frame 中探测。
+      if (!videoInfo && !isInIframe) {
+        const probe = await safeSendMessage({ type: MSG.PROBE_IFRAME_VIDEO });
+        if (probe?.success && probe.videoData) {
+          const { currentTime, duration } = probe.videoData;
+          if (Number.isFinite(currentTime) && Number.isFinite(duration) && duration > 0) {
+            videoInfo = {
+              url: getPageUrl(),
+              title: getPageTitle(),
+              episode: '正片',
+              platform: 'generic',
+              platformName: location.hostname,
+              currentTime,
+              duration,
+            };
+          }
+        }
+      }
+      videoInfo ??= lastVideoInfo;
       if (!videoInfo) return;
 
       const response = await safeSendMessage({
