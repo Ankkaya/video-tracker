@@ -5,7 +5,6 @@ import type { WatchRecord } from '../shared/types';
 import { MSG, STORAGE_KEYS } from '../shared/constants';
 import { logger } from '../shared/logger';
 import SearchBar from './components/SearchBar.vue';
-import { useCustomSites } from '../shared/composables/useCustomSites';
 import { customPlatformOptions, matchesPlatform, builtinPlatforms } from '../shared/platformFilter';
 import RecordList from './components/RecordList.vue';
 import EmptyState from './components/EmptyState.vue';
@@ -22,7 +21,6 @@ const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
 const { theme, toggleTheme } = useTheme();
 const { isSyncing, syncMeta, loadSyncMeta } = useSync();
 
-const customSites = useCustomSites();
 const query = ref('');
 const platform = ref('all');
 const records = ref<WatchRecord[]>([]);
@@ -70,7 +68,7 @@ const recentRecords = computed(() => records.value.filter(record =>
   `${record.title} ${record.episode}`.toLowerCase().includes(query.value.trim().toLowerCase())
 ).slice(0, 3));
 
-watch(() => customPlatformOptions(customSites.value, records.value), options => {
+watch(() => customPlatformOptions(records.value), options => {
   if (platform.value !== 'all' && !builtinPlatforms.includes(platform.value) &&
       !options.some(option => option.value === platform.value)) platform.value = 'all';
 });
@@ -275,7 +273,7 @@ function handleSyncClick() {
     </header>
     <ShortcutStatus compact />
 
-    <SearchBar v-model:query="query" v-model:platform="platform" :custom-sites="customSites" :records="records" />
+    <SearchBar v-model:query="query" v-model:platform="platform" :records="records" />
 
     <RecordList
       v-if="recentRecords.length > 0"

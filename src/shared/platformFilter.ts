@@ -1,4 +1,4 @@
-import type { CustomSite, WatchRecord } from './types';
+import type { WatchRecord } from './types';
 
 export const builtinPlatforms = ['bilibili', 'youtube', 'iqiyi', 'vqq'];
 
@@ -14,12 +14,12 @@ export function matchesPlatform(record: Pick<WatchRecord, 'url' | 'platform'>, f
   return host === domain || host.endsWith(`.${domain}`);
 }
 
-export function customPlatformOptions(sites: CustomSite[], records: Pick<WatchRecord, 'url' | 'platform'>[]) {
-  const domains = new Set(sites.map(site => site.domain.toLowerCase()));
+export function customPlatformOptions(records: Pick<WatchRecord, 'url' | 'platform'>[]) {
+  const domains = new Set<string>();
   for (const record of records) {
     if (builtinPlatforms.includes(record.platform)) continue;
     const host = hostname(record.url);
-    if (host && ![...domains].some(domain => host === domain || host.endsWith(`.${domain}`))) {
+    if (host) {
       domains.add(host);
     }
   }

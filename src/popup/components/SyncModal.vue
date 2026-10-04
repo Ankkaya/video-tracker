@@ -94,11 +94,11 @@ async function handleSync() {
   }
 
   const settings = await api.getSettings();
-  const localSites = Array.isArray(settings?.customSites) ? settings.customSites : [];
+  const localSites = Array.isArray(settings?.siteRules) ? settings.siteRules : [];
   const result = await syncEncryptedRecordsAndSites(localRecords || [], localSites);
   if (result.success) {
-    if ('customSites' in result && Array.isArray(result.customSites)) {
-      await api.updateSettings({ customSites: result.customSites });
+    if ('siteRules' in result && Array.isArray(result.siteRules)) {
+      await api.updateSettings({ siteRules: result.siteRules });
     }
     await loadSyncMeta();
     emit('message', t('popup.sync.syncSuccess'), 'success');

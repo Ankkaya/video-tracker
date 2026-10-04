@@ -1,18 +1,19 @@
 import { ref } from 'vue';
 import { supabase } from '../../supabase';
-import type { CustomSite as LocalCustomSite, WatchRecord } from '../../shared/types';
+import type { SiteRule as LocalSiteRule, WatchRecord } from '../../shared/types';
 import { STORAGE_KEYS } from '../../shared/constants';
 import { logger } from '../../shared/logger';
 import {
   clearRememberedDataKey,
   clearSessionDataKey,
   getSessionDataKey,
+  getVerifiedKeySalt,
   hasCloudEncryptionKey,
   initializeEncryption,
   restoreRememberedDataKey,
   unlockEncryption,
 } from '../../shared/keyManager';
-import { syncEncryptedData, uploadEncryptedSyncBlob } from '../../shared/encryptedSync';
+import { resetEncryptedCloudData, syncEncryptedData, uploadEncryptedSyncBlob } from '../../shared/encryptedSync';
 import { StorageManager } from '../../shared/storage';
 
 export type SyncState = 'idle' | 'syncing' | 'success' | 'error';
@@ -32,6 +33,20 @@ const isSyncing = ref(false);
 const syncMeta = ref<SyncMeta>({ ...DEFAULT_SYNC_META });
 
 export function useSync() {
+  async function resetEncryptedSync(password: string) {
+    if (isSyncing.value) return { success: false as const, error: 'Sync is already running.' };
+    try {
+      const result = await withSyncState(async () => {
+        const [records, sites, deleted] = await Promise.all([
+          StorageManager.getRecords(), StorageManager.getSiteRules(), StorageManager.getDeletedRecords(),
+        ]);
+        return resetEncryptedCloudData(password, records, sites, deleted);
+      });
+      return { success: true as const, ...result };
+    } catch (error: any) {
+      return { success: false as const, error: error.message };
+    }
+  }
   async function loadSyncMeta(): Promise<SyncMeta> {
     const data = await chrome.storage.local.get(STORAGE_KEYS.SYNC_META);
     syncMeta.value = { ...DEFAULT_SYNC_META, ...data[STORAGE_KEYS.SYNC_META] };
@@ -86,7 +101,9 @@ export function useSync() {
 
   async function restoreEncryptedSyncUnlock() {
     try {
-      return Boolean(await restoreRememberedDataKey());
+      if (!await restoreRememberedDataKey()) return false;
+      await getVerifiedKeySalt();
+      return true;
     } catch (error) {
       logger.error('Restore encrypted sync unlock failed:', error);
       return false;
@@ -97,7 +114,7 @@ export function useSync() {
     await clearRememberedDataKey();
   }
 
-  async function initializeEncryptedSync(password: string, localRecords: WatchRecord[], localSites: LocalCustomSite[]) {
+  async function initializeEncryptedSync(password: string, localRecords: WatchRecord[], localSites: LocalSiteRule[]) {
     if (!supabase) {
       return { success: false, error: 'Supabase not configured' };
     }
@@ -130,7 +147,7 @@ export function useSync() {
     }
   }
 
-  async function syncEncryptedRecordsAndSites(localRecords: WatchRecord[], localSites: LocalCustomSite[]) {
+  async function syncEncryptedRecordsAndSites(localRecords: WatchRecord[], localSites: LocalSiteRule[]) {
     if (!supabase) {
       return { success: false, error: 'Supabase not configured' };
     }
@@ -148,6 +165,7 @@ export function useSync() {
   }
 
   return {
+    resetEncryptedSync,
     isSyncing,
     syncMeta,
     loadSyncMeta,

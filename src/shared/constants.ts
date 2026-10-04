@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSync: false,
   threshold: 30,
   shortcut: 'Ctrl+Shift+V',
-  customSites: [],
+  siteRules: [],
 };
 
 /** 心跳间隔（毫秒） */
@@ -46,11 +46,9 @@ export const MSG = {
   DELETE_RECORD: 'DELETE_RECORD',
   GET_SETTINGS: 'GET_SETTINGS',
   UPDATE_SETTINGS: 'UPDATE_SETTINGS',
-  ADD_CUSTOM_SITE: 'ADD_CUSTOM_SITE',
-  REMOVE_CUSTOM_SITE: 'REMOVE_CUSTOM_SITE',
+  SET_SITE_RULE: 'SET_SITE_RULE',
   GET_ALL_RECORDS: 'GET_ALL_RECORDS',
   DELETE_RECORDS: 'DELETE_RECORDS',
-  GET_CUSTOM_SITES: 'GET_CUSTOM_SITES',
   /** Popup 手动添加当前页面记录（不依赖 content script） */
   MANUAL_ADD_RECORD: 'MANUAL_ADD_RECORD',
   /** Popup 添加示例记录，便于首次使用和商店审核验证 */

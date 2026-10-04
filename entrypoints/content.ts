@@ -1,3 +1,4 @@
+import { isSiteAutoRecordEnabled } from '../src/shared/siteRules';
 import { registry } from '../src/content/adapters/registry';
 import { bilibiliAdapter } from '../src/content/adapters/bilibili';
 import { youtubeAdapter } from '../src/content/adapters/youtube';
@@ -5,8 +6,8 @@ import { iqiyiAdapter } from '../src/content/adapters/iqiyi';
 import { vqqAdapter } from '../src/content/adapters/vqq';
 import { genericAdapter } from '../src/content/adapters/generic';
 import type { VideoAdapter } from '../src/content/adapters/types';
-import type { VideoInfo, CustomSite } from '../src/shared/types';
-import { MSG, HEARTBEAT_INTERVAL } from '../src/shared/constants';
+import type { VideoInfo } from '../src/shared/types';
+import { MSG, HEARTBEAT_INTERVAL, STORAGE_KEYS } from '../src/shared/constants';
 import { logger } from '../src/shared/logger';
 import { startPicker, parseTimePair } from '../src/content/picker';
 import { findVideoElements } from '../src/content/videoProbe';
@@ -26,7 +27,7 @@ export default defineContentScript({
     const isInIframe = window !== window.top;
 
     /**
-     * 获取顶层页面的域名（用于自定义站点匹配）
+     * 获取顶层页面的域名（用于站点规则匹配）
      * 在 iframe 中时，尝试通过 document.referrer 或 location.ancestorOrigins 获取
      */
     function getTopDomain(): string {
@@ -117,6 +118,7 @@ export default defineContentScript({
         teardownOnInvalidated();
         return null;
       }
+      if ((message as { type?: string }).type === MSG.HEARTBEAT && !autoRecordAllowed) return null;
       try {
         return await chrome.runtime.sendMessage(message);
       } catch (err: any) {
@@ -175,135 +177,41 @@ export default defineContentScript({
       });
     }
 
-    /**
-     * 获取当前域名（用于自定义站点匹配，始终使用顶层域名）
-     */
-    function getCurrentDomain(): string {
-      return getTopDomain();
-    }
-
-    /**
-     * 检查域名是否在自定义站点列表中
-     */
-    function isInCustomSites(domain: string, customSites: CustomSite[]): boolean {
-      return customSites.some(
-        (site) => site.enabled !== false && domain.includes(site.domain)
-      );
-    }
-
-    /** 初始化：获取自定义站点列表并检测适配器 */
+    let autoRecordAllowed = false;
+    let initGeneration = 0;
     async function init() {
-      // 停止之前的重试检测
+      const generation = ++initGeneration;
+      autoRecordAllowed = false;
+      stopHeartbeat();
       stopRetryDetection();
+      stopVideoDiscoveryObserver();
       mainWorldBridgeEnabled = false;
-
-      const frameLabel = isInIframe ? '[iframe]' : '[top]';
-      logger.log(`[VideoTracker]${frameLabel} === 初始化开始 ===`);
-      logger.log(`[VideoTracker]${frameLabel} location.href: ${location.href}`);
-      logger.log(`[VideoTracker]${frameLabel} location.hostname: ${location.hostname}`);
-      logger.log(`[VideoTracker]${frameLabel} getTopDomain(): ${getTopDomain()}`);
-      logger.log(`[VideoTracker]${frameLabel} document.referrer: ${document.referrer}`);
-
-      // 检测页面中的 video 元素
-      const allVideos = findVideoElements();
-      logger.log(`[VideoTracker]${frameLabel} 当前文档 video 元素数量: ${allVideos.length}`);
-      allVideos.forEach((v, i) => {
-        logger.log(`[VideoTracker]${frameLabel}   video[${i}]: src=${v.src || v.currentSrc || '(无src)'}, duration=${v.duration}, paused=${v.paused}`);
-      });
-
-      // 检测 iframe 数量
-      const allIframes = document.querySelectorAll('iframe');
-      logger.log(`[VideoTracker]${frameLabel} 当前文档 iframe 数量: ${allIframes.length}`);
-      allIframes.forEach((iframe, i) => {
-        logger.log(`[VideoTracker]${frameLabel}   iframe[${i}]: src=${iframe.src || '(无src)'}`);
-      });
-
-      // 在 iframe 中时，跳过内置适配器检测（内置适配器基于域名，iframe 域名通常是 CDN）
-      if (!isInIframe) {
-        // 先尝试用内置适配器检测
-        currentAdapter = registry.detect();
-
-        if (currentAdapter) {
-          // 内置站点匹配成功
-          logger.log(`[VideoTracker]${frameLabel} ✅ 内置适配器匹配: ${currentAdapter.platformName}`);
-          isActivated = true;
-          startHeartbeat();
-          return;
-        }
-        logger.log(`[VideoTracker]${frameLabel} ❌ 内置适配器未匹配`);
+      isActivated = false;
+      currentAdapter = isInIframe ? genericAdapter : registry.detect() ?? genericAdapter;
+      // 恢复进度不受自动记录开关影响。
+      startResumeAttempt();
+      const response = await safeSendMessage({ type: MSG.GET_SETTINGS });
+      if (generation !== initGeneration || contextInvalidated) return;
+      const settings = response?.settings;
+      autoRecordAllowed = !!settings?.autoRecord && isSiteAutoRecordEnabled(response.pageUrl || 'https://' + getTopDomain(), settings.siteRules ?? []);
+      if (!autoRecordAllowed) return;
+      if (currentAdapter?.getVideoElement()) {
+        isActivated = true;
+        startHeartbeat({ enableBridge: currentAdapter === genericAdapter });
       } else {
-        logger.log(`[VideoTracker]${frameLabel} 跳过内置适配器检测（在 iframe 中）`);
-      }
-
-      // 内置适配器未匹配（或在 iframe 中），检查自定义站点
-      const response = await safeSendMessage({ type: MSG.GET_CUSTOM_SITES });
-      const customSites: CustomSite[] = response?.customSites ?? [];
-      logger.log(`[VideoTracker]${frameLabel} 自定义站点列表:`, customSites.map(s => `${s.domain}(${s.enabled !== false ? '启用' : '禁用'})`));
-
-      const domain = getCurrentDomain();
-      logger.log(`[VideoTracker]${frameLabel} 用于匹配的域名: ${domain}`);
-
-      if (isInCustomSites(domain, customSites)) {
-        // 注册并使用通用适配器
-        currentAdapter = genericAdapter;
-        const video = currentAdapter.getVideoElement();
-        logger.log(`[VideoTracker]${frameLabel} ✅ 自定义站点匹配成功: ${domain}`);
-        logger.log(`[VideoTracker]${frameLabel} genericAdapter.getVideoElement(): ${video ? '找到 video' : '未找到 video'}`);
-        if (video) {
-          logger.log(`[VideoTracker]${frameLabel}   video.src: ${video.src || video.currentSrc || '(无src)'}`);
-          logger.log(`[VideoTracker]${frameLabel}   video.duration: ${video.duration}`);
-          logger.log(`[VideoTracker]${frameLabel}   video.currentTime: ${video.currentTime}`);
-          logger.log(`[VideoTracker]${frameLabel}   video.paused: ${video.paused}`);
-          isActivated = true;
-          startHeartbeat({ enableBridge: true });
-        } else {
-          // 本地没有 video，尝试通过 background 探测 iframe 中的 video
-          logger.log(`[VideoTracker]${frameLabel} 本地无 video，启动 iframe 探测模式...`);
-          isActivated = true;
-          startIframeProbeHeartbeat();
-        }
-        return;
-      }
-
-      // iframe 中如果顶层域名匹配自定义站点，也尝试用通用适配器（直接检测 video）
-      if (isInIframe) {
-        logger.log(`[VideoTracker]${frameLabel} 顶层域名未匹配，尝试 iframe 自身域名...`);
-        const video = genericAdapter.getVideoElement();
-        logger.log(`[VideoTracker]${frameLabel} iframe 内 genericAdapter.getVideoElement(): ${video ? '找到 video' : '未找到 video'}`);
-        if (video) {
-          // iframe 内有 video 元素，检查顶层域名是否在自定义站点中
-          // 这里 domain 已经是 getTopDomain() 的结果
-          // 如果顶层域名不在列表中，再用 iframe 自身域名试一次
-          const iframeDomain = location.hostname;
-          logger.log(`[VideoTracker]${frameLabel} iframe 自身域名: ${iframeDomain}`);
-          if (isInCustomSites(iframeDomain, customSites)) {
-            currentAdapter = genericAdapter;
-            logger.log(`[VideoTracker]${frameLabel} ✅ iframe 域名匹配成功: ${iframeDomain}`);
+        // 仅在有 iframe 且实际探测到视频时启动持续探测。
+        if (!isInIframe && document.querySelector('iframe')) {
+          const probe = await safeSendMessage({ type: MSG.PROBE_IFRAME_VIDEO });
+          if (generation !== initGeneration || !autoRecordAllowed) return;
+          if (probe?.success && probe.videoData) {
             isActivated = true;
-            startHeartbeat({ enableBridge: true });
+            startIframeProbeHeartbeat();
             return;
           }
-          logger.log(`[VideoTracker]${frameLabel} ❌ iframe 域名也未匹配自定义站点`);
-          // 新增：如果 iframe 中有 video 且顶层域名在自定义站点中（通过 referrer 判断），直接激活
-          logger.log(`[VideoTracker]${frameLabel} 🔄 尝试无条件激活（iframe 中有 video 元素）...`);
-          currentAdapter = genericAdapter;
-          isActivated = true;
-          startHeartbeat({ enableBridge: true });
-          return;
         }
+        startRetryDetection();
+        startVideoDiscoveryObserver();
       }
-
-      // 不在任何列表中，不激活
-      if (!isInIframe) {
-        logger.log(`[VideoTracker]${frameLabel} ❌ 当前站点不在支持列表中，不激活: ${getCurrentDomain()}`);
-      } else {
-        logger.log(`[VideoTracker]${frameLabel} ❌ iframe 中未找到 video 元素，不激活`);
-      }
-
-      // 启动重试机制：每2秒检测一次，最多重试10次（20秒）
-      // 用于 WAF 验证页跳转到视频页面后 video 元素延迟加载的场景
-      startRetryDetection();
-      startVideoDiscoveryObserver();
     }
 
     /** 重试检测：每2秒检测一次，最多10次 */
@@ -330,21 +238,7 @@ export default defineContentScript({
           currentAdapter = registry.detect();
         }
 
-        if (!currentAdapter) {
-          // 再尝试自定义站点
-          const response = await safeSendMessage({ type: MSG.GET_CUSTOM_SITES });
-          const customSites: CustomSite[] = response?.customSites ?? [];
-          const domain = getCurrentDomain();
-          if (isInCustomSites(domain, customSites)) {
-            currentAdapter = genericAdapter;
-          } else if (isInIframe) {
-            // iframe 中：如果有 video 元素就直接用通用适配器
-            if (videos.length > 0) {
-              logger.log(`[VideoTracker]${frameLabel}   iframe 中发现 video，无条件激活`);
-              currentAdapter = genericAdapter;
-            }
-          }
-        }
+        if (!currentAdapter) currentAdapter = genericAdapter;
 
         if (currentAdapter) {
           // 验证是否有 video 元素
@@ -382,9 +276,11 @@ export default defineContentScript({
     function startVideoDiscoveryObserver() {
       if (discoveryObserver || contextInvalidated) return;
 
-      discoveryObserver = new MutationObserver(() => {
+      discoveryObserver = new MutationObserver((mutations) => {
         if (isActivated || contextInvalidated) return;
-        if (findVideoElements().length === 0) return;
+        const hasPlayer = mutations.some(m => [...m.addedNodes].some(n => n instanceof Element &&
+          (n.matches('video, iframe') || n.querySelector('video, iframe') || n.shadowRoot)));
+        if (!hasPlayer) return;
         void init();
       });
 
@@ -426,7 +322,7 @@ export default defineContentScript({
       const videoInfo = currentAdapter.extract();
       if (!videoInfo) return;
       lastVideoInfo = videoInfo;
-      void safeSendMessage({ type: MSG.HEARTBEAT, data: videoInfo });
+      void safeSendMessage({ type: MSG.HEARTBEAT, data: { ...videoInfo, isPlaying: false } });
     }
 
     function formatResumeTime(seconds: number): string {
@@ -528,7 +424,7 @@ export default defineContentScript({
 
     /**
      * iframe 探测模式心跳：
-     * 当顶层页面匹配自定义站点但本地没有 video 时，
+     * 当顶层页面通过探测发现 iframe 播放器时，
      * 通过 background 的 chrome.scripting.executeScript 探测所有 frame 中的 video
      */
     function startIframeProbeHeartbeat() {
@@ -694,7 +590,7 @@ export default defineContentScript({
 
         logger.log(`[VideoTracker] URL 变化: ${oldUrl} -> ${location.href}`);
 
-        // 重新检测适配器（包括重新获取自定义站点列表）
+        // 重新检测适配器（包括重新获取站点规则）
         await init();
       }
     }
@@ -983,6 +879,9 @@ export default defineContentScript({
     })();
 
     // ===== 启动 =====
-    init();
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes[STORAGE_KEYS.SETTINGS] && !contextInvalidated) void init();
+    });
+    void init();
   },
 });

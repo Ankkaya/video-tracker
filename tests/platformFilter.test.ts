@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { customPlatformOptions, matchesPlatform } from '../src/shared/platformFilter';
 
 describe('custom platform filters', () => {
-  it('lists new sites without records and preserves historical sites', () => {
-    expect(customPlatformOptions([{ domain: 'example.com', enabled: false, addedAt: 1 }], [
+  it('lists only domains present in non-built-in records', () => {
+    expect(customPlatformOptions([
       { platform: 'generic', url: 'https://player.example.com/watch' },
       { platform: 'manual', url: 'https://old.test/watch' },
       { platform: 'youtube', url: 'https://www.youtube.com/watch' },
       { platform: 'generic', url: 'invalid' },
     ])).toEqual([
-      { label: 'example.com', value: 'site:example.com' },
       { label: 'old.test', value: 'site:old.test' },
+      { label: 'player.example.com', value: 'site:player.example.com' },
     ]);
   });
   it('matches old generic and manual records by domain with subdomain boundaries', () => {

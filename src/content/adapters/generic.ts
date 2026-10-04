@@ -4,7 +4,7 @@ import { findVideoElements, pickBestVideo } from '../videoProbe';
 
 /**
  * 通用适配器
- * 用于自定义站点（非内置平台）
+ * 用于所有非内置平台
  * 依赖通用 DOM API，无需专有选择器
  */
 export const genericAdapter: VideoAdapter = {
@@ -46,7 +46,7 @@ export const genericAdapter: VideoAdapter = {
       title,
       episode: '正片',
       platform: this.platform,
-      platformName: this.platformName,
+      platformName: location.hostname,
       currentTime: video.currentTime,
       duration: video.duration || 0,
     };

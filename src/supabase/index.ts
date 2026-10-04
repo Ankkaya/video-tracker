@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import type { EncryptedPayload } from '../shared/crypto';
+export type { EncryptedPayload } from '../shared/crypto';
+export type { EncryptedSyncBlobRow as EncryptedSyncBlob } from '../shared/syncFormat';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -7,12 +10,6 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-export interface EncryptedPayload {
-  version: 1;
-  algorithm: 'AES-GCM';
-  iv: string;
-  data: string;
-}
 
 export interface UserEncryptionKey {
   user_id: string;
@@ -25,11 +22,3 @@ export interface UserEncryptionKey {
   updated_at: string;
 }
 
-export interface EncryptedSyncBlob {
-  user_id: string;
-  schema_version: number;
-  encryption_version: number;
-  encrypted_blob: EncryptedPayload;
-  created_at: string;
-  updated_at: string;
-}

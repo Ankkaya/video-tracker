@@ -11,14 +11,12 @@ import { api } from '../composables/useApi';
 import { formatTime, formatDate, platformIcons } from '../utils/format';
 import { STORAGE_KEYS } from '../../shared/constants';
 import { customPlatformOptions, matchesPlatform } from '../../shared/platformFilter';
-import { useCustomSites } from '../../shared/composables/useCustomSites';
 import { buildRecordResumeUrl } from '../../shared/resume';
 
 const { t } = useI18n();
 const message = useMessage();
 const dialog = useDialog();
 
-const customSites = useCustomSites();
 const records = ref<WatchRecord[]>([]);
 const searchQuery = ref('');
 const platformFilter = ref<string>('all');
@@ -34,7 +32,7 @@ const platformOptions = computed(() => [
   { label: t('popup.platforms.youtube'), value: 'youtube' },
   { label: t('popup.platforms.iqiyi'), value: 'iqiyi' },
   { label: t('popup.platforms.vqq'), value: 'vqq' },
-  ...customPlatformOptions(customSites.value, records.value),
+  ...customPlatformOptions(records.value),
 ]);
 
 const filteredRecords = computed(() =>

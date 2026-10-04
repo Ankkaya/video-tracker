@@ -57,7 +57,7 @@ CREATE TRIGGER set_user_encryption_keys_updated_at
 CREATE TABLE IF NOT EXISTS public.encrypted_sync_blobs (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
-  schema_version INTEGER NOT NULL DEFAULT 1,
+  schema_version INTEGER NOT NULL DEFAULT 2,
   encryption_version INTEGER NOT NULL DEFAULT 1,
   encrypted_blob JSONB NOT NULL,
 
@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS public.encrypted_sync_blobs (
 );
 
 ALTER TABLE public.encrypted_sync_blobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.encrypted_sync_blobs ALTER COLUMN schema_version SET DEFAULT 2;
+ALTER TABLE public.encrypted_sync_blobs ALTER COLUMN encryption_version SET DEFAULT 1;
 
 CREATE POLICY "Users can view own encrypted sync blob"
   ON public.encrypted_sync_blobs

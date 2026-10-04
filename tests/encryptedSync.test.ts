@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   createSyncPlaintext,
-  mergeEncryptedCustomSites,
+  validateSyncPlaintext,
+  mergeEncryptedSiteRules,
   mergeEncryptedDeletedRecords,
   mergeEncryptedRecords,
   pruneSupersededDeletedRecords,
@@ -26,16 +27,25 @@ function record(overrides: Partial<WatchRecord>): WatchRecord {
 }
 
 describe('encrypted sync data helpers', () => {
+  it('accepts only the v2 business envelope', () => {
+    expect(() => validateSyncPlaintext(createSyncPlaintext([], []))).not.toThrow();
+    for (const value of [null, { version: 1, records: [], customSites: [] },
+      { version: 3, exportedAt: 1, records: [], siteRules: [] },
+      { version: 2, exportedAt: 1, records: {}, siteRules: [] },
+      { version: 2, exportedAt: 1, records: [], siteRules: [], deletedRecords: {} }]) {
+      expect(() => validateSyncPlaintext(value)).toThrow('Unsupported sync format');
+    }
+  });
   it('creates the sync plaintext envelope', () => {
     const records = [record({ id: 'a' })];
-    const customSites = [{ domain: 'example.com', enabled: true, addedAt: 1 }];
+    const siteRules = [{ domain: 'example.com', autoRecord: true, updatedAt: 1 }];
     const deletedRecords = [{ key: 'youtube::https://example.com/video', deletedAt: 2 }];
-    const plaintext = createSyncPlaintext(records, customSites, deletedRecords);
+    const plaintext = createSyncPlaintext(records, siteRules, deletedRecords);
 
-    expect(plaintext.version).toBe(1);
+    expect(plaintext.version).toBe(2);
     expect(plaintext.records).toBe(records);
     expect(plaintext.deletedRecords).toBe(deletedRecords);
-    expect(plaintext.customSites).toBe(customSites);
+    expect(plaintext.siteRules).toBe(siteRules);
     expect(plaintext.exportedAt).toBeGreaterThan(0);
   });
 
@@ -83,12 +93,12 @@ describe('encrypted sync data helpers', () => {
     ]);
   });
 
-  it('merges custom sites by domain', () => {
-    const merged = mergeEncryptedCustomSites(
-      [{ domain: 'example.com', enabled: false, addedAt: 1 }],
-      [{ domain: 'example.com', enabled: true, addedAt: 2 }],
+  it('merges site rules by domain and update time', () => {
+    const merged = mergeEncryptedSiteRules(
+      [{ domain: 'example.com', autoRecord: false, updatedAt: 1 }],
+      [{ domain: 'example.com', autoRecord: true, updatedAt: 2 }],
     );
 
-    expect(merged).toEqual([{ domain: 'example.com', enabled: true, addedAt: 2 }]);
+    expect(merged).toEqual([{ domain: 'example.com', autoRecord: true, updatedAt: 2 }]);
   });
 });

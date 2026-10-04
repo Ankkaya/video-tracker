@@ -1,6 +1,7 @@
+import { isSiteAutoRecordEnabled } from '../src/shared/siteRules';
 import { StorageManager } from '../src/shared/storage';
 import type { VideoInfo, WatchRecord } from '../src/shared/types';
-import { MSG, STORAGE_KEYS } from '../src/shared/constants';
+import { MSG, STORAGE_KEYS, HEARTBEAT_INTERVAL } from '../src/shared/constants';
 import { ICON_SIZES, drawVideoTrackerIcon } from '../src/shared/icon';
 import { logger } from '../src/shared/logger';
 import { supabase } from '../src/supabase';
@@ -13,6 +14,7 @@ interface TimerEntry {
   lastTick: number;
   videoInfo: VideoInfo;
   saved: boolean;
+  source: string;
 }
 
 export default defineBackground(() => {
@@ -99,12 +101,12 @@ export default defineBackground(() => {
 
         await setSyncMeta({ state: 'syncing', lastError: undefined });
         const records = await StorageManager.getRecords();
-        const customSites = await StorageManager.getCustomSites();
+        const siteRules = await StorageManager.getSiteRules();
         const deletedRecords = await StorageManager.getDeletedRecords();
-        const synced = await syncEncryptedData(records, customSites, deletedRecords);
+        const synced = await syncEncryptedData(records, siteRules, deletedRecords);
         await chrome.storage.local.set({ [STORAGE_KEYS.RECORDS]: synced.records });
         await StorageManager.setDeletedRecords(synced.deletedRecords);
-        await StorageManager.updateSettings({ customSites: synced.customSites });
+        await StorageManager.updateSettings({ siteRules: synced.siteRules });
         await setSyncMeta({ state: 'success', lastSyncAt: Date.now(), lastError: undefined });
         return;
       }
@@ -195,13 +197,22 @@ export default defineBackground(() => {
     tabTitle?: string
   ): Promise<void> {
     const settings = await StorageManager.getSettings();
-    if (!settings.autoRecord) return;
+    if (!settings.autoRecord || !isSiteAutoRecordEnabled(tabUrl || videoInfo.url, settings.siteRules)) {
+      timers.delete(normalizeUrl(tabUrl || videoInfo.url));
+      return;
+    }
+    if (!Number.isFinite(videoInfo.duration) || videoInfo.duration <= 0 || !Number.isFinite(videoInfo.currentTime) || videoInfo.currentTime <= 0) return;
 
     const normalizedInfo = normalizeFrameVideoInfo(videoInfo, frameId, tabUrl, tabTitle);
+    if (normalizedInfo.platform === 'generic') normalizedInfo.platformName = new URL(normalizedInfo.url).hostname;
     const key = normalizeUrl(normalizedInfo.url);
     const now = Date.now();
 
+    const source = String(tabId) + ':' + String(frameId ?? 0);
     let entry = timers.get(key);
+    // 活跃播放器继续上报时，忽略同页其他 frame 的竞争心跳。
+    if (entry && entry.source !== source && now - entry.lastTick < HEARTBEAT_INTERVAL * 2) return;
+    if (!entry && videoInfo.isPlaying === false) return;
     if (!entry) {
       entry = {
         url: normalizedInfo.url,
@@ -209,11 +220,13 @@ export default defineBackground(() => {
         lastTick: now,
         videoInfo: normalizedInfo,
         saved: false,
+        source,
       };
       timers.set(key, entry);
     }
 
-    const elapsed = (now - entry.lastTick) / 1000;
+    entry.source = source;
+    const elapsed = videoInfo.isPlaying === false ? 0 : Math.min((now - entry.lastTick) / 1000, HEARTBEAT_INTERVAL / 1000);
     entry.accumulated += elapsed;
     entry.lastTick = now;
     entry.videoInfo = normalizedInfo;
@@ -286,8 +299,9 @@ export default defineBackground(() => {
     const entry = timers.get(key);
     if (!entry) return;
 
+    const settings = await StorageManager.getSettings();
+    if (!settings.autoRecord || !isSiteAutoRecordEnabled(entry.url, settings.siteRules)) { timers.delete(key); return; }
     if (!entry.saved) {
-      const settings = await StorageManager.getSettings();
       if (entry.accumulated >= settings.threshold) {
         await saveRecord(entry.videoInfo, entry.accumulated);
       }
@@ -368,7 +382,7 @@ export default defineBackground(() => {
         return true;
 
       case MSG.PAGE_UNLOAD:
-        handlePageUnload((data as { url: string }).url);
+        handlePageUnload(sender.frameId && sender.tab?.url ? sender.tab.url : (data as { url: string }).url);
         sendResponse({ ok: true });
         break;
 
@@ -400,7 +414,7 @@ export default defineBackground(() => {
 
       case MSG.GET_SETTINGS:
         StorageManager.getSettings()
-          .then((settings) => sendResponse({ settings }))
+          .then((settings) => sendResponse({ settings, pageUrl: sender.tab?.url }))
           .catch((err: Error) => sendResponse({ error: err.message }));
         return true;
 
@@ -416,23 +430,14 @@ export default defineBackground(() => {
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
 
-      case MSG.ADD_CUSTOM_SITE:
-        StorageManager.addCustomSite((data as { domain: string }).domain)
-          .then((customSites) => sendResponse({ success: true, customSites }))
+      case MSG.SET_SITE_RULE: {
+        const rule = data as { domain: string; autoRecord: boolean };
+        if (typeof rule.autoRecord !== 'boolean') { sendResponse({ success: false, error: 'Invalid rule' }); return; }
+        StorageManager.setSiteRule(rule.domain, rule.autoRecord)
+          .then(siteRules => sendResponse({ success: true, siteRules }))
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
-
-      case MSG.REMOVE_CUSTOM_SITE:
-        StorageManager.removeCustomSite((data as { domain: string }).domain)
-          .then((customSites) => sendResponse({ success: true, customSites }))
-          .catch((err: Error) => sendResponse({ success: false, error: err.message }));
-        return true;
-
-      case MSG.GET_CUSTOM_SITES:
-        StorageManager.getCustomSites()
-          .then((customSites) => sendResponse({ customSites }))
-          .catch((err: Error) => sendResponse({ customSites: [], error: err.message }));
-        return true;
+      }
 
       case MSG.MANUAL_ADD_RECORD: {
         const { url, title } = data as { url: string; title: string };
@@ -825,6 +830,12 @@ export default defineBackground(() => {
   chrome.storage?.onChanged?.addListener((changes, areaName) => {
     if (areaName !== 'local') return;
     const settingsChange = changes[STORAGE_KEYS.SETTINGS];
+    if (settingsChange) {
+      const settings = settingsChange.newValue;
+      for (const [key, entry] of timers) {
+        if (!settings?.autoRecord || !isSiteAutoRecordEnabled(entry.url, settings.siteRules ?? [])) timers.delete(key);
+      }
+    }
     const autoRecord = settingsChange?.newValue?.autoRecord;
     if (typeof autoRecord === 'boolean') {
       void updateActionState(autoRecord);

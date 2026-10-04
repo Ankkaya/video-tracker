@@ -1,11 +1,11 @@
 {
   "locale": "en-US",
-  "description": "VideoTracker is a video watch progress tracking tool that automatically saves and restores your viewing position across video websites. The extension periodically monitors video playback status on the page through a heartbeat mechanism, and once viewing exceeds a configurable threshold, it automatically records the playback position. The next time you open the same page, you can quickly resume from where you left off. Users can also manually save progress via a keyboard shortcut, and optionally enable Supabase cloud sync to synchronize records across multiple devices.\n\nWhat's new in 0.0.9\n• Redesigned record management, settings, and sign-in pages with clearer navigation and layout.\n• Updated extension branding and toolbar icons.\n• Added custom-site filters to the popup and record management page, including historical records and live site-list updates.\n• Updated Chinese and English interface text and store screenshots.",
-  "descriptionStatus": "Existing description retained with 0.0.9 release notes appended.",
+  "description": "VideoTracker is a video watch progress tracking tool that automatically saves and restores your viewing position across video websites. The extension periodically monitors video playback status on the page through a heartbeat mechanism, and once viewing exceeds a configurable threshold, it automatically records the playback position. The next time you open the same page, you can quickly resume from where you left off. Users can also manually save progress via a keyboard shortcut, and optionally enable Supabase cloud sync to synchronize records across multiple devices.\n\nWhat's new in 0.0.10\n• Generic recognition is enabled for other websites, with per-domain automatic recording controls.\n• Site filters use recorded domains; manual saving and playback recovery remain available independently.\n• Encrypted sync now uses the v2 site-rules format.\n• Added cloud reset for forgotten sync passwords, preserving local data and uploading it with new encryption.\n• Old keys cannot overwrite reset cloud data; other devices must unlock with the new password.",
+  "descriptionStatus": "Existing description retained with 0.0.10 release notes appended.",
   "captions": [
     "Browse watch records and filter by title, platform, and date. Sample records shown.",
     "Control automatic recording, minimum watch time, and keyboard shortcuts. Cloud sync is optional and requires sign-in.",
-    "Built-in support for Bilibili, YouTube, iQIYI, and Tencent Video, with compatible custom sites.",
+    "Built-in support for Bilibili, YouTube, iQIYI, and Tencent Video. Other compatible sites use generic detection automatically, with per-site auto-recording controls.",
     "Open recent records from the toolbar and resume watching. Actual interface with sample records."
   ],
   "searchTerms": [

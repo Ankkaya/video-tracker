@@ -1,4 +1,4 @@
-import type { WatchRecord, Settings, CustomSite } from '../../shared/types';
+import type { WatchRecord, Settings, SiteRule } from '../../shared/types';
 import { MSG } from '../../shared/constants';
 
 /** 与 background 通信的轻量封装 */
@@ -26,17 +26,9 @@ export const api = {
     await chrome.runtime.sendMessage({ type: MSG.UPDATE_SETTINGS, data: partial });
   },
 
-  async addCustomSite(domain: string): Promise<{ success: boolean; customSites?: CustomSite[]; error?: string }> {
-    try {
-      const res = await chrome.runtime.sendMessage({ type: MSG.ADD_CUSTOM_SITE, data: { domain } });
-      return res ?? { success: false };
-    } catch (err: any) {
-      return { success: false, error: err?.message };
-    }
-  },
-
-  async removeCustomSite(domain: string): Promise<CustomSite[] | null> {
-    const res = await chrome.runtime.sendMessage({ type: MSG.REMOVE_CUSTOM_SITE, data: { domain } });
-    return res?.success ? (res.customSites as CustomSite[]) : null;
+  async setSiteRule(domain: string, autoRecord: boolean): Promise<SiteRule[]> {
+    const res = await chrome.runtime.sendMessage({ type: MSG.SET_SITE_RULE, data: { domain, autoRecord } });
+    if (!res?.success) throw new Error(res?.error || 'Unable to save site rule');
+    return res.siteRules;
   },
 };

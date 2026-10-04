@@ -69,7 +69,7 @@ async function runInitialSync() {
   try {
     const localRecords = await api.getRecords();
     const settings = await api.getSettings();
-    const localSites = settings?.customSites ?? [];
+    const localSites = settings?.siteRules ?? [];
 
     if (!await hasEncryptedCloudSync()) {
       logger.log('Initial sync skipped: encrypted sync is not initialized');
@@ -87,8 +87,8 @@ async function runInitialSync() {
       return;
     }
 
-    if ('customSites' in result && Array.isArray(result.customSites)) {
-      await api.updateSettings({ customSites: result.customSites });
+    if ('siteRules' in result && Array.isArray(result.siteRules)) {
+      await api.updateSettings({ siteRules: result.siteRules });
     }
 
     recordsRef.value?.reload();
@@ -220,7 +220,7 @@ function getThemeIcon() {
           </aside>
           <main class="options-main">
             <header class="page-header"><div><h1>{{ pageTitle }}</h1><NText depth="3">{{ t(`options.layout.${showLoginView ? 'login' : activeTab}Subtitle`) }}</NText></div><div class="header-right"><NButton @click="toggleTheme" :title="t('common.theme')" :aria-label="t('common.theme')">{{ getThemeIcon() }}</NButton><NDropdown trigger="click" :options="languageOptions" @select="handleSelectLanguage"><NButton :title="t('language.title')">{{ SUPPORTED_LANGUAGES[currentLanguage] }} <svg class="language-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></NButton></NDropdown></div></header>
-            <div class="page-content" :class="{ 'settings-content': activeTab === 'settings' && !showLoginView }">
+            <div class="page-content">
               <LoginView v-if="showLoginView" @success="handleLoginSuccess" @back="handleBackToSettings" />
               <RecordsTab v-else-if="activeTab === 'records'" ref="recordsRef" />
               <SettingsTab v-else-if="activeTab === 'settings'" @login-required="handleLoginRequired" />
@@ -259,8 +259,7 @@ body { margin: 0; }
 .page-header h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.3; font-weight: 700; }
 .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .header-right .n-button { height: 38px; }
-.page-content { max-width: 1400px; margin: 0 auto; }
-.page-content.settings-content { margin-left: 0; }
+.page-content { max-width: 1400px; margin: 0; }
 html.dark .options-layout { --page-bg: #181824; --sidebar-bg: #202030; --layout-border: #343448; --muted-panel: #28283c; }
 html.dark .nav-item.active { color: #a6b4ff; background: rgba(67,97,238,.18); }
 @media (max-width: 900px) { .options-sidebar { width: 200px; padding-inline: 12px; } .sidebar-brand strong { font-size: 18px; } .options-main { margin-left: 200px; padding: 24px; } .page-header { flex-wrap: wrap; gap: 16px; } }

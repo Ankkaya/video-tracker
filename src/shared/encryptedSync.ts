@@ -1,24 +1,18 @@
 import { supabase } from '../supabase';
-import type { CustomSite, DeletedRecord, WatchRecord } from './types';
-import { decryptJson, encryptJson, type EncryptedPayload } from './crypto';
-import { requireSessionDataKey } from './keyManager';
+import type { SiteRule, DeletedRecord, WatchRecord } from './types';
+import { CRYPTO_CONFIG, decryptJson, encryptJson, deriveKek, encryptBytes, exportAesKey, generateDataKey, generateSalt } from './crypto';
+import { getVerifiedDataKey, getVerifiedKeySalt, rememberResetDataKey, requireSessionDataKey } from './keyManager';
+import { SYNC_SCHEMA_VERSION, SYNC_ENCRYPTION_VERSION, type EncryptedSyncBlobRow } from './syncFormat';
+export type { EncryptedSyncBlobRow } from './syncFormat';
 
 export interface SyncPlaintext {
-  version: 1;
+  version: typeof SYNC_SCHEMA_VERSION;
   exportedAt: number;
   records: WatchRecord[];
   deletedRecords?: DeletedRecord[];
-  customSites: CustomSite[];
+  siteRules: SiteRule[];
 }
 
-export interface EncryptedSyncBlobRow {
-  user_id: string;
-  schema_version: number;
-  encryption_version: number;
-  encrypted_blob: EncryptedPayload;
-  created_at?: string;
-  updated_at?: string;
-}
 
 function getRecordKey(record: Pick<WatchRecord, 'platform' | 'url'>): string {
   return `${record.platform}::${record.url}`;
@@ -107,8 +101,8 @@ export function pruneSupersededDeletedRecords(records: WatchRecord[], deletedRec
   });
 }
 
-export function mergeEncryptedCustomSites(localSites: CustomSite[], cloudSites: CustomSite[]): CustomSite[] {
-  const merged = new Map<string, CustomSite>();
+export function mergeEncryptedSiteRules(localSites: SiteRule[], cloudSites: SiteRule[]): SiteRule[] {
+  const merged = new Map<string, SiteRule>();
 
   for (const site of localSites) {
     merged.set(site.domain, site);
@@ -116,7 +110,7 @@ export function mergeEncryptedCustomSites(localSites: CustomSite[], cloudSites: 
 
   for (const site of cloudSites) {
     const existing = merged.get(site.domain);
-    if (!existing || site.addedAt >= existing.addedAt) {
+    if (!existing || site.updatedAt >= existing.updatedAt) {
       merged.set(site.domain, site);
     }
   }
@@ -139,21 +133,21 @@ async function getCurrentUserId(): Promise<string> {
 
 export function createSyncPlaintext(
   records: WatchRecord[],
-  customSites: CustomSite[],
+  siteRules: SiteRule[],
   deletedRecords: DeletedRecord[] = [],
 ): SyncPlaintext {
   return {
-    version: 1,
+    version: SYNC_SCHEMA_VERSION,
     exportedAt: Date.now(),
     records,
     deletedRecords,
-    customSites,
+    siteRules,
   };
 }
 
 export async function uploadEncryptedSyncBlob(
   records: WatchRecord[],
-  customSites: CustomSite[],
+  siteRules: SiteRule[],
   deletedRecords: DeletedRecord[] = [],
 ): Promise<EncryptedSyncBlobRow> {
   if (!supabase) {
@@ -161,12 +155,16 @@ export async function uploadEncryptedSyncBlob(
   }
 
   const userId = await getCurrentUserId();
-  const dataKey = await requireSessionDataKey();
-  const encryptedBlob = await encryptJson(createSyncPlaintext(records, customSites, deletedRecords), dataKey);
+  const { key: dataKey, salt: keySalt } = await getVerifiedDataKey();
+  const encryptedBlob = await encryptJson(createSyncPlaintext(records, siteRules, deletedRecords), dataKey);
+  if (keySalt !== await getVerifiedKeySalt()) {
+    throw new Error('Cloud encryption changed during sync. Please sync again.');
+  }
+  encryptedBlob.key_salt = keySalt;
   const row = {
     user_id: userId,
-    schema_version: 1,
-    encryption_version: 1,
+    schema_version: SYNC_SCHEMA_VERSION,
+    encryption_version: SYNC_ENCRYPTION_VERSION,
     encrypted_blob: encryptedBlob,
   };
 
@@ -181,6 +179,39 @@ export async function uploadEncryptedSyncBlob(
   }
 
   return data as EncryptedSyncBlobRow;
+}
+
+/** The RPC replaces both rows in one transaction and rejects concurrent key changes. */
+export async function resetEncryptedCloudData(password: string, records: WatchRecord[], siteRules: SiteRule[], deletedRecords: DeletedRecord[] = []) {
+  if (!supabase) throw new Error('Supabase not configured');
+  if (!password.trim()) throw new Error('Please enter a new sync password.');
+  const userId = await getCurrentUserId();
+  const { data: previous, error: readError } = await supabase.from('user_encryption_keys')
+    .select('salt').eq('user_id', userId).maybeSingle();
+  if (readError) throw readError;
+  const key = await generateDataKey();
+  const salt = generateSalt();
+  const kek = await deriveKek(password, salt);
+  const wrapped = await encryptBytes(await exportAesKey(key), kek);
+  wrapped.reset_version = 1;
+  const blob = await encryptJson(createSyncPlaintext(records, siteRules, deletedRecords), key);
+  blob.key_salt = salt;
+  const { error } = await supabase.rpc('reset_encrypted_sync', {
+    p_expected_salt: previous?.salt ?? null,
+    p_salt: salt,
+    p_encrypted_data_key: wrapped,
+    p_encrypted_blob: blob,
+    p_kdf_iterations: CRYPTO_CONFIG.kdfIterations,
+  });
+  if (error) throw error;
+  // Do not replace the local key until the cloud transaction has committed.
+  try {
+    await rememberResetDataKey(key, salt, userId);
+  } catch {
+    // Cloud reset succeeded; the user can unlock with their new password.
+    return { deviceRemembered: false };
+  }
+  return { deviceRemembered: true };
 }
 
 export async function downloadEncryptedSyncBlob(): Promise<SyncPlaintext | null> {
@@ -205,33 +236,46 @@ export async function downloadEncryptedSyncBlob(): Promise<SyncPlaintext | null>
   }
 
   const row = data as EncryptedSyncBlobRow;
-  if (row.schema_version > 1 || row.encryption_version > 1) {
-    throw new Error('云端同步数据由更高版本创建，请升级插件后再同步。');
+  if (row.schema_version !== SYNC_SCHEMA_VERSION) {
+    throw new Error('云端同步格式不受支持。旧格式请使用当前设备数据重置云端同步；更高版本请升级插件。');
   }
+  if (row.encryption_version !== SYNC_ENCRYPTION_VERSION) throw new Error('Unsupported encryption version');
 
   try {
-    return await decryptJson<SyncPlaintext>(row.encrypted_blob, dataKey);
+    const plaintext = await decryptJson<SyncPlaintext>(row.encrypted_blob, dataKey);
+    validateSyncPlaintext(plaintext);
+    return plaintext;
   } catch {
     throw new Error('云端同步数据无法解密。请检查同步加密密码，或使用当前设备数据重置云端同步。');
   }
 }
 
+export function validateSyncPlaintext(value: unknown): asserts value is SyncPlaintext {
+  const data = value as Partial<SyncPlaintext> | null;
+  if (!data || data.version !== SYNC_SCHEMA_VERSION
+    || !Number.isFinite(data.exportedAt)
+    || !Array.isArray(data.records) || !Array.isArray(data.siteRules)
+    || (data.deletedRecords !== undefined && !Array.isArray(data.deletedRecords))) {
+    throw new Error('Unsupported sync format: expected v2 records and siteRules');
+  }
+}
+
 export async function syncEncryptedData(
   localRecords: WatchRecord[],
-  localSites: CustomSite[],
+  localSites: SiteRule[],
   localDeletedRecords: DeletedRecord[] = [],
 ) {
   const cloudPlaintext = await downloadEncryptedSyncBlob();
   const mergedDeletedRecords = mergeEncryptedDeletedRecords(localDeletedRecords, cloudPlaintext?.deletedRecords ?? []);
   const mergedRecords = mergeEncryptedRecords(localRecords, cloudPlaintext?.records ?? [], mergedDeletedRecords);
   const activeDeletedRecords = pruneSupersededDeletedRecords(mergedRecords, mergedDeletedRecords);
-  const mergedSites = mergeEncryptedCustomSites(localSites, cloudPlaintext?.customSites ?? []);
+  const mergedSites = mergeEncryptedSiteRules(localSites, cloudPlaintext?.siteRules ?? []);
 
   await uploadEncryptedSyncBlob(mergedRecords, mergedSites, activeDeletedRecords);
 
   return {
     records: mergedRecords,
     deletedRecords: activeDeletedRecords,
-    customSites: mergedSites,
+    siteRules: mergedSites,
   };
 }

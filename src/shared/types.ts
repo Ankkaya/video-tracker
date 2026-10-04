@@ -22,11 +22,11 @@ export interface DeletedRecord {
   deletedAt: number;
 }
 
-/** 自定义站点 */
-export interface CustomSite {
+/** 按域名控制自动记录，默认允许 */
+export interface SiteRule {
   domain: string;
-  enabled: boolean;
-  addedAt: number;
+  autoRecord: boolean;
+  updatedAt: number;
 }
 
 /** 插件设置 */
@@ -35,11 +35,13 @@ export interface Settings {
   autoSync: boolean;
   threshold: number; // 最低观看时长阈值（秒）
   shortcut: string;
-  customSites: CustomSite[];
+  siteRules: SiteRule[];
 }
 
 /** 视频信息（Content Script 提取） */
 export interface VideoInfo {
+  /** pause/seeked 上报仅更新进度，不累计观看时长 */
+  isPlaying?: boolean;
   url: string;
   title: string;
   episode: string;

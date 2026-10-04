@@ -32,7 +32,7 @@ The extension uses the chrome.identity API to implement OAuth third-party login 
 
 ### Host Permission Justification
 
-The extension uses the *://*/* host permission to support any video website. The core value of the extension is cross-site video progress tracking, and users may watch videos on websites of any domain. Built-in adapters cover Bilibili, YouTube, iQiyi, and Tencent Video, while also supporting user-defined custom sites. The content scripts and MAIN world bridge scripts only read video element playback state and do not read, modify, or transmit any other page content.
+The extension uses the *://*/* host permission to support any video website. The core value of the extension is cross-site video progress tracking, and users may watch videos on websites of any domain. Built-in adapters cover Bilibili, YouTube, iQiyi, and Tencent Video, while also supporting automatic generic detection on other compatible websites. The content scripts and MAIN world bridge scripts only read video element playback state and do not read, modify, or transmit any other page content.
 
 ### Remote Code
 

@@ -2,7 +2,7 @@
 import { h, ref, onMounted, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  NCard, NSwitch, NSelect, NSpace, NText, NDivider, NInput, useDialog, useMessage,
+  NCard, NSwitch, NSelect, NSpace, NText, NDivider, NInput, NModal, NAlert, NCheckbox, NButton, useDialog, useMessage,
 } from 'naive-ui';
 import type { Settings } from '../../shared/types';
 import { THRESHOLD_OPTIONS, DEFAULT_SETTINGS, STORAGE_KEYS } from '../../shared/constants';
@@ -26,17 +26,73 @@ const {
   syncMeta,
   loadSyncMeta,
   hasEncryptedCloudSync,
-  isEncryptedSyncUnlocked,
   restoreEncryptedSyncUnlock,
   initializeEncryptedSync,
   unlockEncryptedSync,
   syncEncryptedRecordsAndSites,
+  resetEncryptedSync,
 } = useSync();
 const encryptionInitialized = ref(false);
 const encryptionUnlocked = ref(false);
 const encryptionBusy = ref(false);
 const encryptionStateLoading = ref(false);
 const encryptionDialogOpen = ref(false);
+const showReset = ref(false);
+const newSyncPassword = ref('');
+const confirmSyncPassword = ref('');
+const resetAcknowledged = ref(false);
+const resetError = ref('');
+
+function openReset() {
+  if (encryptionBusy.value || isSyncing.value || encryptionDialogOpen.value || encryptionStateLoading.value) return;
+  newSyncPassword.value = '';
+  confirmSyncPassword.value = '';
+  resetAcknowledged.value = false;
+  resetError.value = '';
+  showReset.value = true;
+}
+
+async function handleReset() {
+  if (encryptionBusy.value || isSyncing.value) return;
+  if (!newSyncPassword.value.trim()) {
+    resetError.value = t('options.settings.pleaseEnterEncryptionPassword');
+    return;
+  }
+  if (newSyncPassword.value !== confirmSyncPassword.value) {
+    resetError.value = t('options.settings.passwordMismatch');
+    return;
+  }
+  if (!resetAcknowledged.value) return;
+  encryptionBusy.value = true;
+  resetError.value = '';
+  const previousAutoSync = settings.value.autoSync;
+  try {
+    // Pause background uploads; server-side guards also reject in-flight stale writes.
+    await api.updateSettings({ autoSync: false });
+    settings.value.autoSync = false;
+    const result = await resetEncryptedSync(newSyncPassword.value);
+    if (!result.success) {
+      resetError.value = `${t('options.settings.resetSyncFailed')} ${result.error ?? ''}`;
+      return;
+    }
+    encryptionInitialized.value = true;
+    encryptionUnlocked.value = Boolean(result.deviceRemembered);
+    showReset.value = false;
+    newSyncPassword.value = '';
+    confirmSyncPassword.value = '';
+    message.success(t('options.settings.resetSyncSuccess'));
+    if (!result.deviceRemembered) {
+      message.warning(t('options.settings.resetSyncRememberFailed'));
+    } else if (previousAutoSync) {
+      await api.updateSettings({ autoSync: true });
+      settings.value.autoSync = true;
+    }
+  } catch (error: any) {
+    resetError.value = `${t('options.settings.resetSyncFailed')} ${error.message}`;
+  } finally {
+    encryptionBusy.value = false;
+  }
+}
 
 const thresholdOptions = computed(() => THRESHOLD_OPTIONS.map((threshold) => ({
   label: threshold === 0 ? t('options.settings.immediateRecord') : `${threshold} ${t('common.seconds')}`,
@@ -86,7 +142,7 @@ async function persist() {
 }
 
 async function handleAutoSyncChange(val: boolean) {
-  if (encryptionBusy.value || encryptionDialogOpen.value || encryptionStateLoading.value) return;
+  if (encryptionBusy.value || encryptionDialogOpen.value || encryptionStateLoading.value || showReset.value) return;
 
   if (!val) {
     settings.value.autoSync = false;
@@ -103,7 +159,7 @@ async function handleAutoSyncChange(val: boolean) {
   try {
     await refreshEncryptionState();
     const localRecords = await api.getRecords();
-    const localSites = settings.value.customSites ?? [];
+    const localSites = settings.value.siteRules ?? [];
 
     if (!encryptionInitialized.value || !encryptionUnlocked.value) {
       const password = await promptEncryptionPassword(
@@ -136,9 +192,9 @@ async function handleAutoSyncChange(val: boolean) {
         message.error(syncResult.error || t('options.settings.syncFailed'));
         return;
       }
-      if ('customSites' in syncResult && syncResult.customSites) {
-        settings.value.customSites = syncResult.customSites;
-        await api.updateSettings({ customSites: syncResult.customSites });
+      if ('siteRules' in syncResult && syncResult.siteRules) {
+        settings.value.siteRules = syncResult.siteRules;
+        await api.updateSettings({ siteRules: syncResult.siteRules });
       }
     }
 
@@ -149,6 +205,7 @@ async function handleAutoSyncChange(val: boolean) {
 }
 
 async function handleSync() {
+  if (encryptionBusy.value || isSyncing.value || showReset.value) return;
   if (!isLoggedIn.value) {
     emit('loginRequired');
     return;
@@ -189,7 +246,7 @@ async function refreshEncryptionState() {
   try {
     encryptionInitialized.value = await hasEncryptedCloudSync();
     encryptionUnlocked.value = encryptionInitialized.value
-      ? isEncryptedSyncUnlocked() || await restoreEncryptedSyncUnlock()
+      ? await restoreEncryptedSyncUnlock()
       : false;
 
     if (encryptionInitialized.value && !encryptionUnlocked.value && settings.value.autoSync) {
@@ -291,15 +348,15 @@ async function handleEncryptedSync() {
   encryptionBusy.value = true;
   try {
     const localRecords = await api.getRecords();
-    const result = await syncEncryptedRecordsAndSites(localRecords || [], settings.value.customSites ?? []);
+    const result = await syncEncryptedRecordsAndSites(localRecords || [], settings.value.siteRules ?? []);
     if (!result.success) {
       message.error(result.error || t('options.settings.syncFailed'));
       return;
     }
 
-    if ('customSites' in result && result.customSites) {
-      settings.value.customSites = result.customSites;
-      await api.updateSettings({ customSites: result.customSites });
+    if ('siteRules' in result && result.siteRules) {
+      settings.value.siteRules = result.siteRules;
+      await api.updateSettings({ siteRules: result.siteRules });
     }
 
     message.success(t('options.settings.encryptedSyncSuccess'));
@@ -417,6 +474,9 @@ function getSyncStatusActionText() {
               <NText depth="3" style="font-size: 13px">
                 {{ t('options.settings.syncStatus') }}
               </NText>
+              <NText v-if="isLoggedIn && lastSyncTime" class="last-sync-description" depth="3" style="font-size: 12px; margin-left: 12px">
+                {{ t('options.settings.lastSync') }}：{{ lastSyncTime }}
+              </NText>
             </div>
             <button
               class="sync-status-wrapper"
@@ -429,21 +489,11 @@ function getSyncStatusActionText() {
               <span class="sync-status-text">{{ getSyncStatusActionText() }}</span>
             </button>
           </div>
-          <div class="setting-row" v-if="isLoggedIn && lastSyncTime">
-            <div class="setting-info">
-              <NText depth="3" style="font-size: 13px">
-                {{ t('options.settings.lastSync') }}
-              </NText>
-            </div>
-            <NText depth="3" style="font-size: 13px">
-              {{ lastSyncTime }}
-            </NText>
-          </div>
+          <NText v-if="isLoggedIn && syncMeta.state === 'error' && syncMeta.lastError" type="error" style="display: block; overflow-wrap: anywhere" role="alert">
+            {{ syncMeta.lastError }}
+          </NText>
           <div class="setting-row" v-if="isLoggedIn">
             <div class="setting-info">
-              <NText depth="3" style="font-size: 13px">
-                {{ t('options.settings.autoSync') }}
-              </NText>
               <NText depth="3" style="font-size: 12px">
                 {{ t('options.settings.autoSyncDesc') }}
               </NText>
@@ -454,11 +504,42 @@ function getSyncStatusActionText() {
               @update:value="handleAutoSyncChange"
             />
           </div>
+          <div v-if="isLoggedIn && encryptionInitialized" class="reset-sync-entry">
+            <NButton text type="error" :disabled="encryptionBusy || isSyncing" @click="openReset">
+              {{ t('options.settings.resetSyncEntry') }}
+            </NButton>
+          </div>
         </NSpace>
       </div>
     </NSpace>
   </NCard>
   <NText depth="3" class="settings-save-note">ⓘ {{ t('options.layout.autoSave') }}</NText>
+  <NModal v-model:show="showReset" preset="card" :title="t('options.settings.resetSyncTitle')"
+    style="width: min(520px, calc(100vw - 32px))" :closable="!encryptionBusy"
+    :mask-closable="!encryptionBusy" :close-on-esc="!encryptionBusy">
+    <NSpace vertical :size="16">
+      <NAlert type="warning" :title="t('options.settings.resetSyncWarningTitle')">
+        {{ t('options.settings.resetSyncWarning') }}
+      </NAlert>
+      <label>{{ t('options.settings.newSyncPassword') }}
+        <NInput v-model:value="newSyncPassword" type="password" show-password-on="click" :disabled="encryptionBusy" />
+      </label>
+      <label>{{ t('options.settings.confirmEncryptionPassword') }}
+        <NInput v-model:value="confirmSyncPassword" type="password" show-password-on="click" :disabled="encryptionBusy" />
+      </label>
+      <NText depth="3">{{ t('options.settings.resetSyncOtherDevices') }}</NText>
+      <NCheckbox v-model:checked="resetAcknowledged" :disabled="encryptionBusy">
+        {{ t('options.settings.resetSyncAcknowledgement') }}
+      </NCheckbox>
+      <NAlert v-if="resetError" type="error">{{ resetError }}</NAlert>
+      <NSpace justify="end">
+        <NButton :disabled="encryptionBusy" @click="showReset = false">{{ t('common.cancel') }}</NButton>
+        <NButton type="error" :loading="encryptionBusy" :disabled="!resetAcknowledged || encryptionBusy" @click="handleReset">
+          {{ t('options.settings.resetSyncConfirm') }}
+        </NButton>
+      </NSpace>
+    </NSpace>
+  </NModal>
   </div>
 </template>
 
@@ -467,13 +548,13 @@ function getSyncStatusActionText() {
 .settings-cards :deep(.n-card) { border-radius: 10px; }
 .settings-cards :deep(.n-card-header) { padding: 22px 24px 16px; font-weight: 600; }
 .settings-cards :deep(.n-card__content) { padding: 0 24px 24px; }
-.shortcut-card :deep(.shortcut-status:not(.warning)) { display: grid; grid-template-columns: minmax(0, 360px) auto; column-gap: 20px; align-items: center; justify-content: start; }
+.shortcut-card :deep(.shortcut-status:not(.warning)) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 20px; align-items: center; }
 .shortcut-card :deep(.shortcut-heading) { display: contents; }
 .shortcut-card :deep(.shortcut-heading > span) { grid-column: 1; grid-row: 1; }
-.shortcut-card :deep(kbd) { grid-column: 2; grid-row: 1; justify-self: start; }
+.shortcut-card :deep(kbd) { grid-column: 2; grid-row: 1; justify-self: end; }
 .shortcut-card :deep(.shortcut-status > p) { grid-column: 1; }
 .shortcut-card :deep(.shortcut-actions) { grid-column: 1 / -1; grid-row: 3; justify-content: flex-start; }
-.shortcut-card :deep(.shortcut-heading) { justify-content: flex-start; }
+.shortcut-card :deep(.shortcut-heading) { justify-content: space-between; }
 @media (max-width: 600px) { .shortcut-card :deep(.shortcut-status:not(.warning)) { display: block; } .shortcut-card :deep(.shortcut-heading) { display: flex; } .shortcut-card :deep(.shortcut-actions) { justify-content: flex-start; } }
 .settings-save-note { font-size: 13px; }
 .setting-section > .n-space { background: var(--muted-panel); border-radius: 8px; padding: 16px; }
@@ -482,12 +563,16 @@ function getSyncStatusActionText() {
 .setting-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 20px;
   padding: 8px 0;
 }
 .setting-info {
-  flex: 0 1 360px;
-  margin-right: 20px;
+  flex: 1;
+  min-width: 0;
+}
+.setting-row > :last-child:not(.setting-info) {
+  flex-shrink: 0;
 }
 .setting-label {
   font-size: 15px;
@@ -585,6 +670,14 @@ html.dark kbd {
 
 html.dark .setting-row span {
   color: #e0e0e0;
+}
+
+.setting-row .last-sync-description {
+  color: #6b7280;
+}
+
+html.dark .setting-row .last-sync-description {
+  color: #9ca3af;
 }
 
 html.dark .sync-status-wrapper {

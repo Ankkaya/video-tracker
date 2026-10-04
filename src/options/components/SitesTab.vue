@@ -1,123 +1,84 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {
-  NCard, NInput, NButton, NSpace, NTag, NText, NList, NListItem,
-  NThing, NEmpty, NInputGroup, NPopconfirm, useMessage,
-} from 'naive-ui';
-import type { CustomSite } from '../../shared/types';
+import { NCard, NInput, NButton, NSpace, NText, NList, NListItem, NThing, NInputGroup, NSwitch, useMessage } from 'naive-ui';
+import type { SiteRule, WatchRecord } from '../../shared/types';
 import { api } from '../composables/useApi';
-import { BUILTIN_SITES, isValidDomain } from '../utils/format';
+import { BUILTIN_SITES } from '../utils/format';
+import { normalizeDomain, isSiteAutoRecordEnabled } from '../../shared/siteRules';
 import { STORAGE_KEYS } from '../../shared/constants';
 
 const { t } = useI18n();
 const message = useMessage();
-
-const customSites = ref<CustomSite[]>([]);
-const newSiteDomain = ref('');
-
-onMounted(loadSites);
-onMounted(() => {
-  chrome.storage.onChanged.addListener(onStorageChanged);
+const rules = ref<SiteRule[]>([]);
+const records = ref<WatchRecord[]>([]);
+const newDomain = ref('');
+const saving = ref(false);
+const otherDomains = computed(() => {
+  const domains = new Set(rules.value.map(r => r.domain));
+  for (const record of records.value) {
+    try {
+      const domain = new URL(record.url).hostname;
+      if (!BUILTIN_SITES.some(s => domain === s.domain || domain.endsWith('.' + s.domain))) domains.add(domain);
+    } catch {}
+  }
+  return [...domains].filter(domain => !BUILTIN_SITES.some(s => domain === s.domain)).sort();
 });
-
-onUnmounted(() => {
-  chrome.storage.onChanged.removeListener(onStorageChanged);
-});
-
-function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>, areaName: string) {
-  if (areaName === 'local' && changes[STORAGE_KEYS.SETTINGS]) {
-    void loadSites();
-  }
+function enabled(domain: string) { return isSiteAutoRecordEnabled('https://' + domain, rules.value); }
+async function load() {
+  const [settings, saved] = await Promise.all([api.getSettings(), api.getRecords()]);
+  rules.value = settings?.siteRules ?? [];
+  records.value = saved;
 }
-
-async function loadSites() {
-  const s = await api.getSettings();
-  if (s) customSites.value = s.customSites ?? [];
+async function setRule(domain: string, value: boolean) {
+  saving.value = true;
+  try { rules.value = await api.setSiteRule(domain, value); }
+  catch { message.error(t('options.sites.saveFailed')); }
+  finally { saving.value = false; }
 }
-
-async function addCustomSite() {
-  const domain = newSiteDomain.value.trim().toLowerCase();
-  if (!domain) return message.warning(t('options.sites.validation.emptyDomain'));
-  if (!isValidDomain(domain)) return message.warning(t('options.sites.validation.invalidDomain'));
-  if (customSites.value.some((s) => s.domain === domain))
-    return message.warning(t('options.sites.validation.siteExists'));
-  if (BUILTIN_SITES.some((s) => s.domain === domain))
-    return message.warning(t('options.sites.validation.builtinSite'));
-
-  const res = await api.addCustomSite(domain);
-  if (res.success && res.customSites) {
-    customSites.value = res.customSites;
-    newSiteDomain.value = '';
-    message.success(t('options.sites.addSuccess', { domain }));
-  } else {
-    message.error(res.error || t('options.sites.addFailed'));
-  }
+async function disableDomain() {
+  let domain: string;
+  try { domain = normalizeDomain(newDomain.value); }
+  catch { message.warning(t('options.sites.validation.invalidDomain')); return; }
+  await setRule(domain, false);
+  if (!enabled(domain)) newDomain.value = '';
 }
-
-async function removeCustomSite(domain: string) {
-  const updated = await api.removeCustomSite(domain);
-  if (updated) {
-    customSites.value = updated;
-    message.success(t('options.sites.deleteSuccess'));
-  }
+function changed(changes: Record<string, chrome.storage.StorageChange>, area: string) {
+  if (area === 'local' && (changes[STORAGE_KEYS.SETTINGS] || changes[STORAGE_KEYS.RECORDS])) void load();
 }
-
+onMounted(() => { chrome.storage.onChanged.addListener(changed); void load(); });
+onUnmounted(() => chrome.storage.onChanged.removeListener(changed));
 </script>
 
 <template>
   <NSpace vertical :size="20">
+    <NText depth="3">{{ t('options.sites.description') }}</NText>
     <NCard :title="t('options.sites.builtinTitle')" size="small">
-      <NList hoverable>
+      <NList>
         <NListItem v-for="site in BUILTIN_SITES" :key="site.domain">
-          <NThing>
-            <template #avatar>
-              <span style="font-size: 20px">{{ site.icon }}</span>
-            </template>
-            <template #header>{{ site.name }}</template>
-            <template #description>
-              <NText depth="3">{{ site.domain }}</NText>
-            </template>
+          <NThing :title="site.name" :description="site.domain">
+            <template #avatar><img :src="site.icon" alt="" width="32" height="32" class="site-icon" /></template>
           </NThing>
-          <template #suffix>
-            <NTag type="success" :bordered="false" size="small">{{ t('common.builtin') }}</NTag>
-          </template>
+          <template #suffix><NSwitch :value="enabled(site.domain)" :disabled="saving" :aria-label="t('options.sites.autoRecordFor', { domain: site.domain })" @update:value="setRule(site.domain, $event)" /></template>
         </NListItem>
       </NList>
     </NCard>
-
-    <NCard :title="t('options.sites.customTitle')" size="small">
-      <NText depth="3" style="display: block; margin-bottom: 12px; font-size: 13px">
-        {{ t('options.sites.customDesc') }}
-      </NText>
-      <NInputGroup style="margin-bottom: 12px">
-        <NInput
-          v-model:value="newSiteDomain"
-          :placeholder="t('options.sites.domainPlaceholder')"
-          @keydown.enter="addCustomSite"
-        />
-        <NButton type="primary" @click="addCustomSite">{{ t('options.sites.add') }}</NButton>
+    <NCard :title="t('options.sites.otherTitle')" size="small">
+      <NText depth="3" style="display: block; margin-bottom: 12px">{{ t('options.sites.otherDesc') }}</NText>
+      <NInputGroup>
+        <NInput v-model:value="newDomain" :placeholder="t('options.sites.domainPlaceholder')" @keydown.enter="disableDomain" />
+        <NButton :loading="saving" @click="disableDomain">{{ t('options.sites.add') }}</NButton>
       </NInputGroup>
-
-      <NList v-if="customSites.length > 0" hoverable>
-        <NListItem v-for="site in customSites" :key="site.domain">
-          <NThing>
-            <template #avatar>
-              <span style="font-size: 20px">🌐</span>
-            </template>
-            <template #header>{{ site.domain }}</template>
-          </NThing>
-          <template #suffix>
-            <NPopconfirm @positive-click="removeCustomSite(site.domain)">
-              <template #trigger>
-                <NButton size="small" quaternary type="error">✕</NButton>
-              </template>
-              {{ t('options.sites.confirmDelete') }}
-            </NPopconfirm>
-          </template>
+      <NList v-if="otherDomains.length">
+        <NListItem v-for="domain in otherDomains" :key="domain">
+          <NThing :title="domain"><template #avatar>🌐</template></NThing>
+          <template #suffix><NSwitch :value="enabled(domain)" :disabled="saving" :aria-label="t('options.sites.autoRecordFor', { domain })" @update:value="setRule(domain, $event)" /></template>
         </NListItem>
       </NList>
-      <NEmpty v-else :description="t('options.sites.emptyDescription')" style="padding: 24px 0" />
     </NCard>
   </NSpace>
 </template>
+
+<style scoped>
+.site-icon { display: block; object-fit: contain; }
+</style>

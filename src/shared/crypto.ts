@@ -9,6 +9,8 @@ export const CRYPTO_CONFIG = {
 } as const;
 
 export interface EncryptedPayload {
+  key_salt?: string;
+  reset_version?: number;
   version: 1;
   algorithm: typeof CRYPTO_CONFIG.algorithm;
   iv: string;

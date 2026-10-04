@@ -1,4 +1,5 @@
-import type { WatchRecord, Settings, CustomSite, DeletedRecord } from './types';
+import { normalizeDomain } from './siteRules';
+import type { WatchRecord, Settings, SiteRule, DeletedRecord } from './types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from './constants';
 
 function getRecordKey(record: Pick<WatchRecord, 'platform' | 'url'>): string {
@@ -103,7 +104,14 @@ export const StorageManager = {
   /** 获取设置（带默认值） */
   async getSettings(): Promise<Settings> {
     const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-    return { ...DEFAULT_SETTINGS, ...result[STORAGE_KEYS.SETTINGS] };
+    const stored = result[STORAGE_KEYS.SETTINGS] ?? {};
+    return {
+      autoRecord: stored.autoRecord ?? DEFAULT_SETTINGS.autoRecord,
+      autoSync: stored.autoSync ?? DEFAULT_SETTINGS.autoSync,
+      threshold: stored.threshold ?? DEFAULT_SETTINGS.threshold,
+      shortcut: stored.shortcut ?? DEFAULT_SETTINGS.shortcut,
+      siteRules: stored.siteRules ?? [],
+    };
   },
 
   /** 更新设置（合并） */
@@ -114,37 +122,15 @@ export const StorageManager = {
     });
   },
 
-  // ====== Custom Sites ======
-
-  /** 获取自定义站点列表 */
-  async getCustomSites(): Promise<CustomSite[]> {
-    const settings = await this.getSettings();
-    return settings.customSites ?? [];
+  async getSiteRules(): Promise<SiteRule[]> {
+    return (await this.getSettings()).siteRules;
   },
 
-  /** 添加自定义站点 */
-  async addCustomSite(domain: string): Promise<CustomSite[]> {
-    const settings = await this.getSettings();
-    const sites = settings.customSites ?? [];
-    if (sites.some((s) => s.domain === domain)) {
-      return sites; // 已存在
-    }
-    const newSite: CustomSite = {
-      domain,
-      enabled: true,
-      addedAt: Date.now(),
-    };
-    const updated = [...sites, newSite];
-    await this.updateSettings({ customSites: updated });
-    return updated;
-  },
-
-  /** 删除自定义站点 */
-  async removeCustomSite(domain: string): Promise<CustomSite[]> {
-    const settings = await this.getSettings();
-    const sites = settings.customSites ?? [];
-    const updated = sites.filter((s) => s.domain !== domain);
-    await this.updateSettings({ customSites: updated });
+  async setSiteRule(domain: string, autoRecord: boolean): Promise<SiteRule[]> {
+    domain = normalizeDomain(domain);
+    const sites = await this.getSiteRules();
+    const updated = [...sites.filter(s => s.domain !== domain), { domain, autoRecord, updatedAt: Date.now() }];
+    await this.updateSettings({ siteRules: updated });
     return updated;
   },
 };

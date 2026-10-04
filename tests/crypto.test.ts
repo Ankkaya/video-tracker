@@ -49,9 +49,9 @@ describe('encrypted sync crypto helpers', () => {
   it('encrypts and decrypts JSON with a Data Key', async () => {
     const key = await generateDataKey();
     const value = {
-      version: 1,
+      version: 2,
       records: [{ id: '1', title: '测试视频', progress: 0.5 }],
-      customSites: [{ domain: 'example.com', enabled: true }],
+      siteRules: [{ domain: 'example.com', autoRecord: true, updatedAt: 1 }],
     };
 
     const encrypted = await encryptJson(value, key);

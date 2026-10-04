@@ -26,8 +26,12 @@ export interface UserEncryptionKeyRow {
 }
 
 let sessionDataKey: CryptoKey | null = null;
+let sessionKeySalt: string | null = null;
+let sessionUserId: string | null = null;
 
 interface StoredDeviceKey {
+  keySalt?: string;
+  userId?: string;
   version: 1;
   algorithm: typeof CRYPTO_CONFIG.algorithm;
   dataKey: string;
@@ -71,6 +75,8 @@ export function getSessionDataKey(): CryptoKey | null {
 
 export function clearSessionDataKey() {
   sessionDataKey = null;
+  sessionKeySalt = null;
+  sessionUserId = null;
 }
 
 export async function rememberSessionDataKey() {
@@ -78,6 +84,8 @@ export async function rememberSessionDataKey() {
 
   const rawDataKey = await exportAesKey(sessionDataKey);
   const stored: StoredDeviceKey = {
+    ...(sessionKeySalt ? { keySalt: sessionKeySalt } : {}),
+    ...(sessionUserId ? { userId: sessionUserId } : {}),
     version: 1,
     algorithm: CRYPTO_CONFIG.algorithm,
     dataKey: bytesToBase64(rawDataKey),
@@ -97,6 +105,8 @@ export async function restoreRememberedDataKey(): Promise<CryptoKey | null> {
   }
 
   sessionDataKey = await importAesKey(base64ToBytes(stored.dataKey));
+  sessionKeySalt = stored.keySalt ?? null;
+  sessionUserId = stored.userId ?? null;
   return sessionDataKey;
 }
 
@@ -142,6 +152,8 @@ export async function initializeEncryption(password: string): Promise<UserEncryp
   }
 
   sessionDataKey = dataKey;
+  sessionKeySalt = salt;
+  sessionUserId = userId;
   await rememberSessionDataKey();
   return data as UserEncryptionKeyRow;
 }
@@ -157,6 +169,8 @@ export async function unlockEncryption(password: string): Promise<CryptoKey> {
     const kek = await deriveKek(password, row.salt, row.kdf_iterations);
     const rawDataKey = await decryptBytes(row.encrypted_data_key, kek);
     sessionDataKey = await importAesKey(rawDataKey);
+    sessionKeySalt = row.salt;
+    sessionUserId = userId;
     await rememberSessionDataKey();
     return sessionDataKey;
   } catch {
@@ -169,7 +183,43 @@ export async function requireSessionDataKey(): Promise<CryptoKey> {
     throw new Error('Encryption is locked');
   }
 
-  return sessionDataKey;
+  await getVerifiedKeySalt();
+  return sessionDataKey!;
+}
+
+/** Validate against the cloud before every read/write, including other extension contexts. */
+export async function getVerifiedKeySalt(): Promise<string> {
+  const userId = await getCurrentUserId();
+  const row = await fetchKeyRow(userId);
+  if (sessionDataKey && row && sessionKeySalt !== row.salt) {
+    const stored = (await chrome.storage.local.get(STORAGE_KEYS.ENCRYPTION_DEVICE_KEY))[STORAGE_KEYS.ENCRYPTION_DEVICE_KEY] as StoredDeviceKey | undefined;
+    // Another extension context on this same device may already have reset/unlocked.
+    if (stored?.keySalt === row.salt && stored.userId === userId) {
+      clearSessionDataKey();
+      await restoreRememberedDataKey();
+    }
+  }
+  if (!sessionDataKey || !row || (sessionUserId && sessionUserId !== userId)
+    || (sessionKeySalt && sessionKeySalt !== row.salt)
+    || (!sessionKeySalt && row.encrypted_data_key.reset_version)) {
+    await clearRememberedDataKey();
+    throw new Error('Cloud encryption changed. Unlock sync again with the new password.');
+  }
+  sessionKeySalt = row.salt;
+  sessionUserId = userId;
+  return row.salt;
+}
+
+export async function rememberResetDataKey(key: CryptoKey, salt: string, userId: string) {
+  sessionDataKey = key;
+  sessionKeySalt = salt;
+  sessionUserId = userId;
+  await rememberSessionDataKey();
+}
+
+export async function getVerifiedDataKey(): Promise<{ key: CryptoKey; salt: string }> {
+  await getVerifiedKeySalt();
+  return { key: sessionDataKey!, salt: sessionKeySalt! };
 }
 
 export async function changeEncryptionPassword(oldPassword: string, newPassword: string): Promise<UserEncryptionKeyRow> {
@@ -203,5 +253,7 @@ export async function changeEncryptionPassword(oldPassword: string, newPassword:
     throw error;
   }
 
+  sessionKeySalt = newSalt;
+  await rememberSessionDataKey();
   return data as UserEncryptionKeyRow;
 }

@@ -65,7 +65,7 @@ describe('阈值计时逻辑', () => {
     autoSync: false,
     threshold: 30,
     shortcut: 'Ctrl+Shift+V',
-    customSites: [],
+    siteRules: [],
   };
 
   const mockVideoInfo: VideoInfo = {

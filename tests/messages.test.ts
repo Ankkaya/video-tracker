@@ -28,8 +28,8 @@ describe('消息类型定义完整性', () => {
     expect(MSG.ADD_SAMPLE_RECORD).toBe('ADD_SAMPLE_RECORD');
   });
 
-  it('MSG 常量共 22 个消息类型', () => {
-    expect(Object.keys(MSG)).toHaveLength(22);
+  it('MSG 常量共 20 个消息类型', () => {
+    expect(Object.keys(MSG)).toHaveLength(20);
   });
 
   it('包含 AUTO_SAVED 通知消息', () => {
@@ -103,12 +103,12 @@ describe('类型定义完整性', () => {
       autoSync: false,
       threshold: 30,
       shortcut: 'Ctrl+Shift+V',
-      customSites: [],
+      siteRules: [],
     };
     expect(typeof settings.autoRecord).toBe('boolean');
     expect(typeof settings.threshold).toBe('number');
     expect(typeof settings.shortcut).toBe('string');
-    expect(Array.isArray(settings.customSites)).toBe(true);
+    expect(Array.isArray(settings.siteRules)).toBe(true);
   });
 
   it('VideoInfo 包含所有必要字段', () => {

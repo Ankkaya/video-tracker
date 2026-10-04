@@ -37,20 +37,14 @@ export type ManualSaveRequestMessage = BaseMessage<typeof MSG.MANUAL_SAVE_REQUES
 /** Background -> Content: 自动记录已落库（首次新建时） */
 export type AutoSavedMessage = BaseMessage<typeof MSG.AUTO_SAVED, VideoInfo>;
 
-/** Options -> Background: 添加自定义站点 */
-export type AddCustomSiteMessage = BaseMessage<typeof MSG.ADD_CUSTOM_SITE, { domain: string }>;
-
-/** Options -> Background: 删除自定义站点 */
-export type RemoveCustomSiteMessage = BaseMessage<typeof MSG.REMOVE_CUSTOM_SITE, { domain: string }>;
+/** Options -> Background: 设置站点自动记录规则 */
+export type SetSiteRuleMessage = BaseMessage<typeof MSG.SET_SITE_RULE, { domain: string; autoRecord: boolean }>;
 
 /** Options -> Background: 获取全部记录 */
 export type GetAllRecordsMessage = BaseMessage<typeof MSG.GET_ALL_RECORDS, void>;
 
 /** Options -> Background: 批量删除记录 */
 export type DeleteRecordsMessage = BaseMessage<typeof MSG.DELETE_RECORDS, { ids: string[] }>;
-
-/** Content -> Background: 获取自定义站点列表 */
-export type GetCustomSitesMessage = BaseMessage<typeof MSG.GET_CUSTOM_SITES, void>;
 
 /** Popup -> Background: 添加示例记录 */
 export type AddSampleRecordMessage = BaseMessage<typeof MSG.ADD_SAMPLE_RECORD, {
@@ -72,10 +66,8 @@ export type Message =
   | UpdateSettingsMessage
   | ManualSaveRequestMessage
   | AutoSavedMessage
-  | AddCustomSiteMessage
-  | RemoveCustomSiteMessage
+  | SetSiteRuleMessage
   | GetAllRecordsMessage
-  | GetCustomSitesMessage
   | AddSampleRecordMessage;
 
 /** 创建消息辅助函数 */
