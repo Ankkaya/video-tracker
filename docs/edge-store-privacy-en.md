@@ -40,4 +40,10 @@ No, I am not using remote code.
 
 ### Legitimacy (Optional)
 
-VideoTracker is a privacy-friendly, local-first tool. All data is stored locally on the user's device. It does not collect any personal information, does not track user behavior, and does not use analytics services. The cloud sync feature uses the user's own Supabase account, and the developer has no access to user data. The extension code is fully open source (https://github.com/Ankkaya/video-tracker) and subject to community review.
+VideoTracker stores viewing records locally and offers optional account authentication and encrypted cloud sync using the developer-configured Supabase service. It does not sell data or use advertising analytics.
+
+## Data usage / 数据使用
+
+Declare Personally identifiable information, Authentication information, Web history, and Website content (video titles, thumbnail URLs and playback metadata).
+
+Privacy policy: https://github.com/Ankkaya/video-tracker/blob/master/PRIVACY_POLICY.md

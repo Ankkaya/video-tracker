@@ -40,4 +40,10 @@ tabs 权限用于：(1) 在用户切换标签页时检测视频播放状态变�
 
 ### 正当性（可选）
 
-VideoTracker 是一款隐私友好的本地优先工具。所有数据存储在用户设备本地，不收集任何个人信息，不追踪用户行为，不使用分析服务。云同步功能使用用户自己的 Supabase 账户，开发者无法访问用户数据。扩展代码完全开源（https://github.com/Ankkaya/video-tracker），接受社区审查。
+VideoTracker stores viewing records locally and offers optional account authentication and encrypted cloud sync using the developer-configured Supabase service. It does not sell data or use advertising analytics.
+
+## Data usage / 数据使用
+
+Declare Personally identifiable information, Authentication information, Web history, and Website content (video titles, thumbnail URLs and playback metadata).
+
+Privacy policy: https://github.com/Ankkaya/video-tracker/blob/master/PRIVACY_POLICY.md
