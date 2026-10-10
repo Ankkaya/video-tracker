@@ -1,5 +1,5 @@
 {
   "extensionName": { "message": "VideoTracker - 视频观看进度记录器" },
-  "extensionDescription": { "message": "记录 B站、YouTube、爱奇艺和腾讯视频的观看进度，一键继续观看。默认本地存储，可选加密云同步。" },
+  "extensionDescription": { "message": "记录 B站、YouTube 等视频网站的观看进度，一键继续观看。默认本地存储，无需账号；可选端到端加密云同步。" },
   "manualSaveDescription": { "message": "手动保存当前视频观看进度" }
 }

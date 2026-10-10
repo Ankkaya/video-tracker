@@ -1,0 +1,25 @@
+{
+  "version": "0.0.12",
+  "date": "2026-10-08",
+  "status": "uploaded_draft_not_submitted",
+  "package": "releases/video-tracker-0.0.12-chrome-mv3.zip",
+  "sha256": "91ca52104cbf5d1bf56c4e310b98f8a42ca3368076a648795a77da0ce9459595",
+  "tests": "17 test files, 135 tests passed",
+  "screenshots": "Actual Vue interface with synthetic records; not a live account or an end-to-end extension test",
+  "pending": [
+    "Upload localized screenshots and promotion assets; complete localized descriptions and URLs",
+    "Complete privacy disclosure and reviewer instructions",
+    "Verify exact Supabase redirect https://khcbepelehjlhplgepkmapfhcjimgedf.chromiumapp.org/ and test Google login",
+    "Deploy homepage text corrections",
+    "Submit for review"
+  ],
+  "extensionId": "khcbepelehjlhplgepkmapfhcjimgedf",
+  "developerDashboard": "https://chrome.google.com/u/1/webstore/devconsole/ca08487f-410e-421a-9607-2bb4ddc12ee4/khcbepelehjlhplgepkmapfhcjimgedf/edit",
+  "completedOnDashboard": [
+    "Uploaded 0.0.12 ZIP and created draft item",
+    "Saved English description, Tools category and 128px store icon; dashboard confirmed save succeeded"
+  ],
+  "unsavedChangesPossible": true,
+  "blocker": "Repeated Computer Use capture failure after file upload: GPU device instance suspended, HRESULT 0x887A0005; one reconnection retry failed",
+  "screenshotUpload": "Selected all four English screenshots and submitted file chooser; completion not verified because GPU capture failed"
+}

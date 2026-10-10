@@ -203,14 +203,15 @@ export default {
       emailConfirmationSent: 'Verification email sent, please check your inbox',
     },
     sites: {
-      description: "Video detection is attempted on all websites by default. Add a custom domain to exclude it from automatic recording. Manual recording and resume remain available.",
+      description: "Video detection is attempted on all websites by default. Adding a custom site enables automatic recording. Deleting it stops automatic recording and keeps existing watch records.",
       otherTitle: "Custom sites",
-      otherDesc: "Add a domain to disable automatic recording, including its subdomains.",
+      otherDesc: "Add a domain to enable automatic recording, including its subdomains. Use the delete icon to remove a site; add it again to re-enable recording.",
       add: "Add",
       disable: "Disable auto recording",
       enable: "Enable auto recording",
       saveFailed: "Unable to save site rule",
       autoRecordFor: "Automatically record on {domain}",
+      deleteSite: "Delete {domain} and stop automatic recording",
       builtinTitle: 'Built-in Sites',
       domainPlaceholder: 'Enter domain, e.g., example.com',
       validation: {

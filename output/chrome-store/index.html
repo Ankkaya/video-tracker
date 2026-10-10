@@ -1,0 +1,43 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>VideoTracker 0.0.12 发布资料</title><style>body{max-width:1100px;margin:40px auto;padding:0 24px;font:16px/1.7 system-ui;color:#243047;background:#f7f8fb}section{background:white;padding:24px;margin:24px 0;border-radius:16px}img{max-width:100%;border:1px solid #ddd;border-radius:8px}textarea{width:100%;box-sizing:border-box;height:220px;font:14px/1.6 system-ui}a{color:#245acc}.shots{display:grid;grid-template-columns:1fr 1fr;gap:20px}.status{padding:16px;background:#fff2d6}</style><h1>VideoTracker 0.0.12</h1><p class="status">本地资料已准备，尚未上传或提交审核。商店后台不支持当前浏览器自动操作。</p><p><a href="../../releases/video-tracker-0.0.12-chrome-mv3.zip">下载插件 ZIP</a> · <a href="README.md">提交步骤与待办</a> · <a href="../../docs/STORE_LISTING.md">完整权限与隐私说明</a> · <a href="delivery.json">文件校验及验证结果</a></p><section><h2>zh-CN · VideoTracker - 视频观看进度记录器</h2><p>记录 B站、YouTube 等视频网站的观看进度，一键继续观看。默认本地存储，无需账号；可选端到端加密云同步。</p><textarea readonly>VideoTracker 帮你保存跨网站的视频观看进度，下次从上次看到的位置继续观看。本地记录无需注册或登录，也可选择登录后使用端到端加密云同步，在多台设备之间同步记录。
+
+主要功能
+
+• 自动记录：在设置中开启自动记录后，达到设定的观看时长即可保存视频信息和播放进度。自动记录默认关闭，默认时长阈值为 30 秒，可选 0、10、30、60 或 120 秒。
+• 手动保存：使用快捷键 Ctrl+Shift+V（Mac：Command+Shift+V）保存当前视频进度，无需等待自动记录阈值。快捷键可在浏览器的扩展快捷键设置中调整。
+• 继续观看：点击记录打开对应视频页面，在支持的播放器中恢复上次播放位置。
+• 查找记录：在弹窗或完整记录页中查看记录，按关键词搜索、按平台筛选，并删除不再需要的记录。
+• 按站点控制：支持 B站、YouTube、爱奇艺、腾讯视频，并可识别其他兼容的 HTML5 视频网站。内置站点可切换自动记录；添加自定义域名可启用该站点，删除自定义站点会停止其自动记录并保留已有记录，再次添加可重新启用。站点规则受全局自动记录开关控制。实际识别和恢复播放能力取决于网站与播放器的实现。
+• 可选加密同步：登录并开启云同步或执行手动同步时，观看记录和站点规则先在设备端加密，再上传。换设备后输入同步加密密码即可解锁。
+
+数据与隐私
+
+观看记录默认保存在当前浏览器本地，本地功能无需账号。注册或登录时，认证服务会处理邮箱、账号和会话信息。可选云同步使用开发者配置的 Supabase 服务，保存账号元数据、加密后的同步数据及密钥相关信息。同步加密密码不会上传，当前设备会在本地记住同步数据密钥。
+
+加密保护同步记录的内容，不隐藏服务提供方正常处理的账号或连接信息。即使未开启同步，加载远程视频封面也可能向图片提供方发送 IP 地址及请求的图片网址。VideoTracker 不使用广告追踪或分析服务，不出售用户数据。
+
+你可以关闭自动记录或同步、删除本地记录、退出登录。开启同步时，记录删除会在下一次成功同步时传播。退出登录保留本地记录；卸载扩展清除插件本地存储，但不会自动删除云端数据。云端重置会用重新加密的本地数据替换旧云端数据，不等于删除账号。云端数据或账号删除可联系开发者申请。
+
+网站访问权限用于跨网站识别视频、读取相关视频信息并恢复播放位置；存储、脚本、标签页、快捷键及身份验证功能用于记录管理和可选登录。详细的数据处理和删除说明请阅读完整隐私政策。
+
+支持与反馈：https://github.com/Ankkaya/video-tracker/issues</textarea><p>0.0.12：自定义站点添加即启用，删除停止自动记录并保留记录；优化记录页布局、中英文组件与日期显示；修正快捷键权限声明。</p><div class="shots"><figure><a href="zh-CN/01-records-1280x800.jpg"><img src="zh-CN/01-records-1280x800.jpg"></a><figcaption>集中查看观看记录，按标题、平台和日期搜索筛选。画面使用示例记录。</figcaption></figure><figure><a href="zh-CN/02-settings-1280x800.jpg"><img src="zh-CN/02-settings-1280x800.jpg"></a><figcaption>自动记录默认关闭，可设置最低观看时长和快捷键；云同步需登录后主动选择，采用端到端加密。</figcaption></figure><figure><a href="zh-CN/03-sites-1280x800.jpg"><img src="zh-CN/03-sites-1280x800.jpg"></a><figcaption>内置站点可切换；自定义站点添加即启用，删除停止自动记录并保留已有记录。</figcaption></figure><figure><a href="zh-CN/04-popup-1280x800.jpg"><img src="zh-CN/04-popup-1280x800.jpg"></a><figcaption>从工具栏快速查看最近记录，点击记录继续观看。画面使用示例记录。</figcaption></figure></div><p><a href="zh-CN/listing.json">全部字段</a> · <a href="zh-CN/promo-small-440x280.png">440×280 宣传图</a> · <a href="zh-CN/promo-large-1400x560.png">1400×560 宣传图</a></p></section><section><h2>en-US · VideoTracker</h2><p>Save and resume video progress across sites. Local storage, no account required. Optional end-to-end encrypted cloud sync.</p><textarea readonly>VideoTracker saves your watch progress across video sites so you can pick up where you left off. Local recording works without an account. You can also sign in and choose end-to-end encrypted cloud sync to keep records across devices.
+
+Features
+
+• Automatic recording: Enable automatic recording in settings to save video details and progress after your chosen viewing threshold. Automatic recording is off by default. The default threshold is 30 seconds, with 0, 10, 30, 60 and 120 seconds available.
+• Manual saving: Save the current video's progress with Ctrl+Shift+V (Command+Shift+V on Mac), without waiting for the automatic threshold. You can change the shortcut in your browser's extension shortcut settings.
+• Resume watching: Open a saved record to return to the video and restore your position in supported players.
+• Find your records: Browse records in the popup or full records page, search by keyword, filter by platform and delete records you no longer need.
+• Site controls: Supports Bilibili, YouTube, iQIYI and Tencent Video, plus other compatible HTML5 video sites. Toggle automatic recording for built-in sites. Adding a custom domain enables its site rule; deleting it stops automatic recording and preserves existing records. Add it again to re-enable it. Site rules also require the global automatic recording switch to be on. Detection and playback restoration depend on the website and player implementation.
+• Optional encrypted sync: When you sign in and enable cloud sync or use manual sync, viewing records and site rules are encrypted on your device before upload. Enter your sync encryption password on another device to unlock them.
+
+Data and privacy
+
+Viewing records are stored locally in your browser by default, and local features require no account. Registration and sign-in involve an authentication service that processes your email, account and session information. Optional sync uses the developer-configured Supabase service to store account metadata, encrypted sync data and key-related information. Your sync encryption password is not uploaded; a sync data key is remembered locally on the device.
+
+Encryption protects the contents of synced records, but does not hide account or connection information normally processed by service providers. Loading remote video thumbnails may send your IP address and the requested image URL to the image provider, even with sync off. VideoTracker does not use advertising trackers or analytics and does not sell user data.
+
+You can turn off automatic recording or sync, delete local records and sign out. With sync enabled, record deletions propagate on the next successful sync. Signing out preserves local records. Uninstalling clears extension-local storage but does not automatically delete cloud data. Cloud reset replaces previous cloud data with newly encrypted local data; it does not delete your account. Contact the developer to request cloud data or account deletion.
+
+Website access supports detecting videos across sites, reading related video information and restoring playback positions. Storage, scripting, tab, shortcut and identity features support record management and optional sign-in. Read the full privacy policy for data handling and deletion details.
+
+Support and feedback: https://github.com/Ankkaya/video-tracker/issues</textarea><p>0.0.12: Adding a custom site enables recording; deleting it stops automatic recording and preserves records. Improved layout and locale handling. Fixed the shortcut permission declaration.</p><div class="shots"><figure><a href="en-US/01-records-1280x800.jpg"><img src="en-US/01-records-1280x800.jpg"></a><figcaption>Browse watch records and filter by title, platform, and date. Sample records shown.</figcaption></figure><figure><a href="en-US/02-settings-1280x800.jpg"><img src="en-US/02-settings-1280x800.jpg"></a><figcaption>Automatic recording is off by default. Set the watch threshold and shortcuts; optional end-to-end encrypted sync requires sign-in.</figcaption></figure><figure><a href="en-US/03-sites-1280x800.jpg"><img src="en-US/03-sites-1280x800.jpg"></a><figcaption>Toggle built-in sites. Add a custom domain to enable it; deleting stops automatic recording and preserves existing records.</figcaption></figure><figure><a href="en-US/04-popup-1280x800.jpg"><img src="en-US/04-popup-1280x800.jpg"></a><figcaption>Open recent records from the toolbar and resume watching. Actual interface with sample records.</figcaption></figure></div><p><a href="en-US/listing.json">全部字段</a> · <a href="en-US/promo-small-440x280.png">440×280 宣传图</a> · <a href="en-US/promo-large-1400x560.png">1400×560 宣传图</a></p></section></html>

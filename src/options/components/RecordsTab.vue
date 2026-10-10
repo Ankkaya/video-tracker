@@ -256,9 +256,14 @@ defineExpose({ reload: loadRecords });
       />
     </template>
 
-    <NEmpty v-else :description="t('options.records.emptyDescription')" style="padding: 60px 0">
+    <NEmpty
+      v-else
+      :description="t('options.records.emptyDescription')"
+      :theme-overrides="{ iconSizeMedium: '48px' }"
+      style="padding: 60px 0"
+    >
       <template #icon>
-        <div style="font-size: 48px">📭</div>
+        <div class="records-empty-icon" aria-hidden="true">📭</div>
       </template>
       <template #extra>
         <NText depth="3">{{ t('options.records.emptyExtra') }}</NText>
@@ -274,6 +279,14 @@ defineExpose({ reload: loadRecords });
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 .records-panel :deep(> .n-card__content) { padding: 24px; }
+.records-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
 @media (max-width: 600px) {
   .records-panel :deep(> .n-card__content) { padding: 16px; }
 }

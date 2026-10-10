@@ -9,6 +9,10 @@ import {
   NText,
   NButton,
   NDropdown,
+  zhCN,
+  enUS,
+  dateZhCN,
+  dateEnUS,
 } from 'naive-ui';
 import type { GlobalThemeOverrides } from 'naive-ui';
 import RecordsTab from './components/RecordsTab.vue';
@@ -27,6 +31,8 @@ import BrandIcon from '../shared/components/BrandIcon.vue';
 type TabId = 'records' | 'settings' | 'sites';
 
 const { t, locale } = useI18n();
+const naiveLocale = computed(() => locale.value === 'zh-CN' ? zhCN : enUS);
+const naiveDateLocale = computed(() => locale.value === 'zh-CN' ? dateZhCN : dateEnUS);
 const { isLoggedIn, user, loadAuthMeta, checkSession, consumePendingAuth, handleAuthCallback, signOut } = useAuth();
 const { theme, toggleTheme, naiveTheme } = useTheme();
 const {
@@ -198,7 +204,7 @@ function getThemeIcon() {
 </script>
 
 <template>
-  <NConfigProvider :theme="naiveTheme" :theme-overrides="themeOverrides">
+  <NConfigProvider :theme="naiveTheme" :theme-overrides="themeOverrides" :locale="naiveLocale" :date-locale="naiveDateLocale">
     <NMessageProvider>
       <NDialogProvider>
         <NLayout class="options-layout">
@@ -248,7 +254,7 @@ body { margin: 0; }
 .nav-item.active { background: rgba(67,97,238,.09); color: #4361ee; font-weight: 600; }
 .nav-item:focus-visible { outline: 2px solid #4361ee; outline-offset: 2px; }
 .sidebar-bottom { margin-top: auto; padding-top: 32px; }
-.account-panel { display: flex; align-items: center; gap: 12px; padding: 16px 12px; border-top: 1px solid var(--layout-border); background: var(--muted-panel); border-radius: 8px; }
+.account-panel { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid var(--layout-border); background: var(--muted-panel); border-radius: 8px; }
 .account-panel > svg { width: 28px; height: 28px; flex-shrink: 0; }
 .account-details { display: grid; gap: 8px; min-width: 0; flex: 1; }
 .user-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; }
@@ -259,7 +265,7 @@ body { margin: 0; }
 .page-header h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.3; font-weight: 700; }
 .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .header-right .n-button { height: 38px; }
-.page-content { max-width: 1400px; margin: 0; }
+.page-content { max-width: none; margin: 0; }
 html.dark .options-layout { --page-bg: #181824; --sidebar-bg: #202030; --layout-border: #343448; --muted-panel: #28283c; }
 html.dark .nav-item.active { color: #a6b4ff; background: rgba(67,97,238,.18); }
 @media (max-width: 900px) { .options-sidebar { width: 200px; padding-inline: 12px; } .sidebar-brand strong { font-size: 18px; } .options-main { margin-left: 200px; padding: 24px; } .page-header { flex-wrap: wrap; gap: 16px; } }

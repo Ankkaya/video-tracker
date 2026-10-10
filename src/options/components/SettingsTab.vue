@@ -557,7 +557,7 @@ function getSyncStatusActionText() {
 .shortcut-card :deep(.shortcut-heading) { justify-content: space-between; }
 @media (max-width: 600px) { .shortcut-card :deep(.shortcut-status:not(.warning)) { display: block; } .shortcut-card :deep(.shortcut-heading) { display: flex; } .shortcut-card :deep(.shortcut-actions) { justify-content: flex-start; } }
 .settings-save-note { font-size: 13px; }
-.setting-section > .n-space { background: var(--muted-panel); border-radius: 8px; padding: 16px; }
+.setting-section > .n-space { background: var(--muted-panel); border-radius: 8px; padding: 8px 16px; }
 @media (max-width: 600px) { .setting-row { gap: 12px; flex-wrap: wrap; } .setting-info { min-width: 170px; } }
 
 .setting-row {

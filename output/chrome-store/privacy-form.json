@@ -1,0 +1,31 @@
+{
+  "version": "0.0.12",
+  "extensionId": "khcbepelehjlhplgepkmapfhcjimgedf",
+  "purpose": "保存和恢复用户在不同视频网站的观看进度；本地记录无需账号，并通过用户主动选择的端到端加密同步，在多设备间保持观看记录和站点规则一致。",
+  "remoteCode": false,
+  "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
+  "selectedDataCategories": {
+    "个人身份信息": "用户主动登录时处理邮箱及账号标识",
+    "身份验证信息": "登录凭据、授权及会话令牌",
+    "位置": "认证、同步及图片请求中服务提供方处理的 IP 地址；不采集 GPS",
+    "网络记录": "视频网址、标题及观看时间",
+    "用户活动": "视频播放位置、时长及观看进度；不采集通用鼠标或键盘日志",
+    "网站内容": "视频标题、链接及封面网址"
+  },
+  "unselectedDataCategories": [
+    "健康信息",
+    "财务和付款信息",
+    "个人通讯"
+  ],
+  "limitedUse": {
+    "noSaleOrUnapprovedTransfer": true,
+    "noUnrelatedUse": true,
+    "noCreditOrLendingUse": true
+  },
+  "sources": [
+    "PRIVACY_POLICY.md",
+    "docs/STORE_LISTING.md",
+    "https://developer.chrome.com/docs/webstore/program-policies/user-data-faq"
+  ],
+  "dashboardStatus": "Partially entered; final selections and save pending confirmation"
+}

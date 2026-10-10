@@ -1,6 +1,8 @@
 <!doctype html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VideoTracker — Store preview</title>
 <style>
+/* Keep store captures at the requested viewport size, without scrollbar scaling. */
+html{overflow:hidden}
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:#f8f9fa;color:#1a1a2e;min-height:100vh}
 .showcase{width:1280px;height:800px;background:linear-gradient(125deg,#f5f7ff,#fff 60%,#ebfaf6);display:flex;align-items:center;justify-content:center;gap:100px;padding:70px}
 .showcase-copy{width:520px}.eyebrow{color:#4361ee;font-size:22px;font-weight:650;margin-bottom:30px}.showcase h1{font-size:52px;line-height:1.25;letter-spacing:-1px;margin-bottom:26px}.showcase p{font-size:22px;color:#647087;line-height:1.7}.showcase small{display:block;font-size:14px;color:#7d879a;margin-top:42px}

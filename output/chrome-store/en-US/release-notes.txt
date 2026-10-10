@@ -1,0 +1,1 @@
+0.0.12: Adding a custom site enables recording; deleting it stops automatic recording and preserves records. Improved layout and locale handling. Fixed the shortcut permission declaration.

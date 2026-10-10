@@ -1,5 +1,5 @@
 {
   "extensionName": { "message": "VideoTracker" },
-  "extensionDescription": { "message": "Automatically save and resume your watch progress across video sites" },
+  "extensionDescription": { "message": "Save and resume video progress across sites. Local storage, no account required. Optional end-to-end encrypted cloud sync." },
   "manualSaveDescription": { "message": "Manually save current video record" }
 }

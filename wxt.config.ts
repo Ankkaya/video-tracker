@@ -17,9 +17,9 @@ export default defineConfig({
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     default_locale: 'en_US',
-    version: '0.0.11',
+    version: '0.0.12',
     ...(isDevelopment && extensionKey ? { key: extensionKey } : {}),
-    permissions: ['storage', 'activeTab', 'tabs', 'commands', 'scripting', 'identity'],
+    permissions: ['storage', 'activeTab', 'tabs', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],
     icons: {
       16: 'icon-16.png',

@@ -203,14 +203,15 @@ export default {
       emailConfirmationSent: '验证邮件已发送，请检查邮箱',
     },
     sites: {
-      description: "默认尝试识别所有网站的视频。可添加自定义域名，排除该网站的自动记录；手动记录和进度恢复仍可使用。",
+      description: "默认尝试识别所有网站的视频。自定义站点添加后自动开启记录；删除后停止该站点的自动记录，已有观看记录保留。",
       otherTitle: "自定义站点",
-      otherDesc: "添加域名以关闭自动记录，规则包含子域名。",
+      otherDesc: "添加域名即可开启自动记录，规则包含子域名。点击删除图标可移除站点，再次添加即可重新开启。",
       add: "添加",
       disable: "关闭自动记录",
       enable: "开启自动记录",
       saveFailed: "站点规则保存失败",
       autoRecordFor: "在 {domain} 自动记录",
+      deleteSite: "删除 {domain} 并停止自动记录",
       builtinTitle: '内置站点',
       domainPlaceholder: '输入域名，如 example.com',
       validation: {
