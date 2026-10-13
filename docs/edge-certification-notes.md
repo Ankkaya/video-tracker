@@ -1,6 +1,6 @@
 # Microsoft Edge Add-ons certification notes
 
-Applies to the current 0.0.12 source. Updated: 2026-10-13. Repository materials only; this update was not uploaded or submitted for review. Build a matching package before submission.
+Applies to the current 0.0.13 source and local package. Updated: 2026-10-13. Repository materials only; this update was not uploaded or submitted for review.
 
 Use the following text in the certification notes field. Supply any cloud test credentials separately in the private submission fields, not in the public store description.
 

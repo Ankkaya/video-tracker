@@ -1,5 +1,5 @@
 {
-  "version": "0.0.12",
+  "version": "0.0.13",
   "date": "2026-10-13",
   "status": "repository_materials_updated_not_uploaded",
   "locales": [
@@ -19,10 +19,12 @@
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "support": "https://github.com/Ankkaya/video-tracker/issues",
   "preview": "index.html",
-  "packageStatus": "No package uploaded or rebuilt by this materials update; build a matching source package before submission.",
+  "packageStatus": "Latest version built locally; not uploaded to either store or published as a GitHub Release.",
+  "package": "releases/video-tracker-0.0.13-chrome-mv3.zip",
+  "sha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
+  "bytes": 438644,
   "historicalDelivery": "archive/delivery-before-2026-10-13.json",
   "pending": [
-    "Build a package containing the described features and use an acceptable new version when updating an existing store package.",
     "Verify authentication and sync with the formal extension ID.",
     "Upload localized descriptions, screenshots and updated privacy disclosures when authorized.",
     "Submit for store review when authorized."

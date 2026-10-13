@@ -1,0 +1,13 @@
+{
+  "version": "0.0.13",
+  "filename": "video-tracker-0.0.13-chrome-mv3.zip",
+  "builtAt": "2026-10-13T05:46:03.867Z",
+  "bytes": 438644,
+  "sha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
+  "manifestVersion": 3,
+  "browsers": [
+    "Chrome",
+    "Edge"
+  ],
+  "status": "built_locally_not_published"
+}

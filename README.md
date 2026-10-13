@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-当前源码版本：`0.0.12`（资料更新：2026-10-13）。已发布安装包请以 [GitHub Releases](https://github.com/Ankkaya/video-tracker/releases) 为准；当前源码的新功能需要从源码构建。
+当前源码版本：`0.0.13`（资料更新：2026-10-13）。最新本地安装包为 `releases/video-tracker-0.0.13-chrome-mv3.zip`，适用于 Chrome / Edge。已公开发布的安装包请以 [GitHub Releases](https://github.com/Ankkaya/video-tracker/releases) 为准。
 
 [官方网站](https://video-tracker.ankkaya.top/) · [English website](https://video-tracker.ankkaya.top/en/) · [隐私政策](https://video-tracker.ankkaya.top/privacy-policy.html) · [问题反馈](https://github.com/Ankkaya/video-tracker/issues)
 

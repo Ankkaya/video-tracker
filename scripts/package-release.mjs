@@ -3,6 +3,7 @@ import { readFile, readFile as readFileBuffer } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateRawSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
@@ -20,6 +21,7 @@ const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 if (manifest.version !== version) {
   throw new Error(`Manifest version ${manifest.version} does not match package version ${version}.`);
 }
+if ('key' in manifest) throw new Error('Release manifest must not contain a development extension key.');
 
 mkdirSync(releasesDir, { recursive: true });
 if (existsSync(zipPath)) {
@@ -146,5 +148,11 @@ async function createZip(inputDir, outputPath) {
 
 await createZip(sourceDir, zipPath);
 
+const archive = await readFileBuffer(zipPath);
+const sha256 = createHash('sha256').update(archive).digest('hex');
+writeFileSync(`${zipPath}.sha256`, `${sha256}  ${basename(zipPath)}\n`);
+writeFileSync(zipPath.replace(/\.zip$/, '.json'), `${JSON.stringify({ version, filename: basename(zipPath), builtAt: new Date().toISOString(), bytes: archive.length, sha256, manifestVersion: manifest.manifest_version, browsers: ['Chrome', 'Edge'], status: 'built_locally_not_published' }, null, 2)}\n`);
+
 console.log(`Created ${zipPath}`);
 console.log(`Packaged ${basename(sourceDir)} manifest v${manifest.version} into ${basename(zipPath)}`);
+console.log(`SHA-256: ${sha256}`);

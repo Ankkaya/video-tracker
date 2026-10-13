@@ -86,7 +86,7 @@ export default {
       watchSettings: 'Watch history', shortcuts: 'Keyboard shortcuts', autoSave: 'Changes are saved automatically',
     },
     headerSubtitle: 'Manage your video watch records and extension settings',
-    footerVersion: 'VideoTracker v0.0.11 · Automatically record your video watch progress',
+    footerVersion: 'VideoTracker v0.0.13 · Automatically record your video watch progress',
     tabs: {
       records: '📋 Records',
       settings: '⚙️ Settings',

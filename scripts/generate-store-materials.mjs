@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const version = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8')).version;
@@ -10,6 +11,13 @@ if (!date) throw new Error('Missing materials update date');
 const homepage = 'https://video-tracker.ankkaya.top/';
 const privacyPolicy = `${homepage}privacy-policy.html`;
 const support = 'https://github.com/Ankkaya/video-tracker/issues';
+let localPackage;
+try {
+  const filename = `video-tracker-${version}-chrome-mv3.zip`;
+  const receipt = JSON.parse(await readFile(resolve(root, 'releases', filename.replace(/\.zip$/, '.json')), 'utf8'));
+  const archive = await readFile(resolve(root, 'releases', filename));
+  if (receipt.version === version && receipt.sha256 === createHash('sha256').update(archive).digest('hex')) localPackage = receipt;
+} catch { /* Materials can be prepared before building a release package. */ }
 const screenshotNames = ['01-records', '02-settings', '03-sites', '04-popup', '05-feedback'];
 function section(title) {
   const start = markdown.indexOf(`## ${title}\n`);
@@ -61,13 +69,20 @@ for (const store of ['chrome-store', 'edge-store']) {
     version, date, status: 'repository_materials_updated_not_uploaded', locales: ['zh-CN', 'en-US'], screenshotsPerLocale: 5,
     screenshotOrder: listings[0].screenshots, screenshotSource: 'Current Vue components with fictional records and excluded example.com; isolated preview without cloud access. Feedback screenshot sends no request.',
     homepage, privacyPolicy, support, preview: 'index.html',
-    packageStatus: 'No package uploaded or rebuilt by this materials update; build a matching source package before submission.',
+    packageStatus: localPackage ? 'Latest version built locally; not uploaded to either store or published as a GitHub Release.' : 'No verified package receipt for this version; build a matching package before submission.',
+    ...(localPackage ? { package: `releases/${localPackage.filename}`, sha256: localPackage.sha256, bytes: localPackage.bytes } : {}),
     historicalDelivery: `archive/delivery-before-${date}.json`,
-    pending: ['Build a package containing the described features and use an acceptable new version when updating an existing store package.', 'Verify authentication and sync with the formal extension ID.', 'Upload localized descriptions, screenshots and updated privacy disclosures when authorized.', 'Submit for store review when authorized.'],
+    pending: [...(localPackage ? [] : ['Build a package containing the described features and use an acceptable new version when updating an existing store package.']), 'Verify authentication and sync with the formal extension ID.', 'Upload localized descriptions, screenshots and updated privacy disclosures when authorized.', 'Submit for store review when authorized.'],
   });
   const gallery = listings.map(listing => `<section><h2>${escape(listing.locale)} · ${escape(listing.name)}</h2><p>${escape(listing.shortDescription)}</p><textarea readonly aria-label="${escape(listing.locale)} description">${escape(listing.description)}</textarea><pre>${escape(listing.releaseNotes)}</pre><div class="shots">${listing.screenshots.map((name, i) => `<figure><a href="${listing.locale}/${name}"><img loading="lazy" src="${listing.locale}/${name}" alt="${escape(listing.captions[i])}"></a><figcaption>${escape(listing.captions[i])}</figcaption></figure>`).join('')}</div><p><a href="${listing.locale}/listing.json">全部字段</a> · <a href="${listing.locale}/description.txt">详情文本</a> · <a href="${listing.locale}/promo-small-440x280.png">440×280 宣传图</a> · <a href="${listing.locale}/promo-large-1400x560.png">1400×560 宣传图</a></p></section>`).join('');
   await write(`${base}/index.html`, `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VideoTracker ${version} · ${store}</title><style>body{max-width:1100px;margin:40px auto;padding:0 24px;font:16px/1.7 system-ui;color:#243047;background:#f7f8fb}section{background:white;padding:24px;margin:24px 0;border-radius:16px}img{max-width:100%;border:1px solid #ddd;border-radius:8px}textarea{width:100%;box-sizing:border-box;height:260px;font:14px/1.6 system-ui}a{color:#245acc}.shots{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0}pre{white-space:pre-wrap}.status{padding:16px;background:#fff2d6}@media(max-width:650px){.shots{grid-template-columns:1fr}}</style></head><body><h1>VideoTracker ${version} · ${store}</h1><p class="status">资料更新：${date}。仅同步仓库，未上传商店、未提交审核。以下功能基于当前源码，提交前需构建匹配的安装包。</p><p><a href="README.md">使用说明</a> · <a href="../../docs/STORE_LISTING.md">统一文案与审核说明</a> · <a href="delivery.json">资料状态</a> · <a href="${privacyPolicy}">完整隐私政策</a></p>${gallery}</body></html>\n`);
   await write(`${base}/README.md`, `# ${store === 'chrome-store' ? 'Chrome Web Store' : 'Edge Add-ons'} 资料\n\n适用当前源码：${version}。更新日期：${date}。仅更新仓库，未上传或提交审核。旧上传记录保留在 archive/delivery-before-${date}.json，历史状态不代表本次资料已上传。\n\n- 中英文名称、短描述、详情、截图说明与更新内容：各语言目录的 listing.json、description.txt、release-notes.txt。\n- 每种语言 5 张 1280×800 ${store === 'chrome-store' ? 'JPG' : '无损 PNG'}：记录、设置、站点排除、弹窗、反馈。来自当前真实 Vue 组件和虚构数据，无真实账号，反馈预览不发送请求。\n- 宣传图：每种语言 440×280 和 1400×560；使用当前功能文案。\n- 官网：${homepage}\n- 隐私政策：${privacyPolicy}\n- 支持：${support}\n- 统一权限说明与审核步骤：../../docs/STORE_LISTING.md；Edge 专用说明：../../docs/edge-certification-notes.md。\n\n更新统一文案后运行 npm run generate:store。截图可运行 node scripts/store-preview/capture-assets.js（需先启动该目录的 Vite 预览配置）。\n\n发布前构建包含当前源码功能的安装包，更新既有商店包时使用商店接受的新版本号；核对正式扩展 ID 的认证回调并验证登录、同步与反馈。审核账号只填私密字段。填写最新数据披露、上传中英文素材后再按授权提交审核。本次没有更新安装包、操作商店后台或提交审核。\n`);
+  if (localPackage) {
+    const readme = await readFile(resolve(root, base, 'README.md'), 'utf8');
+    await write(`${base}/README.md`, readme.replace('本次没有更新安装包、操作商店后台或提交审核。', `本地已构建 ${localPackage.filename}，SHA-256 见 delivery.json；未上传商店或提交审核。`));
+    const preview = await readFile(resolve(root, base, 'index.html'), 'utf8');
+    await write(`${base}/index.html`, preview.replace('以下功能基于当前源码，提交前需构建匹配的安装包。', `匹配的 ${version} 安装包已在本地构建，文件及校验值见 delivery.json。`));
+  }
   const edgeReviewerNotes = await readFile(resolve(root, 'docs/edge-certification-notes.md'), 'utf8');
   const notes = edgeReviewerNotes.match(/```text\r?\n([\s\S]*?)\r?\n```/)?.[1];
   if (!notes) throw new Error('Missing reviewer notes');

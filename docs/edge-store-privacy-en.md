@@ -1,6 +1,6 @@
 # Edge Add-ons Store Privacy Form Content (English)
 
-Applies to the current 0.0.12 source. Updated: 2026-10-13. Repository materials only; not uploaded or submitted for review. The submitted package must include the described features.
+Applies to the current 0.0.13 source and local package. Updated: 2026-10-13. Repository materials only; not uploaded or submitted for review.
 
 ## Single Purpose Description
 
