@@ -1,6 +1,6 @@
 # Edge Add-ons Store Privacy Form Content (English)
 
-Applies to version 0.0.11. Updated: 2026-10-08. This is local submission copy, based on the extension's behavior and full privacy policy.
+Applies to the current 0.0.12 source. Updated: 2026-10-13. Repository materials only; not uploaded or submitted for review. The submitted package must include the described features.
 
 ## Single Purpose Description
 
@@ -42,9 +42,11 @@ No remote code is used. Player detection, recording and playback restoration cod
 
 ### Purpose of Data Use
 
-Data is used to save and resume videos, authenticate accounts and optionally sync encrypted records. VideoTracker does not use advertising trackers or analytics, sell data, or use it for unrelated profiling, creditworthiness or lending.
+Data is used to save and resume videos, authenticate accounts, optionally sync encrypted records, and investigate or reply to voluntarily submitted feedback. VideoTracker does not use advertising trackers or analytics, sell data, or use it for unrelated profiling, creditworthiness or lending.
 
 ## Data Usage
+
+Voluntary feedback: Signed-out users can submit up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB, and an optional contact email. A signed-in email is prefilled but editable and removable. The first submission requires confirming the purpose. Feedback goes to the developer-configured Supabase service for investigation and replies; images are private and nothing is automatically published to GitHub. Viewing records, passwords and tokens are not automatically attached. Rate limiting and deduplication use a salted request-IP hash, random reference, content hash and processing timestamps/state. Stop submitting to stop new feedback collection; request deletion by providing the submission time, content or contact email to help locate your feedback.
 
 Match the dashboard fields for personally identifiable information, authentication information, web history and website content to the actual data processed:
 
@@ -61,7 +63,7 @@ Cloud reset replaces the previous cloud snapshot and key with a new key and newl
 
 ## Full Policy and Contact
 
-Privacy policy: https://github.com/Ankkaya/video-tracker/blob/master/PRIVACY_POLICY.md
+Privacy policy: https://video-tracker.ankkaya.top/privacy-policy.html
 
 Local policy source: [PRIVACY_POLICY.md](../PRIVACY_POLICY.md). Confirm that the published link matches the local policy before submission.
 

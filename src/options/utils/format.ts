@@ -35,14 +35,6 @@ export const platformIcons: Record<string, string> = {
   vqq: '🎬',
 };
 
-/** 内置站点元数据 */
-export const BUILTIN_SITES = [
-  { domain: 'bilibili.com', platform: 'bilibili', icon: '/site-icons/bilibili.ico' },
-  { domain: 'youtube.com', platform: 'youtube', icon: '/site-icons/youtube.png' },
-  { domain: 'iqiyi.com', platform: 'iqiyi', icon: '/site-icons/iqiyi.ico' },
-  { domain: 'v.qq.com', platform: 'vqq', icon: '/site-icons/vqq.ico' },
-] as const;
-
 /** 校验域名合法性 */
 export function isValidDomain(domain: string): boolean {
   const pattern = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;

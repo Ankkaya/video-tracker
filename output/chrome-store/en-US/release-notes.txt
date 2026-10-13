@@ -1,1 +1,5 @@
-0.0.12: Adding a custom site enables recording; deleting it stops automatic recording and preserves records. Improved layout and locale handling. Fixed the shortcut permission declaration.
+Current source 0.0.12 update notes (2026-10-13)
+• Site filters now use an exclusion list: add a domain or webpage URL to stop automatic recording for it and its subdomains; remove it to restore recording. Saved records stay.
+• New feedback page: up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB, optional email and first-submission consent. Failed submissions keep the draft.
+• Simplified popup and records search; records can be filtered by title, episode and viewing date, with batch deletion.
+• Updated bilingual layout, sync status, shortcut guidance and privacy disclosures.

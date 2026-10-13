@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate:privacy": "node scripts/generate-privacy-policy.mjs",
+    "generate:store": "node scripts/generate-store-materials.mjs",
+    "prebuild": "npm run generate:privacy",
+    "prebuild:prod": "npm run generate:privacy",
+    "prebuild:firefox": "npm run generate:privacy",
     "dev": "wxt",
     "dev:firefox": "wxt --browser firefox",
     "build": "wxt build",

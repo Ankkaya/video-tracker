@@ -1,0 +1,5 @@
+.hero-visual { min-width: 0; }
+.product-preview { width: 380px; max-width: 100%; min-width: 0; margin: 0 0 0 auto; }
+.product-preview img { display: block; width: 100%; height: auto; border-radius: 16px; box-shadow: 0 24px 64px #18265b18; }
+.product-preview figcaption { margin-top: 16px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+@media (max-width: 1024px) { .product-preview { margin: 0; } }

@@ -17,7 +17,7 @@ let records = samples.map(([platform, platformName, titleZh, titleEn, currentTim
   currentTime, duration, progress: Number(currentTime) / Number(duration),
   lastWatchedAt: now - (index + 1) * 3600000, createdAt: now - 86400000,
 }));
-const settings = { autoRecord: true, autoSync: false, threshold: 30, shortcut: 'Ctrl+Shift+V', siteRules: [] as SiteRule[] };
+const settings = { autoRecord: true, autoSync: false, threshold: 30, shortcut: 'Ctrl+Shift+V', siteRules: [{ domain: 'example.com', autoRecord: false, updatedAt: now }] as SiteRule[] };
 const storage: Record<string, unknown> = { theme: 'light', video_tracker_settings: settings, video_tracker_records: records };
 const syncState = params.get('sync');
 if (syncState === 'success' || syncState === 'error') {

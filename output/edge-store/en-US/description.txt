@@ -1,0 +1,23 @@
+VideoTracker saves your watch progress across video sites so you can pick up where you left off. Local recording works without an account. You can also sign in and choose end-to-end encrypted cloud sync to keep records across devices.
+
+Features
+
+• Automatic recording: Enable automatic recording in settings to save video details and progress after your chosen viewing threshold. Automatic recording is off by default. The default threshold is 30 seconds, with 0, 10, 30, 60 and 120 seconds available.
+• Manual saving: Save the current video's progress with Ctrl+Shift+V (Command+Shift+V on Mac), without waiting for the automatic threshold. You can change the shortcut in your browser's extension shortcut settings.
+• Resume watching: Open a saved record to return to the video and restore your position in supported players.
+• Find your records: Search titles in the popup. Filter the full records page by title, episode text and viewing date, and delete individual or selected records.
+• Site exclusions: Supports Bilibili, YouTube, iQIYI and Tencent Video, plus generic detection on other compatible HTML5 video sites. Add a domain or webpage URL to the exclusion list to stop automatic recording for that domain and its subdomains while preserving saved records. Removing it restores automatic recording when the global switch is on. Manual saving still works for excluded sites. Detection and playback restoration depend on the website and player implementation.
+• Optional encrypted sync: When you sign in and enable cloud sync or use manual sync, viewing records and site rules are encrypted on your device before upload. Enter your sync encryption password on another device to unlock them.
+• Interface and feedback: Choose Chinese or English and a light, dark or system theme. Open the feedback page from the popup or options to send up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB and an optional contact email. No sign-in is required.
+
+Data and privacy
+
+Viewing records are stored locally in your browser by default, and local features require no account. Registration and sign-in involve an authentication service that processes your email, account and session information. Optional sync uses the developer-configured Supabase service to store account metadata, encrypted sync data and key-related information. Your sync encryption password is not uploaded; a sync data key is remembered locally on the device.
+
+Encryption protects the contents of synced records, but does not hide account or connection information normally processed by service providers. Loading remote video thumbnails may send your IP address and the requested image URL to the image provider, even with sync off. VideoTracker does not use advertising trackers or analytics and does not sell user data.
+
+You can turn off automatic recording or sync, delete local records and sign out. With sync enabled, record deletions propagate on the next successful sync. Signing out preserves local records. Uninstalling clears extension-local storage but does not automatically delete cloud data. Cloud reset replaces previous cloud data with newly encrypted local data; it does not delete your account. Contact the developer to request cloud data or account deletion.
+
+Website access supports detecting videos across sites, reading related video information and restoring playback positions. Storage, scripting, tab, shortcut and identity features support record management and optional sign-in. Read the full privacy policy for data handling and deletion details.
+
+Support and feedback: Before the first submission, you confirm that the text, image and entered email are sent over HTTPS to the developer-configured Supabase service for the developer to read, investigate and reply. Email may be left blank; a signed-in email is prefilled but editable or removable. Images are private, with no automatic GitHub publication or attached viewing records, passwords or tokens. Feedback is separate from encrypted sync. Failed submissions retain the form contents for retry. You can also use https://github.com/Ankkaya/video-tracker/issues .

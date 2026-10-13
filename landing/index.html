@@ -4,27 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - 视频观看进度记录器</title>
-  <meta name="description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。">
-  <link rel="alternate" hreflang="zh-CN" href="./index.html">
-  <link rel="alternate" hreflang="en" href="./en/index.html">
-  <link rel="canonical" href="./index.html">
+  <meta name="description" content="保存和恢复跨网站视频观看进度。默认本地存储，无需账号；可选加密云同步，支持站点排除和插件内问题反馈。">
+  <link rel="alternate" hreflang="zh-CN" href="https://video-tracker.ankkaya.top/">
+  <link rel="alternate" hreflang="en" href="https://video-tracker.ankkaya.top/en/">
+  <link rel="canonical" href="https://video-tracker.ankkaya.top/">
   <meta property="og:title" content="VideoTracker - 视频观看进度记录器">
-  <meta property="og:description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。">
+  <meta property="og:description" content="保存和恢复跨网站视频观看进度。默认本地存储，无需账号；可选加密云同步，支持站点排除和插件内问题反馈。">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://video-tracker.ankkaya.top/">
-  <meta property="og:image" content="http://video-tracker.ankkaya.top/og-image.png">
+  <meta property="og:url" content="https://video-tracker.ankkaya.top/">
+  <meta property="og:image" content="https://video-tracker.ankkaya.top/og-image.png">
   <meta property="og:site_name" content="VideoTracker">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:locale:alternate" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - 视频观看进度记录器">
-  <meta name="twitter:description" content="自动记录 B站、YouTube、爱奇艺、腾讯视频的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。">
-  <meta name="twitter:image" content="http://video-tracker.ankkaya.top/og-image.png">
+  <meta name="twitter:description" content="保存和恢复跨网站视频观看进度。默认本地存储，无需账号；可选加密云同步，支持站点排除和插件内问题反馈。">
+  <meta name="twitter:image" content="https://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="preview.css">
 <link rel="icon" type="image/png" href="assets/icon-32.png">
 </head>
 <body>
@@ -65,46 +66,11 @@
             查看源码
           </a>
         </div>
-        <p class="hero-note">支持 Chrome / Edge / Firefox · 完全免费开源</p>
+        <p class="hero-note">适用于 Chrome / Edge · 免费开源 · 自动记录默认关闭</p>
+        <p class="hero-note">以下介绍当前源码功能；已发布版本请查看下载页，新功能可从源码构建。</p>
       </div>
       <div class="hero-visual">
-        <div class="mockup-popup">
-          <div class="mockup-header">
-            <span class="mockup-title"><img src="assets/icon-128.png" width="32" height="32" alt="" style="vertical-align:middle"> VideoTracker</span>
-            <span class="mockup-icon">⚙️</span>
-          </div>
-          <div class="mockup-item">
-            <div class="mockup-item-badge bilibili">B站</div>
-            <div class="mockup-item-info">
-              <div class="mockup-item-title">某某动漫 第12集</div>
-              <div class="mockup-item-progress">
-                <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
-                <span>14:32 / 22:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-item">
-            <div class="mockup-item-badge youtube">YouTube</div>
-            <div class="mockup-item-info">
-              <div class="mockup-item-title">TypeScript 进阶教程 EP5</div>
-              <div class="mockup-item-progress">
-                <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
-                <span>08:20 / 20:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-item">
-            <div class="mockup-item-badge iqiyi">爱奇艺</div>
-            <div class="mockup-item-info">
-              <div class="mockup-item-title">某某电视剧 第10集</div>
-              <div class="mockup-item-progress">
-                <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
-                <span>36:00 / 45:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-btn">📋 查看全部记录 →</div>
-        </div>
+        <figure class="product-preview"><img src="assets/popup-zh-CN.png" width="380" alt="VideoTracker 当前弹窗：搜索、观看进度与反馈入口"><figcaption>当前真实界面 · 虚构示例记录</figcaption></figure>
       </div>
     </div>
   </section>
@@ -118,17 +84,17 @@
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
           <h3>自动记录</h3>
-          <p>访问视频页面时自动记录播放进度，无需手动操作。智能阈值过滤，避免无效记录。</p>
+          <p>在设置中开启后，观看达到设定时长即可保存进度。默认关闭，记录保存在本地，无需账号。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⌨️</div>
           <h3>快捷键保存</h3>
-          <p>按 Ctrl+Shift+V 立即记录当前视频，无需等待阈值。操作成功后 Toast 提示。</p>
+          <p>按 Ctrl+Shift+V 保存当前进度，Mac 使用 Command+Shift+V。自动记录关闭时也可手动保存。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🚀</div>
           <h3>一键继续观看</h3>
-          <p>点击记录即可跳转到对应页面，自动定位到上次播放位置，无缝衔接。</p>
+          <p>点击记录打开原视频页面，在支持的播放器中恢复上次进度；兼容性取决于网站实现。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⏱️</div>
@@ -138,7 +104,7 @@
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3>搜索筛选</h3>
-          <p>支持关键词搜索和按平台筛选，快速找到想继续观看的视频。</p>
+          <p>弹窗按标题搜索，记录管理页按标题、分集和观看日期筛选，支持单条与批量删除。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">☁️</div>
@@ -147,8 +113,18 @@
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
-          <h3>站点管理</h3>
-          <p>其他网站默认尝试识别 HTML5 播放器，无需添加域名；可按站点关闭自动记录。</p>
+          <h3>站点排除</h3>
+          <p>输入域名或网页链接，停止该域名及子域名的自动记录。移出排除名单后恢复，已有记录保留。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>反馈问题</h3>
+          <p>插件内填写最多 500 字，可附一张不超过 5 MB 的 PNG/JPG/WebP 图片及邮箱。首次提交前确认用途。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>语言与主题</h3>
+          <p>中文和英文界面，浅色、深色或跟随系统主题，让查看记录和调整设置更顺手。</p>
         </div>
       </div>
     </div>
@@ -183,7 +159,7 @@
         <div class="platform-card custom">
           <div class="platform-logo">➕</div>
           <div class="platform-name">通用识别</div>
-          <div class="platform-domain">任意 HTML5 视频网站</div>
+          <div class="platform-domain">其他兼容 HTML5 视频网站</div>
         </div>
       </div>
     </div>
@@ -192,28 +168,28 @@
   <!-- How it works -->
   <section class="how-it-works">
     <div class="container">
-      <h2 class="section-title">工作原理</h2>
-      <p class="section-desc">轻量无感，后台默默工作</p>
+      <h2 class="section-title">开始使用</h2>
+      <p class="section-desc">无需账号即可保存和继续观看</p>
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
-          <h3>检测视频</h3>
-          <p>Content Script 自动检测当前页面的视频播放器，匹配对应平台适配器。</p>
+          <h3>安装扩展</h3>
+          <p>下载已发布安装包，按说明加载到浏览器；安装后本地记录无需登录。</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <h3>心跳上报</h3>
-          <p>每 5 秒上报一次播放进度到 Background Service Worker，累计观看时长。</p>
+          <h3>选择记录方式</h3>
+          <p>使用快捷键立即保存，或在设置中开启自动记录，选择最低观看时长。</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <h3>阈值保存</h3>
-          <p>观看时长超过设定阈值后，自动将视频信息和进度保存到本地存储。</p>
+          <h3>继续观看</h3>
+          <p>从弹窗或记录管理页选择视频，打开原页面，在支持的播放器中恢复进度。</p>
         </div>
         <div class="step">
           <div class="step-num">4</div>
-          <h3>继续或加密同步</h3>
-          <p>在 Popup 或 Options 页面查看记录，点击继续观看；登录后输入同步密码即可加密同步记录。</p>
+          <h3>按需同步与反馈</h3>
+          <p>跨设备使用可登录并启用加密同步；遇到问题可从插件内反馈页联系开发者。</p>
         </div>
       </div>
     </div>
@@ -242,6 +218,10 @@
           <div class="privacy-point">
             <span class="check">✓</span>
             <span>完全开源，代码可审计</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>确认后才发送反馈文字、图片和填写的邮箱，供开发者排查与回复；反馈独立于加密同步</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>

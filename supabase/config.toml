@@ -1,0 +1,4 @@
+# Only this function disables the platform JWT check. It checks the project's
+# anonymous API key itself and applies transactional database rate limits.
+[functions.submit-feedback]
+verify_jwt = false

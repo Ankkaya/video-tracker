@@ -1,22 +1,30 @@
 {
   "version": "0.0.12",
+  "updatedAt": "2026-10-13",
   "extensionId": "khcbepelehjlhplgepkmapfhcjimgedf",
-  "purpose": "保存和恢复用户在不同视频网站的观看进度；本地记录无需账号，并通过用户主动选择的端到端加密同步，在多设备间保持观看记录和站点规则一致。",
+  "purpose": "保存和恢复跨网站视频观看进度，可选端到端加密同步及与该用途相关的主动问题反馈。",
   "remoteCode": false,
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "selectedDataCategories": {
-    "个人身份信息": "用户主动登录时处理邮箱及账号标识",
-    "身份验证信息": "登录凭据、授权及会话令牌",
-    "位置": "认证、同步及图片请求中服务提供方处理的 IP 地址；不采集 GPS",
-    "网络记录": "视频网址、标题及观看时间",
-    "用户活动": "视频播放位置、时长及观看进度；不采集通用鼠标或键盘日志",
-    "网站内容": "视频标题、链接及封面网址"
+    "个人身份信息": "主动登录的邮箱及账号标识；主动反馈时可选的联系邮箱，登录邮箱仅预填且可删除。",
+    "身份验证信息": "登录凭据、授权及会话令牌；反馈不自动附带密码或令牌。",
+    "位置": "认证、同步、反馈和图片请求的 IP 连接信息；反馈限流存储加盐 IP 哈希，不采集 GPS。",
+    "网络记录": "视频网址、标题及观看时间；不是全部浏览历史。",
+    "用户活动": "视频播放位置、时长及观看进度；不记录通用鼠标或键盘日志。",
+    "网站内容": "视频标题、链接、封面网址，以及用户主动提交的反馈文字和图片（图片可能含原始元数据）。",
+    "个人通讯": "用户主动向开发者发送的支持反馈文字、图片及可选邮箱，仅用于排查与回复。"
   },
   "unselectedDataCategories": [
     "健康信息",
-    "财务和付款信息",
-    "个人通讯"
+    "财务和付款信息"
   ],
+  "feedback": {
+    "consent": "首次提交前确认用途，取消不发送。",
+    "limits": "500 字；1 张 PNG/JPG/WebP，最大 5 MB。",
+    "storage": "Supabase 私有图片存储；反馈可由开发者阅读，独立于端到端加密同步。",
+    "metadata": "加盐 IP 哈希、随机请求编号、内容哈希和处理时间状态。",
+    "deletion": "联系开发者，提供提交时间、内容或邮箱协助定位；不在公开 issue 发布私人资料。"
+  },
   "limitedUse": {
     "noSaleOrUnapprovedTransfer": true,
     "noUnrelatedUse": true,
@@ -25,7 +33,8 @@
   "sources": [
     "PRIVACY_POLICY.md",
     "docs/STORE_LISTING.md",
-    "https://developer.chrome.com/docs/webstore/program-policies/user-data-faq"
+    "https://developer.chrome.com/docs/webstore/cws-dashboard-privacy",
+    "https://developer.chrome.com/docs/webstore/program-policies/disclosure-requirements"
   ],
-  "dashboardStatus": "Partially entered; final selections and save pending confirmation"
+  "dashboardStatus": "Repository reference only; actual dashboard selections unchanged. Confirm category definitions at submission."
 }

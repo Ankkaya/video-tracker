@@ -18,6 +18,7 @@ import type { GlobalThemeOverrides } from 'naive-ui';
 import RecordsTab from './components/RecordsTab.vue';
 import SettingsTab from './components/SettingsTab.vue';
 import SitesTab from './components/SitesTab.vue';
+import FeedbackTab from './components/FeedbackTab.vue';
 import LoginView from './components/LoginView.vue';
 import { useAuth } from './composables/useAuth';
 import { useSync } from './composables/useSync';
@@ -28,7 +29,7 @@ import { api } from './composables/useApi';
 import { logger } from '../shared/logger';
 import BrandIcon from '../shared/components/BrandIcon.vue';
 
-type TabId = 'records' | 'settings' | 'sites';
+type TabId = 'records' | 'settings' | 'sites' | 'feedback';
 
 const { t, locale } = useI18n();
 const naiveLocale = computed(() => locale.value === 'zh-CN' ? zhCN : enUS);
@@ -56,7 +57,7 @@ function onLanguageChange(lang: Language) {
   setLanguage(lang);
 }
 
-const navigation = computed(() => (['records', 'settings', 'sites'] as TabId[]).map(id => ({
+const navigation = computed(() => (['records', 'sites', 'settings', 'feedback'] as TabId[]).map(id => ({
   id, label: t(`options.tabs.${id}`).replace(/^[^A-Za-z\u4e00-\u9fff]+/u, ''),
 })));
 const pageTitle = computed(() => showLoginView.value ? t('options.settings.login') : navigation.value.find(item => item.id === activeTab.value)?.label);
@@ -105,6 +106,7 @@ async function runInitialSync() {
 
 // Check URL parameter for login mode
 const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('tab') === 'feedback') activeTab.value = 'feedback';
 if (urlParams.get('login') === 'true') {
   showLoginView.value = true;
 }
@@ -215,6 +217,7 @@ function getThemeIcon() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
                   <path v-if="item.id === 'records'" d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Zm0 0v6h6M8 13h8M8 17h6" />
                   <template v-else-if="item.id === 'settings'"><path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 3-1 2 3 3-1 1-3 3-1 2-3-2-2 1-3-3-2-3 1-2-3Z" /><circle cx="12" cy="11" r="3" /></template>
+                  <path v-else-if="item.id === 'feedback'" d="M21 14a2 2 0 0 1-2 2H8l-5 5V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
                   <template v-else><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18" /></template>
                 </svg>
                 {{ item.label }}
@@ -230,7 +233,8 @@ function getThemeIcon() {
               <LoginView v-if="showLoginView" @success="handleLoginSuccess" @back="handleBackToSettings" />
               <RecordsTab v-else-if="activeTab === 'records'" ref="recordsRef" />
               <SettingsTab v-else-if="activeTab === 'settings'" @login-required="handleLoginRequired" />
-              <SitesTab v-else />
+              <SitesTab v-else-if="activeTab === 'sites'" />
+              <FeedbackTab v-else />
             </div>
           </main>
         </NLayout>
@@ -266,6 +270,7 @@ body { margin: 0; }
 .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .header-right .n-button { height: 38px; }
 .page-content { max-width: none; margin: 0; }
+@media (max-width: 600px) { .options-sidebar .sidebar-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); } .options-sidebar .nav-item { flex-direction: column; text-align: center; } }
 html.dark .options-layout { --page-bg: #181824; --sidebar-bg: #202030; --layout-border: #343448; --muted-panel: #28283c; }
 html.dark .nav-item.active { color: #a6b4ff; background: rgba(67,97,238,.18); }
 @media (max-width: 900px) { .options-sidebar { width: 200px; padding-inline: 12px; } .sidebar-brand strong { font-size: 18px; } .options-main { margin-left: 200px; padding: 24px; } .page-header { flex-wrap: wrap; gap: 16px; } }

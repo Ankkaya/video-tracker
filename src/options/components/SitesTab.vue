@@ -1,34 +1,25 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { NCard, NInput, NButton, NSpace, NText, NList, NListItem, NThing, NInputGroup, NSwitch, useMessage } from 'naive-ui';
-import type { SiteRule, WatchRecord } from '../../shared/types';
+import { NCard, NInput, NButton, NSpace, NText, NList, NListItem, NThing, NInputGroup, useMessage } from 'naive-ui';
+import type { SiteRule } from '../../shared/types';
 import { api } from '../composables/useApi';
-import { BUILTIN_SITES } from '../utils/format';
-import { normalizeDomain, isSiteAutoRecordEnabled } from '../../shared/siteRules';
+import { parseSiteDomain } from '../../shared/siteRules';
 import { STORAGE_KEYS } from '../../shared/constants';
 
 const { t } = useI18n();
 const message = useMessage();
 const rules = ref<SiteRule[]>([]);
-const records = ref<WatchRecord[]>([]);
 const newDomain = ref('');
 const saving = ref(false);
-const otherDomains = computed(() => {
-  const domains = new Set(rules.value.map(r => r.domain));
-  for (const record of records.value) {
-    try {
-      const domain = new URL(record.url).hostname;
-      if (!BUILTIN_SITES.some(s => domain === s.domain || domain.endsWith('.' + s.domain))) domains.add(domain);
-    } catch {}
-  }
-  return [...domains].filter(domain => !BUILTIN_SITES.some(s => domain === s.domain) && enabled(domain)).sort();
+const domainPreview = computed(() => {
+  try { return parseSiteDomain(newDomain.value); }
+  catch { return ''; }
 });
-function enabled(domain: string) { return isSiteAutoRecordEnabled('https://' + domain, rules.value); }
+const excludedDomains = computed(() => rules.value.filter(rule => !rule.autoRecord).map(rule => rule.domain).sort());
 async function load() {
-  const [settings, saved] = await Promise.all([api.getSettings(), api.getRecords()]);
+  const settings = await api.getSettings();
   rules.value = settings?.siteRules ?? [];
-  records.value = saved;
 }
 async function setRule(domain: string, value: boolean) {
   if (saving.value) return false;
@@ -41,13 +32,28 @@ async function setRule(domain: string, value: boolean) {
   finally { saving.value = false; }
 }
 async function addDomain() {
+  if (saving.value) return;
+  if (!newDomain.value.trim()) {
+    message.warning(t('options.sites.validation.emptyDomain'));
+    return;
+  }
   let domain: string;
-  try { domain = normalizeDomain(newDomain.value); }
+  try { domain = parseSiteDomain(newDomain.value); }
   catch { message.warning(t('options.sites.validation.invalidDomain')); return; }
-  if (await setRule(domain, true)) newDomain.value = '';
+  if (excludedDomains.value.includes(domain)) {
+    message.info(t('options.sites.validation.alreadyAdded', { domain }));
+    return;
+  }
+  if (await setRule(domain, false)) {
+    newDomain.value = '';
+    message.success(t('options.sites.addSuccess', { domain }));
+  }
+}
+async function removeDomain(domain: string) {
+  if (await setRule(domain, true)) message.success(t('options.sites.removeSuccess', { domain }));
 }
 function changed(changes: Record<string, chrome.storage.StorageChange>, area: string) {
-  if (area === 'local' && (changes[STORAGE_KEYS.SETTINGS] || changes[STORAGE_KEYS.RECORDS])) void load();
+  if (area === 'local' && changes[STORAGE_KEYS.SETTINGS]) void load();
 }
 onMounted(() => { chrome.storage.onChanged.addListener(changed); void load(); });
 onUnmounted(() => chrome.storage.onChanged.removeListener(changed));
@@ -55,32 +61,24 @@ onUnmounted(() => chrome.storage.onChanged.removeListener(changed));
 
 <template>
   <NSpace vertical :size="20">
-    <NText depth="3">{{ t('options.sites.description') }}</NText>
-    <NCard :title="t('options.sites.builtinTitle')" size="small">
-      <NList>
-        <NListItem v-for="site in BUILTIN_SITES" :key="site.domain">
-          <NThing :title="t(`popup.platforms.${site.platform}`)" :description="site.domain">
-            <template #avatar><img :src="site.icon" alt="" width="32" height="32" class="site-icon" /></template>
-          </NThing>
-          <template #suffix><NSwitch :value="enabled(site.domain)" :disabled="saving" :aria-label="t('options.sites.autoRecordFor', { domain: site.domain })" @update:value="setRule(site.domain, $event)" /></template>
-        </NListItem>
-      </NList>
-    </NCard>
     <NCard :title="t('options.sites.otherTitle')" size="small">
       <NText depth="3" style="display: block; margin-bottom: 12px">{{ t('options.sites.otherDesc') }}</NText>
       <NInputGroup>
         <NInput v-model:value="newDomain" :placeholder="t('options.sites.domainPlaceholder')" :disabled="saving" @keydown.enter="addDomain" />
         <NButton :loading="saving" @click="addDomain">{{ t('options.sites.add') }}</NButton>
       </NInputGroup>
-      <NList v-if="otherDomains.length">
-        <NListItem v-for="domain in otherDomains" :key="domain">
+      <NText v-if="domainPreview && domainPreview !== newDomain.trim()" depth="3" style="display: block; margin-top: 8px; overflow-wrap: anywhere">
+        {{ t('options.sites.domainPreview', { domain: domainPreview }) }}
+      </NText>
+      <NList v-if="excludedDomains.length">
+        <NListItem v-for="domain in excludedDomains" :key="domain">
           <NThing :title="domain"><template #avatar>🌐</template></NThing>
           <template #suffix>
             <NButton
               quaternary circle type="error" :disabled="saving"
               :title="t('options.sites.deleteSite', { domain })"
               :aria-label="t('options.sites.deleteSite', { domain })"
-              @click="setRule(domain, false)"
+              @click="removeDomain(domain)"
             >
               <template #icon>
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -94,7 +92,3 @@ onUnmounted(() => chrome.storage.onChanged.removeListener(changed));
     </NCard>
   </NSpace>
 </template>
-
-<style scoped>
-.site-icon { display: block; object-fit: contain; }
-</style>

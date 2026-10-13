@@ -1,10 +1,10 @@
 # VideoTracker Privacy Policy / 隐私政策
 
-Last updated / 更新日期: 2026-10-06
+Last updated / 更新日期: 2026-10-13
 
 ## English
 
-VideoTracker, published by Ankkaya, records video viewing progress so you can resume watching. Local recording works without an account. This policy covers the browser extension and its optional cloud sync.
+VideoTracker, published by Ankkaya, records video viewing progress so you can resume watching. Local recording works without an account. This policy covers the browser extension, optional cloud sync and voluntary feedback.
 
 ### Data we process
 We store video page URLs, titles, playback position and duration, viewing timestamps, thumbnail URLs, site rules, deletion markers and preferences in browser local storage. These are video viewing records, not a general log of all visited pages. Automatic recording can be disabled globally or per site; manual recording remains user initiated.
@@ -14,8 +14,15 @@ If you choose to register or sign in, the configured Supabase service processes 
 ### Optional encrypted sync
 When you enable sync or use manual sync, viewing records, site rules and deletion markers are encrypted on your device before being sent to the developer-configured Supabase project. This is not a database hosted in your own Supabase account. The service stores account metadata, ciphertext, password-protected data keys, salts and encryption parameters. Your sync encryption password is not uploaded. A data key is remembered locally. Encryption protects the contents of synced records; it does not conceal account metadata or ordinary connection metadata such as IP addresses from service providers.
 
+### Voluntary feedback
+You can submit feedback without signing in. Feedback contains the text you enter (up to 500 characters), one optional PNG/JPG/WebP image (up to 5 MB), and an optional contact email. If you are signed in, the form initially fills in your account email; you can edit or clear it. Clearing it means no contact email is submitted. Feedback is sent only after you confirm the first submission and click submit; cancelling keeps your draft without sending it. The consent is remembered locally and requested again if this feedback notice changes. Images are manually selected; the extension does not take screenshots or attach viewing records, site rules, passwords or tokens automatically.
+
+The developer-configured Supabase Edge Function, database and private image storage receive feedback over HTTPS so the developer can investigate and reply. Unlike encrypted viewing-record sync, feedback is readable by the developer for support. It is not automatically published to GitHub. Supabase also handles normal request metadata, which can include IP addresses. The feedback service keeps a salted hash of the request IP for short-lived submission limits, plus a random submission id, content hash, processing status and timestamps for deduplication and support. Rate-limit counters older than one day are removed when a new submission is processed. The original image is uploaded as selected, including any metadata it contains.
+
+Feedback is retained while needed to investigate, reply or resolve follow-up questions, and the developer deletes it when those purposes end. You can request deletion by providing the submission time, content or contact email to help locate your feedback, without posting private contents in a public issue. Declining feedback does not affect recording or sync. To stop submitting feedback, leave the form or cancel the confirmation. Provider backups and logs may have separate retention periods. A failed or interrupted request may already have reached the server; retries use the same internal request identifier to avoid duplicates.
+
 ### Network requests and use
-Data is used to record and resume videos, authenticate accounts and synchronize your data. Loading remote video thumbnails can send your IP address and requested image URL to the image host, even when sync is off. We do not use advertising trackers or analytics, sell data, or use it for unrelated profiling, creditworthiness or lending. Supabase and chosen login/image providers receive data needed for these services, not for advertising by VideoTracker.
+Data is used to record and resume videos, authenticate accounts, synchronize your data and process feedback you choose to submit. Loading remote video thumbnails can send your IP address and requested image URL to the image host, even when sync is off. We do not use advertising trackers or analytics, sell data, or use it for unrelated profiling, creditworthiness or lending. Supabase and chosen login/image providers receive data needed for these services, not for advertising by VideoTracker. Our use and transfer of data complies with the Chrome Web Store User Data Policy, including its Limited Use requirements.
 
 ### Control, retention and deletion
 You can delete local records in the extension, disable recording or sync, and sign out. Signing out clears the remembered sync key and session but preserves local records. Uninstalling removes extension-local storage; it does not delete cloud data. With sync enabled, record deletion is propagated on the next successful sync. Cloud reset replaces the previous encrypted snapshot and key with newly encrypted local data, preserving local records; other devices need the new password. Reset is not account deletion. Cloud account metadata remains while the account exists. Contact the developer to request cloud/account deletion. Provider backups and logs may have separate retention periods; we do not promise immediate removal from them. Forgotten sync passwords cannot decrypt the old cloud snapshot.
@@ -28,7 +35,7 @@ For questions or deletion requests, contact Ankkaya via https://github.com/Ankka
 
 ## 中文
 
-VideoTracker 由 Ankkaya 发布，用于保存视频观看进度并恢复播放。本地记录无需账号。本政策适用于浏览器插件及可选云同步。
+VideoTracker 由 Ankkaya 发布，用于保存视频观看进度并恢复播放。本地记录无需账号。本政策适用于浏览器插件、可选云同步及用户主动提交的反馈。
 
 ### 处理的数据
 插件在浏览器本地保存视频页面网址、标题、播放位置与时长、观看时间、缩略图网址、站点规则、删除标记和偏好设置。这是视频观看记录，并非所有访问页面的完整浏览历史。可关闭全局或单个站点的自动记录；手动记录由用户主动触发。
@@ -38,8 +45,15 @@ VideoTracker 由 Ankkaya 发布，用于保存视频观看进度并恢复播放�
 ### 可选加密同步
 开启同步或执行手动同步时，观看记录、站点规则和删除标记在设备端加密，再发送到开发者配置的 Supabase 项目，并非用户自己托管的 Supabase 数据库。服务保存账号元数据、密文、受密码保护的数据密钥、盐值与加密参数。同步加密密码不上传；设备会在本地记住数据密钥。加密保护同步记录的内容，但不隐藏账号元数据和服务提供方正常处理的 IP 地址等连接信息。
 
+### 主动反馈
+无需登录即可提交反馈。反馈包括你填写的文字（最多 500 字）、一张可选 PNG/JPG/WebP 图片（不超过 5 MB）及可选联系邮箱。登录后表单默认带出账号邮箱，可以修改或清空；清空后不会发送联系邮箱。首次提交前会展示说明并请求确认，用户点击提交后才发送；取消确认保留草稿而不发送。确认版本保存在本地，反馈说明变更后会再次请求确认。图片由你手动选择，插件不会自动截屏或附带观看记录、站点规则、密码或令牌。
+
+反馈通过 HTTPS 发送至开发者配置的 Supabase Edge Function、数据库和私有图片存储，供开发者排查和回复。反馈供开发者阅读处理，与端到端加密的观看记录同步不同；不会自动公开到 GitHub。Supabase 会处理正常请求元数据，其中可能包含 IP 地址。反馈服务保存请求 IP 的加盐哈希用于短期限流，以及随机提交编号、内容哈希、处理状态和时间用于去重和支持。处理新提交时会清理超过一天的限流计数。图片按所选原文件上传，可能包含文件自身的元数据。
+
+反馈在排查、回复或处理后续问题所需期间保留，相关用途结束后由开发者删除。可以提供提交时间、内容或联系邮箱，协助定位反馈并申请删除，无需在公开 issue 中发布私人内容。不提交反馈不影响观看记录或同步；离开表单或取消确认即可停止本次提交。服务提供方的备份和日志可能有单独保留周期。失败或中断的请求可能已经到达服务端，重试会沿用同一内部请求编号避免重复。
+
 ### 网络请求与用途
-数据仅用于记录、恢复播放、认证和同步。加载远程视频缩略图时，即使未开启同步，图片提供方也可能收到 IP 地址及请求的图片网址。插件不使用广告追踪或分析服务，不出售数据，不用于无关画像、信用评估或借贷。Supabase 和用户选择的登录或图片服务接收提供相关功能所需的数据。
+数据用于记录、恢复播放、认证、同步和处理你主动提交的反馈。加载远程视频缩略图时，即使未开启同步，图片提供方也可能收到 IP 地址及请求的图片网址。插件不使用广告追踪或分析服务，不出售数据，不用于无关画像、信用评估或借贷。Supabase 和用户选择的登录或图片服务接收提供相关功能所需的数据。数据使用和传输遵守 Chrome Web Store 用户数据政策，包括 Limited Use 要求。
 
 ### 控制、保留与删除
 可以删除本地记录、关闭记录或同步、退出登录。退出登录清除同步解锁密钥及会话，保留本地记录。卸载清除插件本地存储，不会自动删除云端数据。开启同步时，记录删除会在下一次成功同步时传播。重置云端用新密钥和重新加密的本地数据替换旧密文及密钥，不删除本地记录；其他设备需用新密码解锁。重置不等于删除账号，账号元数据会在账号存在期间保留。可联系开发者申请删除云端数据或账号。服务提供方的备份与日志可能有单独保留周期，不保证立即清除。忘记同步密码后无法解密旧云端数据。

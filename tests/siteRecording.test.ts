@@ -60,6 +60,26 @@ describe('background site recording integration', () => {
     await send(MSG.PAGE_UNLOAD, { url: video.url });
     expect(storage[STORAGE_KEYS.RECORDS]).toBeUndefined();
   });
+  it('excludes built-in sites and restores recording when removed without deleting history', async () => {
+    const builtinSender = { tab: { id: 2, url: 'https://www.bilibili.com/video/BV123', title: 'Bilibili video' }, frameId: 0 };
+    const builtinVideo = { ...video, url: builtinSender.tab.url, platform: 'bilibili', platformName: 'B站' };
+    await send(MSG.HEARTBEAT, builtinVideo, builtinSender);
+    const saved = structuredClone(storage[STORAGE_KEYS.RECORDS][0]);
+
+    await send(MSG.SET_SITE_RULE, { domain: 'bilibili.com', autoRecord: false });
+    await send(MSG.HEARTBEAT, { ...builtinVideo, currentTime: 50 }, builtinSender);
+    await send(MSG.PAGE_UNLOAD, { url: builtinVideo.url }, builtinSender);
+    expect(storage[STORAGE_KEYS.RECORDS]).toEqual([saved]);
+
+    await send(MSG.HEARTBEAT, video);
+    expect(storage[STORAGE_KEYS.RECORDS]).toHaveLength(2);
+
+    await send(MSG.SET_SITE_RULE, { domain: 'bilibili.com', autoRecord: true });
+    await send(MSG.HEARTBEAT, { ...builtinVideo, currentTime: 60 }, builtinSender);
+    expect(storage[STORAGE_KEYS.RECORDS]).toHaveLength(2);
+    expect(storage[STORAGE_KEYS.RECORDS].find((record: any) => record.url === builtinVideo.url))
+      .toMatchObject({ id: saved.id, currentTime: 60 });
+  });
   it('does not create records for seek-only reports or live streams', async () => {
     await send(MSG.HEARTBEAT, { ...video, isPlaying: false });
     await send(MSG.HEARTBEAT, { ...video, duration: Infinity });

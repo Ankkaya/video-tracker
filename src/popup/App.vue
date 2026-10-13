@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { WatchRecord } from '../shared/types';
 import { MSG, STORAGE_KEYS } from '../shared/constants';
 import { logger } from '../shared/logger';
 import SearchBar from './components/SearchBar.vue';
-import { customPlatformOptions, matchesPlatform, builtinPlatforms } from '../shared/platformFilter';
 import RecordList from './components/RecordList.vue';
 import EmptyState from './components/EmptyState.vue';
 import SyncModal from './components/SyncModal.vue';
@@ -22,7 +21,6 @@ const { theme, toggleTheme } = useTheme();
 const { isSyncing, syncMeta, loadSyncMeta } = useSync();
 
 const query = ref('');
-const platform = ref('all');
 const records = ref<WatchRecord[]>([]);
 const manualSaveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
 const showSyncModal = ref(false);
@@ -64,14 +62,8 @@ onUnmounted(() => {
 });
 
 const recentRecords = computed(() => records.value.filter(record =>
-  matchesPlatform(record, platform.value) &&
   `${record.title} ${record.episode}`.toLowerCase().includes(query.value.trim().toLowerCase())
 ).slice(0, 3));
-
-watch(() => customPlatformOptions(records.value), options => {
-  if (platform.value !== 'all' && !builtinPlatforms.includes(platform.value) &&
-      !options.some(option => option.value === platform.value)) platform.value = 'all';
-});
 
 async function deleteRecord(id: string) {
   try {
@@ -92,6 +84,10 @@ function openSettings() {
 
 function openAllRecords() {
   chrome.tabs.create({ url: chrome.runtime.getURL('/options.html') });
+}
+
+function openFeedback() {
+  chrome.tabs.create({ url: chrome.runtime.getURL('/options.html?tab=feedback') });
 }
 
 /** 手动记录当前标签页（仅 URL + 标题） */
@@ -268,12 +264,13 @@ function handleSyncClick() {
         <button class="theme-btn" @click="toggleTheme" :title="t('common.theme')">
           {{ getThemeIcon() }}
         </button>
+        <button class="settings-btn" @click="openFeedback" :title="t('options.tabs.feedback')" :aria-label="t('options.tabs.feedback')">✉</button>
         <button class="settings-btn" @click="openSettings" :title="t('common.settings')">⚙️</button>
       </div>
     </header>
     <ShortcutStatus compact />
 
-    <SearchBar v-model:query="query" v-model:platform="platform" :records="records" />
+    <SearchBar v-model:query="query" />
 
     <RecordList
       v-if="recentRecords.length > 0"

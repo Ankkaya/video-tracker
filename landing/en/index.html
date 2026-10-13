@@ -4,27 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - Video Watch Progress Tracker</title>
-  <meta name="description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.">
-  <link rel="alternate" hreflang="zh-CN" href="../index.html">
-  <link rel="alternate" hreflang="en" href="./index.html">
-  <link rel="canonical" href="./index.html">
+  <meta name="description" content="Save and resume video progress across sites. Local by default, with optional encrypted sync, site exclusions and in-extension feedback.">
+  <link rel="alternate" hreflang="zh-CN" href="https://video-tracker.ankkaya.top/">
+  <link rel="alternate" hreflang="en" href="https://video-tracker.ankkaya.top/en/">
+  <link rel="canonical" href="https://video-tracker.ankkaya.top/en/">
   <meta property="og:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta property="og:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.">
+  <meta property="og:description" content="Save and resume video progress across sites. Local by default, with optional encrypted sync, site exclusions and in-extension feedback.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://video-tracker.ankkaya.top/en/">
-  <meta property="og:image" content="http://video-tracker.ankkaya.top/og-image.png">
+  <meta property="og:url" content="https://video-tracker.ankkaya.top/en/">
+  <meta property="og:image" content="https://video-tracker.ankkaya.top/og-image.png">
   <meta property="og:site_name" content="VideoTracker">
   <meta property="og:locale" content="en_US">
   <meta property="og:locale:alternate" content="zh_CN">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta name="twitter:description" content="Automatically record watch progress on Bilibili, YouTube, iQIYI, Tencent Video with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.">
-  <meta name="twitter:image" content="http://video-tracker.ankkaya.top/og-image.png">
+  <meta name="twitter:description" content="Save and resume video progress across sites. Local by default, with optional encrypted sync, site exclusions and in-extension feedback.">
+  <meta name="twitter:image" content="https://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../preview.css">
 <link rel="icon" type="image/png" href="../assets/icon-32.png">
 </head>
 <body>
@@ -65,46 +66,11 @@
             View Source
           </a>
         </div>
-        <p class="hero-note">Supports Chrome / Edge / Firefox · Completely Free & Open Source</p>
+        <p class="hero-note">For Chrome / Edge · Free & Open Source · Automatic recording is off by default</p>
+        <p class="hero-note">Features describe the current source. See the download page for published versions, or build from source for new features.</p>
       </div>
       <div class="hero-visual">
-        <div class="mockup-popup">
-          <div class="mockup-header">
-            <span class="mockup-title"><img src="../assets/icon-128.png" width="32" height="32" alt="" style="vertical-align:middle"> VideoTracker</span>
-            <span class="mockup-icon">⚙️</span>
-          </div>
-          <div class="mockup-item">
-            <div class="mockup-item-badge bilibili">Bilibili</div>
-            <div class="mockup-item-info">
-              <div class="mockup-item-title">Anime Episode 12</div>
-              <div class="mockup-item-progress">
-                <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
-                <span>14:32 / 22:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-item">
-            <div class="mockup-item-badge youtube">YouTube</div>
-            <div class="mockup-item-info">
-              <div class="mockup-item-title">TypeScript Advanced Tutorial EP5</div>
-              <div class="mockup-item-progress">
-                <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
-                <span>08:20 / 20:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-item">
-            <div class="mockup-item-badge iqiyi">iQIYI</div>
-            <div class="mockup-item-info">
-              <div class="mockup-item-title">TV Series Episode 10</div>
-              <div class="mockup-item-progress">
-                <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
-                <span>36:00 / 45:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="mockup-btn">📋 View All Records →</div>
-        </div>
+        <figure class="product-preview"><img src="../assets/popup-en-US.png" width="380" alt="Current VideoTracker popup with search, watch progress and feedback"><figcaption>Current interface · Fictional sample records</figcaption></figure>
       </div>
     </div>
   </section>
@@ -118,17 +84,17 @@
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
           <h3>Auto Record</h3>
-          <p>Automatically records playback progress when visiting video pages. Smart threshold filtering avoids invalid records.</p>
+          <p>Enable automatic recording in settings to save progress after your viewing threshold. Off by default; local recording needs no account.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⌨️</div>
           <h3>Shortcut Save</h3>
-          <p>Press Ctrl+Shift+V to instantly record current video without waiting for threshold. Toast notification on success.</p>
+          <p>Save with Ctrl+Shift+V, or Command+Shift+V on Mac. Manual saving works even when automatic recording is off.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🚀</div>
           <h3>One-Click Resume</h3>
-          <p>Click any record to jump to the corresponding page and automatically seek to the last playback position.</p>
+          <p>Open a record to return to its video and restore your position in supported players. Compatibility depends on the website.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⏱️</div>
@@ -138,7 +104,7 @@
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3>Search & Filter</h3>
-          <p>Support keyword search and platform filtering to quickly find videos you want to continue watching.</p>
+          <p>Search titles in the popup. Filter the records page by title, episode and viewing date, with individual or batch deletion.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">☁️</div>
@@ -147,8 +113,18 @@
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
-          <h3>Automatic Detection</h3>
-          <p>Other sites automatically use generic HTML5 player detection. No domain setup required; automatic recording can be disabled per site.</p>
+          <h3>Site Exclusions</h3>
+          <p>Add a domain or webpage URL to stop automatic recording for it and its subdomains. Remove it to restore recording; saved records stay.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>Report a Problem</h3>
+          <p>Send up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB and an optional email. Confirm the purpose before your first submission.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Language & Theme</h3>
+          <p>Choose Chinese or English, with a light, dark or system theme for your records and settings.</p>
         </div>
       </div>
     </div>
@@ -183,7 +159,7 @@
         <div class="platform-card custom">
           <div class="platform-logo">➕</div>
           <div class="platform-name">Automatic Detection</div>
-          <div class="platform-domain">Any HTML5 Video Site</div>
+          <div class="platform-domain">Other compatible HTML5 sites</div>
         </div>
       </div>
     </div>
@@ -192,28 +168,28 @@
   <!-- How it works -->
   <section class="how-it-works">
     <div class="container">
-      <h2 class="section-title">How It Works</h2>
-      <p class="section-desc">Lightweight and seamless, works quietly in the background</p>
+      <h2 class="section-title">Get Started</h2>
+      <p class="section-desc">Save and resume videos without an account</p>
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
-          <h3>Detect Video</h3>
-          <p>Content Script automatically detects video players on current page and matches corresponding platform adapter.</p>
+          <h3>Install the Extension</h3>
+          <p>Download a published package and follow the installation guide. Local recording needs no sign-in.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <h3>Heartbeat Report</h3>
-          <p>Reports playback progress to Background Service Worker every 5 seconds to accumulate watch time.</p>
+          <h3>Choose How to Save</h3>
+          <p>Use the shortcut to save immediately, or enable automatic recording and choose a viewing threshold.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <h3>Threshold Save</h3>
-          <p>After watch time exceeds threshold, automatically saves video info and progress to local storage.</p>
+          <h3>Resume Watching</h3>
+          <p>Choose a video from the popup or records page to open its original page and resume in a supported player.</p>
         </div>
         <div class="step">
           <div class="step-num">4</div>
-          <h3>Resume or Encrypted Sync</h3>
-          <p>View records in Popup or Options page, click to continue, or sign in and unlock encrypted sync with your sync password.</p>
+          <h3>Sync or Send Feedback</h3>
+          <p>Sign in and enable encrypted sync when you need another device. Use the extension's feedback page to report a problem.</p>
         </div>
       </div>
     </div>
@@ -242,6 +218,10 @@
           <div class="privacy-point">
             <span class="check">✓</span>
             <span>Completely open source, code is auditable</span>
+          </div>
+          <div class="privacy-point">
+            <span class="check">✓</span>
+            <span>Confirmed feedback sends your text, image and entered email for developer support, separately from encrypted sync</span>
           </div>
           <div class="privacy-point">
             <span class="check">✓</span>

@@ -16,6 +16,7 @@ const { t } = useI18n();
 const message = useMessage();
 const dialog = useDialog();
 const settings = ref<Settings>({ ...DEFAULT_SETTINGS });
+const settingsLoaded = ref(false);
 const emit = defineEmits<{
   loginRequired: []
 }>();
@@ -35,7 +36,9 @@ const {
 const encryptionInitialized = ref(false);
 const encryptionUnlocked = ref(false);
 const encryptionBusy = ref(false);
-const encryptionStateLoading = ref(false);
+const autoSyncChanging = ref(false);
+const syncRequestPending = ref(false);
+const encryptionStateLoading = ref(true);
 const encryptionDialogOpen = ref(false);
 const showReset = ref(false);
 const newSyncPassword = ref('');
@@ -44,7 +47,7 @@ const resetAcknowledged = ref(false);
 const resetError = ref('');
 
 function openReset() {
-  if (encryptionBusy.value || isSyncing.value || encryptionDialogOpen.value || encryptionStateLoading.value) return;
+  if (autoSyncChanging.value || syncRequestPending.value || encryptionBusy.value || isSyncing.value || encryptionDialogOpen.value) return;
   newSyncPassword.value = '';
   confirmSyncPassword.value = '';
   resetAcknowledged.value = false;
@@ -103,6 +106,7 @@ const thresholdOptions = computed(() => THRESHOLD_OPTIONS.map((threshold) => ({
 onMounted(async () => {
   const s = await api.getSettings();
   if (s) settings.value = s;
+  settingsLoaded.value = true;
   await checkSession();
   await loadSyncMeta();
   await refreshEncryptionState();
@@ -142,6 +146,17 @@ async function persist() {
 }
 
 async function handleAutoSyncChange(val: boolean) {
+  if (autoSyncChanging.value || syncRequestPending.value || isSyncing.value || encryptionBusy.value || encryptionDialogOpen.value || encryptionStateLoading.value || showReset.value) return;
+
+  autoSyncChanging.value = true;
+  try {
+    await updateAutoSync(val);
+  } finally {
+    autoSyncChanging.value = false;
+  }
+}
+
+async function updateAutoSync(val: boolean) {
   if (encryptionBusy.value || encryptionDialogOpen.value || encryptionStateLoading.value || showReset.value) return;
 
   if (!val) {
@@ -205,19 +220,21 @@ async function handleAutoSyncChange(val: boolean) {
 }
 
 async function handleSync() {
-  if (encryptionBusy.value || isSyncing.value || showReset.value) return;
+  if (autoSyncChanging.value || syncRequestPending.value || encryptionBusy.value || isSyncing.value || encryptionDialogOpen.value || showReset.value) return;
   if (!isLoggedIn.value) {
     emit('loginRequired');
     return;
   }
 
-  await refreshEncryptionState();
-  if (!encryptionInitialized.value) {
-    await handleAutoSyncChange(true);
-    return;
-  }
+  // Include encryption checks and local reads in the button's pending state.
+  syncRequestPending.value = true;
+  try {
+    await refreshEncryptionState();
+    if (!encryptionInitialized.value) {
+      await updateAutoSync(true);
+      return;
+    }
 
-  if (encryptionInitialized.value) {
     if (!encryptionUnlocked.value) {
       if (encryptionDialogOpen.value) return;
       const password = await promptEncryptionPassword(t('options.settings.unlockEncryptedSync'));
@@ -231,7 +248,10 @@ async function handleSync() {
     }
 
     await handleEncryptedSync();
-    return;
+  } catch (error: any) {
+    message.error(error?.message || t('options.settings.syncFailed'));
+  } finally {
+    syncRequestPending.value = false;
   }
 }
 
@@ -239,6 +259,7 @@ async function refreshEncryptionState() {
   if (!isLoggedIn.value) {
     encryptionInitialized.value = false;
     encryptionUnlocked.value = false;
+    encryptionStateLoading.value = false;
     return;
   }
 
@@ -367,7 +388,7 @@ async function handleEncryptedSync() {
 
 const syncStatus = computed(() => {
   if (!isLoggedIn.value) return 'not-logged-in';
-  if (isSyncing.value || syncMeta.value.state === 'syncing') return 'syncing';
+  if (syncRequestPending.value || isSyncing.value || syncMeta.value.state === 'syncing') return 'syncing';
   if (syncMeta.value.state === 'error') return 'error';
   if (syncMeta.value.lastSyncAt) return 'synced';
   return 'not-synced';
@@ -481,7 +502,7 @@ function getSyncStatusActionText() {
             <button
               class="sync-status-wrapper"
               :class="getSyncStatusClass()"
-              :disabled="isSyncing && isLoggedIn"
+              :disabled="isLoggedIn && (autoSyncChanging || syncRequestPending || isSyncing || encryptionBusy || encryptionDialogOpen || showReset)"
               @click="handleSync"
               :title="getSyncStatusTitle()"
             >
@@ -499,13 +520,16 @@ function getSyncStatusActionText() {
               </NText>
             </div>
             <NSwitch
+              v-if="settingsLoaded"
               :value="settings.autoSync"
-              :loading="encryptionBusy || encryptionDialogOpen || encryptionStateLoading || isSyncing"
+              :loading="autoSyncChanging"
+              :disabled="syncRequestPending || isSyncing || encryptionBusy || encryptionDialogOpen || encryptionStateLoading || showReset"
               @update:value="handleAutoSyncChange"
             />
+            <span v-else class="auto-sync-placeholder" aria-hidden="true" />
           </div>
-          <div v-if="isLoggedIn && encryptionInitialized" class="reset-sync-entry">
-            <NButton text type="error" :disabled="encryptionBusy || isSyncing" @click="openReset">
+          <div v-if="isLoggedIn" class="reset-sync-entry">
+            <NButton text type="error" :disabled="autoSyncChanging || syncRequestPending || encryptionBusy || isSyncing || encryptionDialogOpen" @click="openReset">
               {{ t('options.settings.resetSyncEntry') }}
             </NButton>
           </div>
@@ -545,6 +569,7 @@ function getSyncStatusActionText() {
 
 <style scoped>
 .settings-cards { display: grid; gap: 24px; text-align: left; }
+.auto-sync-placeholder { width: 40px; height: 22px; flex-shrink: 0; }
 .settings-cards :deep(.n-card) { border-radius: 10px; }
 .settings-cards :deep(.n-card-header) { padding: 22px 24px 16px; font-weight: 600; }
 .settings-cards :deep(.n-card__content) { padding: 0 24px 24px; }

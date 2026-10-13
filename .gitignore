@@ -5,4 +5,5 @@ dist
 *.local
 .env
 private.pem
+output/website-preview/
 *Zone.Identifier

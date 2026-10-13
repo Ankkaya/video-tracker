@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, h } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  NInput, NSelect, NDatePicker, NButton, NCheckbox,
+  NInput, NDatePicker, NButton, NCheckbox,
   NPagination, NSpace, NEmpty, NTag, NProgress, NIcon,
   NCard, NPopconfirm, useMessage, useDialog, NText,
 } from 'naive-ui';
@@ -10,7 +10,6 @@ import type { WatchRecord } from '../../shared/types';
 import { api } from '../composables/useApi';
 import { formatTime, formatDate, platformIcons } from '../utils/format';
 import { STORAGE_KEYS } from '../../shared/constants';
-import { customPlatformOptions, matchesPlatform } from '../../shared/platformFilter';
 import { buildRecordResumeUrl } from '../../shared/resume';
 
 const { t } = useI18n();
@@ -19,33 +18,22 @@ const dialog = useDialog();
 
 const records = ref<WatchRecord[]>([]);
 const searchQuery = ref('');
-const platformFilter = ref<string>('all');
 /** [startMs, endMs] 或 null */
 const dateRange = ref<[number, number] | null>(null);
 const currentPage = ref(1);
 const PAGE_SIZE = 20;
 const selected = ref<Set<string>>(new Set());
 
-const platformOptions = computed(() => [
-  { label: t('options.records.allPlatforms'), value: 'all' },
-  { label: t('popup.platforms.bilibili'), value: 'bilibili' },
-  { label: t('popup.platforms.youtube'), value: 'youtube' },
-  { label: t('popup.platforms.iqiyi'), value: 'iqiyi' },
-  { label: t('popup.platforms.vqq'), value: 'vqq' },
-  ...customPlatformOptions(records.value),
-]);
-
 const filteredRecords = computed(() =>
   records.value.filter((r) => {
     const q = searchQuery.value.toLowerCase();
     const matchSearch =
       !q || r.title.toLowerCase().includes(q) || r.episode.toLowerCase().includes(q);
-    const matchPlatform = matchesPlatform(r, platformFilter.value);
     if (dateRange.value) {
       const [start, end] = dateRange.value;
       if (r.lastWatchedAt < start || r.lastWatchedAt > end) return false;
     }
-    return matchSearch && matchPlatform;
+    return matchSearch;
   })
 );
 
@@ -85,17 +73,12 @@ onUnmounted(() => {
   chrome.storage.onChanged.removeListener(onStorageChanged);
 });
 
-watch(platformOptions, options => {
-  if (!options.some(option => option.value === platformFilter.value)) platformFilter.value = 'all';
-});
-
-watch([searchQuery, platformFilter, dateRange], () => {
+watch([searchQuery, dateRange], () => {
   currentPage.value = 1;
 });
 
 function resetFilters() {
   searchQuery.value = '';
-  platformFilter.value = 'all';
   dateRange.value = null;
   currentPage.value = 1;
 }
@@ -159,11 +142,6 @@ defineExpose({ reload: loadRecords });
       >
         <template #prefix>🔍</template>
       </NInput>
-      <NSelect
-        v-model:value="platformFilter"
-        :options="platformOptions"
-        filterable style="width: 200px"
-      />
       <NDatePicker
         v-model:value="dateRange"
         type="daterange"
