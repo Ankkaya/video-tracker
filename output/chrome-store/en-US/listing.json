@@ -32,5 +32,6 @@
   "homepage": "https://video-tracker.ankkaya.top/",
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "support": "https://github.com/Ankkaya/video-tracker/issues",
-  "releaseNotes": "Current source 0.0.13 update notes (2026-10-13)\n• Site filters now use an exclusion list: add a domain or webpage URL to stop automatic recording for it and its subdomains; remove it to restore recording. Saved records stay.\n• New feedback page: up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB, optional email and first-submission consent. Failed submissions keep the draft.\n• Simplified popup and records search; records can be filtered by title, episode and viewing date, with batch deletion.\n• Updated bilingual layout, sync status, shortcut guidance and privacy disclosures."
+  "releaseNotes": "Current source 0.0.13 update notes (2026-10-13)\n• Site filters now use an exclusion list: add a domain or webpage URL to stop automatic recording for it and its subdomains; remove it to restore recording. Saved records stay.\n• New feedback page: up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB, optional email and first-submission consent. Failed submissions keep the draft.\n• Simplified popup and records search; records can be filtered by title, episode and viewing date, with batch deletion.\n• Updated bilingual layout, sync status, shortcut guidance and privacy disclosures.",
+  "dashboardStatus": "blocked_browser_access"
 }

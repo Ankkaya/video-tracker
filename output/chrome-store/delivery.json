@@ -1,7 +1,7 @@
 {
   "version": "0.0.13",
   "date": "2026-10-13",
-  "status": "repository_materials_updated_not_uploaded",
+  "status": "blocked_browser_access",
   "locales": [
     "zh-CN",
     "en-US"
@@ -19,14 +19,24 @@
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "support": "https://github.com/Ankkaya/video-tracker/issues",
   "preview": "index.html",
-  "packageStatus": "Latest version built locally; not uploaded to either store or published as a GitHub Release.",
+  "packageStatus": "Published as a GitHub Release; individual store upload/review status is recorded separately.",
   "package": "releases/video-tracker-0.0.13-chrome-mv3.zip",
   "sha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
   "bytes": 438644,
   "historicalDelivery": "archive/delivery-before-2026-10-13.json",
   "pending": [
-    "Verify authentication and sync with the formal extension ID.",
-    "Upload localized descriptions, screenshots and updated privacy disclosures when authorized.",
-    "Submit for store review when authorized."
-  ]
+    "Complete store dashboard upload and review submission; see recorded blocker."
+  ],
+  "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13",
+  "submission": {
+    "version": "0.0.13",
+    "date": "2026-10-13",
+    "status": "blocked_browser_access",
+    "packageUploaded": false,
+    "descriptionsSaved": false,
+    "submittedForReview": false,
+    "blocker": "Browser tool rejected navigation to the Chrome Web Store developer dashboard with Not allowed; no further dashboard actions performed.",
+    "developerDashboard": "https://chrome.google.com/u/1/webstore/devconsole/ca08487f-410e-421a-9607-2bb4ddc12ee4/khcbepelehjlhplgepkmapfhcjimgedf/edit",
+    "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13"
+  }
 }

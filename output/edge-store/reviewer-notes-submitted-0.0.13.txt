@@ -1,0 +1,10 @@
+VideoTracker 0.0.13: local video-progress recording, optional encrypted sync, domain exclusions and voluntary feedback. Automatic recording is OFF by default.
+
+No account is needed for local recording or feedback.
+1. Open the toolbar popup. Add sample record if empty, then open View All Records. Test title/episode search, viewing-date filters, opening records and single/batch deletion. Samples test the list only.
+2. Play a supported YouTube/Bilibili/iQIYI/Tencent video. Save with Ctrl+Shift+V; assign it in edge://extensions/shortcuts if needed. Manual saving works with automatic recording off. Resume depends on the player.
+3. Enable automatic recording in Settings, keep the 30-second threshold and play past it. Add a domain or webpage URL under Site exclusions: automatic recording stops for it and subdomains, saved records remain and manual saving still works. Remove the exclusion to restore recording.
+4. Open Report an issue. Text limit is 500 characters; optional PNG/JPG/WebP is one image up to 5 MB; email is optional. First-submit confirmation explains readable developer support data. Cancel sends nothing; consent submits. Network failures retain the draft. Use disposable review content.
+
+Optional sync needs an account. No shared demo credentials are shipped because each account has private encrypted data and a user-chosen sync password. Reviewers can create a free account in Settings/Login (email/password registration and email confirmation, or Google/GitHub sign-in). Set a separate sync password, sync, then sign in on a second profile and unlock with that password. Reset only disposable data. Supabase Auth/sync/feedback services are operational. Remote thumbnails may request images with sync off. Feedback is separate from end-to-end encrypted record sync.
+Privacy: https://video-tracker.ankkaya.top/privacy-policy.html

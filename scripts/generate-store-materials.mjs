@@ -106,4 +106,37 @@ await json('output/chrome-store/privacy-form.json', {
   sources: ['PRIVACY_POLICY.md', 'docs/STORE_LISTING.md', 'https://developer.chrome.com/docs/webstore/cws-dashboard-privacy', 'https://developer.chrome.com/docs/webstore/program-policies/disclosure-requirements'],
   dashboardStatus: 'Repository reference only; actual dashboard selections unchanged. Confirm category definitions at submission.',
 });
-console.log(`Generated bilingual Chrome and Edge materials for source ${version}. No dashboard changes.`);
+// Publication ledgers reflect verified remote actions; regenerating copy must not erase them.
+let publication;
+try { publication = JSON.parse(await readFile(resolve(root, 'releases', `PUBLISH_STATUS_${version}.json`), 'utf8')); } catch {}
+for (const store of ['chrome-store', 'edge-store']) {
+  const base = `output/${store}`;
+  let submission;
+  try { submission = JSON.parse(await readFile(resolve(root, base, 'submission-status.json'), 'utf8')); } catch {}
+  if (submission?.version !== version) submission = undefined;
+  const delivery = JSON.parse(await readFile(resolve(root, base, 'delivery.json'), 'utf8'));
+  if (publication?.version === version) {
+    delivery.release = publication.release;
+    delivery.packageStatus = 'Published as a GitHub Release; individual store upload/review status is recorded separately.';
+  }
+  if (submission) {
+    delivery.status = submission.status;
+    delivery.submission = submission;
+    delivery.pending = submission.submittedForReview ? ['Await store review result.'] : ['Complete store dashboard upload and review submission; see recorded blocker.'];
+    const stateText = submission.submittedForReview
+      ? `${version} 已提交商店审核，后台状态为 ${submission.dashboardStatus}；尚未代表审核通过。`
+      : `商店后台访问被工具拒绝（Not allowed），尚未上传或提交审核；详见 submission-status.json。`;
+    const readme = await readFile(resolve(root, base, 'README.md'), 'utf8');
+    await write(`${base}/README.md`, readme.replace('仅更新仓库，未上传或提交审核。', stateText).replace('未上传商店或提交审核。', stateText));
+    const preview = await readFile(resolve(root, base, 'index.html'), 'utf8');
+    await write(`${base}/index.html`, preview.replace('仅同步仓库，未上传商店、未提交审核。', escape(stateText)));
+    for (const locale of ['zh-CN', 'en-US']) {
+      const listing = JSON.parse(await readFile(resolve(root, base, locale, 'listing.json'), 'utf8'));
+      listing.dashboardStatus = submission.status;
+      if (submission.descriptionsSaved) listing.materialStatus = 'saved_to_dashboard';
+      await json(`${base}/${locale}/listing.json`, listing);
+    }
+  }
+  await json(`${base}/delivery.json`, delivery);
+}
+console.log(`Generated bilingual materials for ${version}, preserving recorded publication status. No dashboard actions performed by this script.`);

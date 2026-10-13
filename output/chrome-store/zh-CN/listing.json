@@ -32,5 +32,6 @@
   "homepage": "https://video-tracker.ankkaya.top/",
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "support": "https://github.com/Ankkaya/video-tracker/issues",
-  "releaseNotes": "当前源码 0.0.13 更新说明（2026-10-13）\n• 站点过滤改为排除名单，支持粘贴网页链接及子域名匹配；移出名单恢复自动记录，保留已有记录。\n• 新增插件内反馈：最多 500 字、单张不超过 5 MB 的图片、可选邮箱，首次提交前确认用途，失败保留内容。\n• 简化记录页与弹窗搜索；记录页按标题、分集信息和日期筛选，支持批量删除。\n• 更新中英文布局、同步状态、快捷键说明及与当前功能一致的隐私披露。"
+  "releaseNotes": "当前源码 0.0.13 更新说明（2026-10-13）\n• 站点过滤改为排除名单，支持粘贴网页链接及子域名匹配；移出名单恢复自动记录，保留已有记录。\n• 新增插件内反馈：最多 500 字、单张不超过 5 MB 的图片、可选邮箱，首次提交前确认用途，失败保留内容。\n• 简化记录页与弹窗搜索；记录页按标题、分集信息和日期筛选，支持批量删除。\n• 更新中英文布局、同步状态、快捷键说明及与当前功能一致的隐私披露。",
+  "dashboardStatus": "blocked_browser_access"
 }

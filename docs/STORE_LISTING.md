@@ -1,6 +1,6 @@
 # Chrome Web Store / Edge Add-ons 上架资料
 
-适用当前源码版本：`0.0.13`。更新日期：2026-10-13。最新本地安装包为 `releases/video-tracker-0.0.13-chrome-mv3.zip`。商店资料只更新仓库，未上传或提交审核。已公开发布版本以 GitHub Releases 为准。
+适用版本：`0.0.13`。更新日期：2026-10-13。[GitHub Release](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13) 已发布。Edge 已提交审核（In review）；Chrome 后台访问被浏览器工具拒绝，未上传或提交。实际商店状态以各自 `output/*-store/submission-status.json` 和后台为准。
 
 以下中英文介绍可用于商店详情页。简短描述与 `public/_locales` 中的扩展描述保持一致；隐私摘要以仓库根目录的 `PRIVACY_POLICY.md` 为准。
 

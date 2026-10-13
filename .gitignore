@@ -6,4 +6,5 @@ dist
 .env
 private.pem
 output/website-preview/
+output/edge-store/evidence/
 *Zone.Identifier

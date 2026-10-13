@@ -1,6 +1,6 @@
 # Edge Add-ons Store Privacy Form Content (English)
 
-Applies to the current 0.0.13 source and local package. Updated: 2026-10-13. Repository materials only; not uploaded or submitted for review.
+Applies to version 0.0.13. Updated: 2026-10-13. Saved to the Edge dashboard and submitted for review (In review). Exact entered permission text is saved in `output/edge-store/permission-disclosures-submitted-0.0.13.json`.
 
 ## Single Purpose Description
 
