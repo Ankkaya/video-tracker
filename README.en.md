@@ -2,7 +2,7 @@
 
 [简体中文](README.md)
 
-Current source version: `0.0.13`. Documentation updated: 2026-10-13. The latest local Chrome / Edge package is `releases/video-tracker-0.0.13-chrome-mv3.zip`. Publicly released packages may be older; check [GitHub Releases](https://github.com/Ankkaya/video-tracker/releases).
+Current version: `0.0.13`, released on 2026-10-13. [Download the latest Chrome / Edge package](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.13/video-tracker-0.0.13-chrome-mv3.zip) · [Release notes and checksum files](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13).
 
 [Website](https://video-tracker.ankkaya.top/en/) · [Privacy policy](https://video-tracker.ankkaya.top/privacy-policy.html) · [Support](https://github.com/Ankkaya/video-tracker/issues)
 
