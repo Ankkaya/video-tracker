@@ -1,0 +1,24 @@
+Brand icons identify the source of saved videos. Trademarks belong to their respective owners.
+
+SVG icons: Simple Icons 13.21.0, CC0-1.0
+https://github.com/simple-icons/simple-icons/tree/13.21.0
+https://github.com/simple-icons/simple-icons/blob/13.21.0/LICENSE.md
+
+bilibili: https://www.bilibili.com/favicon.ico
+bilibili.svg (old icon retained for preview comparison only): https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/bilibili.svg
+youtube: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/youtube.svg
+netflix: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/netflix.svg
+twitch: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/twitch.svg
+vimeo: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/vimeo.svg
+dailymotion: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/dailymotion.svg
+niconico: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/niconico.svg
+primevideo: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/primevideo.svg
+crunchyroll: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/crunchyroll.svg
+tiktok: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/tiktok.svg
+kuaishou: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/kuaishou.svg
+kick: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/kick.svg
+rumble: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/rumble.svg
+ted: https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/ted.svg
+iqiyi: https://www.iqiyi.com/favicon.ico
+vqq: https://v.qq.com/favicon.ico
+youku: https://www.youku.com/favicon.ico

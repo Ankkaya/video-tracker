@@ -27,6 +27,25 @@ function record(overrides: Partial<WatchRecord>): WatchRecord {
 }
 
 describe('encrypted sync data helpers', () => {
+  it('merges timestamp variants by video identity and retains a replay from zero and manual status', () => {
+    const local = record({ url: 'https://youtube.com/watch?v=abc&t=30', lastWatchedAt: 2000,
+      currentTime: 0, progress: 0, completed: false, completionSource: 'manual' });
+    const cloud = record({ url: 'https://youtu.be/abc', lastWatchedAt: 1000, currentTime: 100, progress: 1, completed: true });
+    const merged = mergeEncryptedRecords([local], [cloud]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({ currentTime: 0, progress: 0, completed: false, completionSource: 'manual' });
+  });
+
+  it('keeps Bilibili parts and multiple media on one page separate during sync', () => {
+    const base = { url: 'https://www.bilibili.com/video/BV123', platform: 'bilibili' };
+    expect(mergeEncryptedRecords([record({ ...base, episode: 'P2' })], [record({ ...base, episode: '正片' })])).toHaveLength(2);
+    expect(mergeEncryptedRecords([record({ platform: 'generic', mediaId: 'one' })], [record({ platform: 'generic', mediaId: 'two' })])).toHaveLength(2);
+  });
+
+  it('honors old URL-based deletion tombstones after identity normalization', () => {
+    const cloud = record({ url: 'https://youtu.be/abc', lastWatchedAt: 1000 });
+    expect(mergeEncryptedRecords([], [cloud], [{ key: 'youtube::https://youtu.be/abc', deletedAt: 2000 }])).toEqual([]);
+  });
   it('accepts only the v2 business envelope', () => {
     expect(() => validateSyncPlaintext(createSyncPlaintext([], []))).not.toThrow();
     for (const value of [null, { version: 1, records: [], customSites: [] },

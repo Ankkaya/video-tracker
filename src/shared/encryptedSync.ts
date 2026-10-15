@@ -1,5 +1,7 @@
 import { supabase } from '../supabase';
 import type { SiteRule, DeletedRecord, WatchRecord } from './types';
+import { recordKeyAliases, videoIdentity } from './videoIdentity';
+import { nearVideoEnd } from './watchStatus';
 import { CRYPTO_CONFIG, decryptJson, encryptJson, deriveKek, encryptBytes, exportAesKey, generateDataKey, generateSalt } from './crypto';
 import { getVerifiedDataKey, getVerifiedKeySalt, rememberResetDataKey, requireSessionDataKey } from './keyManager';
 import { SYNC_SCHEMA_VERSION, SYNC_ENCRYPTION_VERSION, type EncryptedSyncBlobRow } from './syncFormat';
@@ -15,7 +17,7 @@ export interface SyncPlaintext {
 
 
 function getRecordKey(record: Pick<WatchRecord, 'platform' | 'url'>): string {
-  return `${record.platform}::${record.url}`;
+  return videoIdentity(record).key;
 }
 
 function getRecordUpdatedAt(record: WatchRecord): number {
@@ -40,9 +42,11 @@ function mergeRecordPair(localRecord: WatchRecord, cloudRecord: WatchRecord): Wa
     episode: newer.episode || older.episode || '正片',
     platform: newer.platform || older.platform,
     platformName: preferText(newer.platformName, older.platformName) || newer.platform || older.platform,
-    currentTime: newer.currentTime > 0 ? newer.currentTime : older.currentTime,
+    currentTime: Number.isFinite(newer.currentTime) && newer.currentTime >= 0 ? newer.currentTime : older.currentTime,
     duration: newer.duration > 0 ? newer.duration : older.duration,
-    progress: newer.progress > 0 ? newer.progress : older.progress,
+    progress: Number.isFinite(newer.progress) && newer.progress >= 0 ? newer.progress : older.progress,
+    completed: newer.completed ?? nearVideoEnd(newer),
+    completionSource: newer.completionSource ?? 'auto',
     thumbnail: preferText(newer.thumbnail, older.thumbnail),
     notes: preferText(newer.notes, older.notes),
     lastWatchedAt: Math.max(localRecord.lastWatchedAt, cloudRecord.lastWatchedAt),
@@ -73,7 +77,7 @@ export function mergeEncryptedRecords(
 
   function setIfNotDeleted(record: WatchRecord) {
     const key = getRecordKey(record);
-    const deletedAt = deletedByKey.get(key) ?? 0;
+    const deletedAt = Math.max(...recordKeyAliases(record).map(alias => deletedByKey.get(alias) ?? 0));
     if (deletedAt >= getRecordUpdatedAt(record)) {
       return;
     }
@@ -94,7 +98,7 @@ export function mergeEncryptedRecords(
 }
 
 export function pruneSupersededDeletedRecords(records: WatchRecord[], deletedRecords: DeletedRecord[]): DeletedRecord[] {
-  const recordUpdatedByKey = new Map(records.map((record) => [getRecordKey(record), getRecordUpdatedAt(record)]));
+  const recordUpdatedByKey = new Map(records.flatMap(record => recordKeyAliases(record).map(key => [key, getRecordUpdatedAt(record)] as const)));
   return deletedRecords.filter((deletedRecord) => {
     const recordUpdatedAt = recordUpdatedByKey.get(deletedRecord.key) ?? 0;
     return deletedRecord.deletedAt >= recordUpdatedAt;

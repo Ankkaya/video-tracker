@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 /** 心跳间隔（毫秒） */
 export const HEARTBEAT_INTERVAL = 5000;
+export const PROGRESS_SAVE_INTERVAL = 30000;
 
 /** 可选阈值列表（秒） */
 export const THRESHOLD_OPTIONS = [0, 10, 30, 60, 120];
@@ -32,10 +33,13 @@ export const STORAGE_KEYS = {
   AUTH_META: 'video_tracker_auth_meta',
   AUTH_PENDING: 'video_tracker_auth_pending',
   ENCRYPTION_DEVICE_KEY: 'video_tracker_encryption_device_key',
+  FEATURE_TOUR: 'video_tracker_feature_tour',
 } as const;
 
 /** 消息类型 */
 export const MSG = {
+  MATCH_VIDEO: 'MATCH_VIDEO',
+  SET_RECORD_COMPLETED: 'SET_RECORD_COMPLETED',
   HEARTBEAT: 'HEARTBEAT',
   MANUAL_SAVE: 'MANUAL_SAVE',
   PAGE_UNLOAD: 'PAGE_UNLOAD',
@@ -51,8 +55,6 @@ export const MSG = {
   DELETE_RECORDS: 'DELETE_RECORDS',
   /** Popup 手动添加当前页面记录（不依赖 content script） */
   MANUAL_ADD_RECORD: 'MANUAL_ADD_RECORD',
-  /** Popup 添加示例记录，便于首次使用和商店审核验证 */
-  ADD_SAMPLE_RECORD: 'ADD_SAMPLE_RECORD',
   /** Content Script 请求 Background 探测 iframe 中的 video */
   PROBE_IFRAME_VIDEO: 'PROBE_IFRAME_VIDEO',
   /** Content Script 请求 Background 在当前 frame 的 MAIN world 安装播放器桥接 */

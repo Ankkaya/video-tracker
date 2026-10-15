@@ -14,6 +14,7 @@ import { useSync } from '../options/composables/useSync';
 import { buildRecordResumeUrl } from '../shared/resume';
 import ShortcutStatus from '../shared/components/ShortcutStatus.vue';
 import BrandIcon from '../shared/components/BrandIcon.vue';
+import { isRecordCompleted } from '../shared/watchStatus';
 
 const { t } = useI18n();
 const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
@@ -22,18 +23,25 @@ const { isSyncing, syncMeta, loadSyncMeta } = useSync();
 
 const query = ref('');
 const records = ref<WatchRecord[]>([]);
+const recordsLoaded = ref(false);
+const recordsError = ref(false);
 const manualSaveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
 const showSyncModal = ref(false);
 
 async function loadRecords() {
+  recordsError.value = false;
   try {
     const response = await chrome.runtime.sendMessage({ type: MSG.GET_RECORDS });
-    if (response?.records) {
+    if (response?.records && !response.error) {
       records.value = response.records
         .sort((a: WatchRecord, b: WatchRecord) => b.lastWatchedAt - a.lastWatchedAt);
+      recordsLoaded.value = true;
+    } else {
+      throw new Error('Records unavailable');
     }
   } catch (err) {
     logger.error('获取记录失败:', err);
+    recordsError.value = true;
   }
 }
 
@@ -51,17 +59,18 @@ function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>,
 }
 
 onMounted(async () => {
+  chrome.storage.onChanged.addListener(onStorageChanged);
   await loadRecords();
   await checkSession();
   await loadSyncMeta();
-  chrome.storage.onChanged.addListener(onStorageChanged);
 });
 
 onUnmounted(() => {
   chrome.storage.onChanged.removeListener(onStorageChanged);
 });
 
-const recentRecords = computed(() => records.value.filter(record =>
+const continuingRecords = computed(() => records.value.filter(record => !isRecordCompleted(record)));
+const recentRecords = computed(() => continuingRecords.value.filter(record =>
   `${record.title} ${record.episode}`.toLowerCase().includes(query.value.trim().toLowerCase())
 ).slice(0, 3));
 
@@ -74,8 +83,12 @@ async function deleteRecord(id: string) {
   }
 }
 
-function openRecord(record: WatchRecord) {
-  chrome.tabs.create({ url: buildRecordResumeUrl(record) });
+async function openRecord(record: WatchRecord) {
+  try {
+    await chrome.tabs.create({ url: buildRecordResumeUrl(record) });
+  } catch (err) {
+    logger.error('打开记录失败:', err);
+  }
 }
 
 function openSettings() {
@@ -114,31 +127,6 @@ async function manualAddCurrentPage() {
     }
   } catch (err) {
     logger.error('手动添加失败:', err);
-    manualSaveStatus.value = 'error';
-  }
-  setTimeout(() => { manualSaveStatus.value = 'idle'; }, 2000);
-}
-
-async function addSampleRecord() {
-  manualSaveStatus.value = 'saving';
-  try {
-    const response = await chrome.runtime.sendMessage({
-      type: MSG.ADD_SAMPLE_RECORD,
-      data: {
-        title: 'YouTube sample - resume at 10:00',
-        episode: 'Sample video',
-        platformName: 'YouTube',
-      },
-    });
-
-    if (response?.success) {
-      manualSaveStatus.value = 'success';
-      await loadRecords();
-    } else {
-      manualSaveStatus.value = 'error';
-    }
-  } catch (err) {
-    logger.error('添加示例记录失败:', err);
     manualSaveStatus.value = 'error';
   }
   setTimeout(() => { manualSaveStatus.value = 'idle'; }, 2000);
@@ -270,7 +258,12 @@ function handleSyncClick() {
     </header>
     <ShortcutStatus compact />
 
-    <SearchBar v-model:query="query" />
+    <h2 v-if="records.length" class="section-title">{{ t('common.continueWatching') }}</h2>
+    <SearchBar v-if="continuingRecords.length" v-model:query="query" />
+
+    <div v-if="recordsError" class="no-results" role="alert">
+      {{ t('options.records.loadFailed') }} <button @click="loadRecords">{{ t('common.retry') }}</button>
+    </div>
 
     <RecordList
       v-if="recentRecords.length > 0"
@@ -279,8 +272,15 @@ function handleSyncClick() {
       @open="openRecord"
     />
 
-    <p v-else-if="records.length" class="no-results">{{ t('options.records.emptyDescription') }}</p>
-    <EmptyState v-else @add-sample="addSampleRecord" />
+    <div v-else-if="records.length && !continuingRecords.length" class="no-results">
+      <p>{{ t('popup.allCompleted') }}</p>
+      <p>{{ t('popup.completedHint') }}</p>
+    </div>
+    <div v-else-if="records.length" class="no-results">
+      <p>{{ t('options.records.noMatches') }}</p>
+      <button @click="query = ''">{{ t('popup.clearSearch') }}</button>
+    </div>
+    <EmptyState v-else-if="recordsLoaded && !recordsError" />
 
     <button class="view-all-btn" @click="openAllRecords">
       {{ t('popup.viewAllRecords') }}
@@ -314,10 +314,15 @@ function handleSyncClick() {
 </template>
 
 <style scoped>
+.section-title { margin: 12px 0 8px; font-size: 13px; }
 .popup-container {
   padding: 12px;
   min-width: 360px;
 }
+
+.no-results { padding: 16px; font-size: 12px; text-align: center; }
+.no-results p { margin: 6px 0; font-size: 12px; line-height: 1.6; }
+.no-results button { margin-top: 8px; border: none; background: transparent; color: #4361ee; cursor: pointer; }
 
 .header {
   display: flex;

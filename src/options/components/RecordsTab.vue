@@ -1,23 +1,30 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, h } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  NInput, NDatePicker, NButton, NCheckbox,
-  NPagination, NSpace, NEmpty, NTag, NProgress, NIcon,
-  NCard, NPopconfirm, useMessage, useDialog, NText,
+  NInput, NDatePicker, NButton, NCheckbox, NAlert,
+  NPagination, NSpace, NEmpty, NTag, NProgress, NTooltip,
+  NCard, NPopconfirm, useMessage, useDialog, NText, NRadioGroup, NRadioButton,
 } from 'naive-ui';
 import type { WatchRecord } from '../../shared/types';
-import { api } from '../composables/useApi';
-import { formatTime, formatDate, platformIcons } from '../utils/format';
+import { api, BackgroundUnavailableError } from '../composables/useApi';
+import { formatTime, formatDate } from '../utils/format';
+import SiteIcon from '../../shared/components/SiteIcon.vue';
 import { STORAGE_KEYS } from '../../shared/constants';
 import { buildRecordResumeUrl } from '../../shared/resume';
+import { isRecordCompleted } from '../../shared/watchStatus';
 
 const { t } = useI18n();
 const message = useMessage();
 const dialog = useDialog();
 
 const records = ref<WatchRecord[]>([]);
+const recordsLoaded = ref(false);
+const recordsError = ref(false);
+const completionPending = ref(new Set<string>());
+const completionError = ref<{ message: string; needsReload: boolean } | null>(null);
 const searchQuery = ref('');
+const statusFilter = ref<'watching' | 'completed'>('watching');
 /** [startMs, endMs] 或 null */
 const dateRange = ref<[number, number] | null>(null);
 const currentPage = ref(1);
@@ -26,6 +33,7 @@ const selected = ref<Set<string>>(new Set());
 
 const filteredRecords = computed(() =>
   records.value.filter((r) => {
+    if (isRecordCompleted(r) !== (statusFilter.value === 'completed')) return false;
     const q = searchQuery.value.toLowerCase();
     const matchSearch =
       !q || r.title.toLowerCase().includes(q) || r.episode.toLowerCase().includes(q);
@@ -49,8 +57,14 @@ const allCurrentSelected = computed(
 );
 
 async function loadRecords() {
-  const list = await api.getRecords();
-  records.value = list.sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
+  recordsError.value = false;
+  try {
+    const list = await api.getRecords();
+    records.value = list.sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
+    recordsLoaded.value = true;
+  } catch {
+    recordsError.value = true;
+  }
 }
 
 function onVisibilityChange() {
@@ -73,9 +87,11 @@ onUnmounted(() => {
   chrome.storage.onChanged.removeListener(onStorageChanged);
 });
 
-watch([searchQuery, dateRange], () => {
+watch([searchQuery, dateRange, statusFilter], () => {
   currentPage.value = 1;
+  selected.value.clear();
 });
+watch(totalPages, pages => { currentPage.value = Math.min(currentPage.value, pages); });
 
 function resetFilters() {
   searchQuery.value = '';
@@ -124,15 +140,55 @@ async function deleteRecord(id: string) {
   message.success(t('options.records.deleteSingleSuccess'));
 }
 
-function openRecord(record: WatchRecord) {
-  chrome.tabs.create({ url: buildRecordResumeUrl(record) });
+async function openRecord(record: WatchRecord) {
+  try {
+    await chrome.tabs.create({ url: buildRecordResumeUrl(record) });
+  } catch {
+    message.error(t('options.records.openFailed'));
+  }
 }
+
+async function toggleCompleted(record: WatchRecord) {
+  if (completionPending.value.has(record.id)) return;
+  completionPending.value.add(record.id);
+  completionError.value = null;
+  try {
+    const updated = await api.setCompleted(record.id, !isRecordCompleted(record));
+    if (updated) records.value = records.value.map(item => item.id === updated.id ? updated : item);
+    else await loadRecords();
+  } catch (error) {
+    const needsReload = error instanceof BackgroundUnavailableError;
+    const reason = error instanceof Error ? error.message : String(error);
+    completionError.value = {
+      message: needsReload ? t('options.records.statusNeedsReload') : t('options.records.statusFailedDetail', { reason }),
+      needsReload,
+    };
+  } finally {
+    completionPending.value.delete(record.id);
+  }
+}
+
+function reloadExtension() { chrome.runtime.reload(); }
 
 defineExpose({ reload: loadRecords });
 </script>
 
 <template>
-  <NCard class="records-panel">
+  <NCard class="records-panel" data-tour="records">
+    <NAlert v-if="completionError" type="error" class="completion-error" closable @close="completionError = null" style="margin-bottom: 16px">
+      {{ completionError.message }}
+      <div v-if="completionError.needsReload" style="margin-top: 12px">
+        <NButton size="small" @click="reloadExtension">{{ t('options.records.reloadExtension') }}</NButton>
+      </div>
+    </NAlert>
+    <NRadioGroup v-model:value="statusFilter" name="watch-status" :aria-label="t('options.records.watchStatus')" style="margin-bottom: 16px">
+      <NRadioButton value="watching">{{ t('options.records.watching') }}</NRadioButton>
+      <NRadioButton value="completed">{{ t('options.records.completed') }}</NRadioButton>
+    </NRadioGroup>
+    <NSpace v-if="recordsError" align="center" style="margin-bottom: 16px" role="alert">
+      <NText type="error">{{ t('options.records.loadFailed') }}</NText>
+      <NButton size="small" @click="loadRecords">{{ t('common.retry') }}</NButton>
+    </NSpace>
     <NSpace align="center" wrap style="margin-bottom: 16px">
       <NInput
         v-model:value="searchQuery"
@@ -189,10 +245,11 @@ defineExpose({ reload: loadRecords });
               :checked="selected.has(record.id)"
               @update:checked="(v) => toggleSelect(record.id, v)"
             />
+            <SiteIcon :url="record.url" :platform="record.platform" />
             <div class="record-main" @click="openRecord(record)">
               <div class="record-meta">
-                <span class="platform-icon">{{ platformIcons[record.platform] || '📹' }}</span>
-                <NTag class="platform-tag" size="small" :bordered="false">{{ record.platformName }}</NTag>
+                <NText class="platform-name" depth="3">{{ record.platformName }}</NText>
+                <NTag v-if="isRecordCompleted(record)" size="small" type="success">{{ t('options.records.completed') }}</NTag>
                 <NText class="record-time" depth="3">
                   {{ formatDate(record.lastWatchedAt) }}
                 </NText>
@@ -207,6 +264,7 @@ defineExpose({ reload: loadRecords });
                 :percentage="+(record.progress * 100).toFixed(1)"
                 :show-indicator="false"
                 :height="4"
+                color="#4361ee"
               />
               <NText depth="3" style="font-size: 11px">
                 {{ formatTime(record.currentTime) }} / {{ formatTime(record.duration) }}
@@ -214,10 +272,32 @@ defineExpose({ reload: loadRecords });
               </NText>
             </div>
             <div class="record-actions">
-              <NButton size="small" quaternary class="record-action-btn" @click="openRecord(record)" :title="t('options.records.openTooltip')">🔗</NButton>
+              <NTooltip :delay="200" trigger="hover">
+                <template #trigger>
+                  <NButton type="primary" class="record-action-btn resume-action" :aria-label="t(isRecordCompleted(record) ? 'options.records.replay' : 'common.continueWatching')" @click="openRecord(record)">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5a1 1 0 0 1 1.5-.86l10 6a1.6 1.6 0 0 1 0 2.72l-10 6A1 1 0 0 1 8 18.5Z" /></svg>
+                  </NButton>
+                </template>
+                {{ t(isRecordCompleted(record) ? 'options.records.replay' : 'common.continueWatching') }}
+              </NTooltip>
+              <NTooltip :delay="200" trigger="hover">
+                <template #trigger>
+                  <NButton class="record-action-btn status-action" :loading="completionPending.has(record.id)" :disabled="completionPending.has(record.id)" :type="isRecordCompleted(record) ? 'success' : 'primary'" :secondary="isRecordCompleted(record)" :ghost="!isRecordCompleted(record)" :aria-label="t(isRecordCompleted(record) ? 'options.records.markWatching' : 'options.records.markCompleted')" :aria-pressed="isRecordCompleted(record)" @click="toggleCompleted(record)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                  </NButton>
+                </template>
+                {{ t(isRecordCompleted(record) ? 'options.records.markWatching' : 'options.records.markCompleted') }}
+              </NTooltip>
               <NPopconfirm @positive-click="deleteRecord(record.id)">
                 <template #trigger>
-                  <NButton size="small" quaternary type="error" class="record-action-btn" :title="t('options.records.deleteTooltip')">🗑️</NButton>
+                  <NTooltip :delay="200" trigger="hover">
+                    <template #trigger>
+                      <NButton class="record-action-btn delete-action" :aria-label="t('popup.deleteTooltip')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" /></svg>
+                      </NButton>
+                    </template>
+                    {{ t('popup.deleteTooltip') }}
+                  </NTooltip>
                 </template>
                 {{ t('options.records.confirmDeleteSingle') }}
               </NPopconfirm>
@@ -235,8 +315,8 @@ defineExpose({ reload: loadRecords });
     </template>
 
     <NEmpty
-      v-else
-      :description="t('options.records.emptyDescription')"
+      v-else-if="recordsLoaded && !recordsError"
+      :description="t(records.length ? 'options.records.noMatches' : 'popup.emptyTitle')"
       :theme-overrides="{ iconSizeMedium: '48px' }"
       style="padding: 60px 0"
     >
@@ -244,7 +324,7 @@ defineExpose({ reload: loadRecords });
         <div class="records-empty-icon" aria-hidden="true">📭</div>
       </template>
       <template #extra>
-        <NText depth="3">{{ t('options.records.emptyExtra') }}</NText>
+        <NButton v-if="records.length" @click="resetFilters">{{ t('options.records.clearFilters') }}</NButton>
       </template>
     </NEmpty>
   </NCard>
@@ -268,38 +348,28 @@ defineExpose({ reload: loadRecords });
 @media (max-width: 600px) {
   .records-panel :deep(> .n-card__content) { padding: 16px; }
 }
-.record-card { cursor: default; }
+.record-card { cursor: default; border-radius: 12px; }
+.record-card :deep(> .n-card__content) { padding: 20px; }
 .record-row {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto 48px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
 }
 .record-main {
-  flex: 1;
   cursor: pointer;
   min-width: 0;
 }
 .record-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   min-height: 24px;
   margin-bottom: 4px;
 }
-.platform-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 24px;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-.platform-tag {
-  display: inline-flex;
-  align-items: center;
+.platform-name {
   max-width: 120px;
-  height: 22px;
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -308,7 +378,6 @@ defineExpose({ reload: loadRecords });
   display: inline-flex;
   align-items: center;
   height: 24px;
-  margin-left: auto;
   font-size: 11px;
   line-height: 1;
   white-space: nowrap;
@@ -316,14 +385,35 @@ defineExpose({ reload: loadRecords });
 .record-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  height: 24px;
-  flex: 0 0 auto;
+  gap: 8px;
+  margin-left: 8px;
+  white-space: nowrap;
 }
 .record-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
+}
+.record-action-btn svg { display: block; width: 18px; height: 18px; }
+.resume-action { color: #fff; }
+.delete-action { color: var(--n-text-color); }
+.delete-action:hover, .delete-action:focus-visible { color: #e5484d; background: rgba(229, 72, 77, 0.08); --n-border-hover: 1px solid #e5484d; --n-border-focus: 1px solid #e5484d; }
+.record-action-btn:focus-visible { outline: 2px solid #4361ee; outline-offset: 3px; }
+@media (max-width: 1000px) {
+  .record-row { gap: 12px; }
+  .record-actions { grid-column: 3 / -1; justify-content: flex-end; margin-left: 0; }
+  .record-main { grid-column: 3 / -1; }
+  .record-meta { flex-wrap: wrap; gap: 4px 8px; }
+}
+@media (max-width: 600px) {
+  .record-card :deep(> .n-card__content) { padding: 14px; }
+  .record-row { grid-template-columns: auto 40px minmax(0, 1fr); gap: 10px; }
+  .record-row > :deep(.site-icon) { width: 40px; height: 40px; border-radius: 10px; }
+  .record-actions { grid-column: 2 / -1; }
 }
 .record-title {
   font-size: 14px;

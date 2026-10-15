@@ -1,12 +1,5 @@
 import { defineConfig } from 'wxt';
 import UnoCSS from 'unocss/vite';
-import { loadEnv } from 'vite';
-
-const env = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
-const extensionKey = env.WXT_EXTENSION_KEY;
-
-// 只在开发环境包含 key，生产构建不包含（商店不允许 key 字段）
-const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
@@ -18,7 +11,6 @@ export default defineConfig({
     description: '__MSG_extensionDescription__',
     default_locale: 'en_US',
     version: '0.0.13',
-    ...(isDevelopment && extensionKey ? { key: extensionKey } : {}),
     permissions: ['storage', 'activeTab', 'tabs', 'scripting', 'identity'],
     host_permissions: ['*://*/*'],
     icons: {

@@ -1,5 +1,9 @@
 /** 观看记录 */
 export interface WatchRecord {
+  videoKey?: string;
+  mediaId?: string;
+  completed?: boolean;
+  completionSource?: 'auto' | 'manual';
   id: string;
   url: string;
   title: string;
@@ -40,6 +44,8 @@ export interface Settings {
 
 /** 视频信息（Content Script 提取） */
 export interface VideoInfo {
+  mediaId?: string;
+  event?: 'play' | 'pause' | 'seeked' | 'ended' | 'switch' | 'unload';
   /** pause/seeked 上报仅更新进度，不累计观看时长 */
   isPlaying?: boolean;
   url: string;

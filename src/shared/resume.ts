@@ -1,16 +1,19 @@
 import type { WatchRecord } from './types';
+import { videoIdentity } from './videoIdentity';
+import { isRecordCompleted } from './watchStatus';
 
 function cleanTimeParams(url: URL) {
   url.searchParams.delete('t');
   url.searchParams.delete('start');
 }
 
-export function buildRecordResumeUrl(record: Pick<WatchRecord, 'url' | 'platform' | 'currentTime'>): string {
+export function buildRecordResumeUrl(record: Pick<WatchRecord, 'url' | 'platform' | 'currentTime'> & Partial<WatchRecord>): string {
   try {
-    const url = new URL(record.url);
-    const seconds = Math.max(0, Math.floor(record.currentTime || 0));
+    const url = new URL(videoIdentity(record).url);
+    const seconds = record.completed || (record.duration && isRecordCompleted(record as WatchRecord)) ? 0 : Math.max(0, Math.floor(record.currentTime || 0));
 
     cleanTimeParams(url);
+    if (record.id) url.searchParams.set('vt_record', record.id);
 
     if (seconds <= 0) return url.toString();
 

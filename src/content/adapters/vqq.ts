@@ -29,7 +29,7 @@ export const vqqAdapter: VideoAdapter = {
     const episode = episodeEl?.textContent?.trim() || '正片';
 
     return {
-      url: location.href.split('?')[0],
+      url: location.href,
       title,
       episode,
       platform: this.platform,

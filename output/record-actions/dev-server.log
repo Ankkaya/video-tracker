@@ -1,0 +1,43 @@
+√ Started dev server @ http://localhost:3000
+i Pre-rendering chrome-mv3 for development with Vite 6.4.2
+√ Built extension in 1.016 s
+  ├─ .output\chrome-mv3-dev\manifest.json                   3.12 kB  
+  ├─ .output\chrome-mv3-dev\auth-redirect.html              6.75 kB  
+  ├─ .output\chrome-mv3-dev\options.html                    922 B    
+  ├─ .output\chrome-mv3-dev\popup.html                      988 B    
+  ├─ .output\chrome-mv3-dev\privacy-policy.html             11.89 kB 
+  ├─ .output\chrome-mv3-dev\background.js                   852.97 kB
+  ├─ .output\chrome-mv3-dev\chunks\reload-html-CjF4FejW.js  2.97 kB  
+  ├─ .output\chrome-mv3-dev\content-scripts\content.js      65.16 kB 
+  ├─ .output\chrome-mv3-dev\_locales\en_US\messages.json    304 B    
+  ├─ .output\chrome-mv3-dev\_locales\zh_CN\messages.json    359 B    
+  ├─ .output\chrome-mv3-dev\icon-128.png                    1.87 kB  
+  ├─ .output\chrome-mv3-dev\icon-16.png                     351 B    
+  ├─ .output\chrome-mv3-dev\icon-32.png                     578 B    
+  ├─ .output\chrome-mv3-dev\icon-48.png                     886 B    
+  ├─ .output\chrome-mv3-dev\icon-enabled-128.png            1.97 kB  
+  ├─ .output\chrome-mv3-dev\icon-enabled-16.png             356 B    
+  ├─ .output\chrome-mv3-dev\icon-enabled-32.png             586 B    
+  ├─ .output\chrome-mv3-dev\icon-enabled-48.png             900 B    
+  ├─ .output\chrome-mv3-dev\site-icons\bilibili.ico         4.29 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\bilibili.svg         1.4 kB   
+  ├─ .output\chrome-mv3-dev\site-icons\crunchyroll.svg      397 B    
+  ├─ .output\chrome-mv3-dev\site-icons\dailymotion.svg      1.47 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\iqiyi.ico            32.04 kB 
+  ├─ .output\chrome-mv3-dev\site-icons\kick.svg             229 B    
+  ├─ .output\chrome-mv3-dev\site-icons\kuaishou.svg         1.18 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\netflix.svg          350 B    
+  ├─ .output\chrome-mv3-dev\site-icons\niconico.svg         560 B    
+  ├─ .output\chrome-mv3-dev\site-icons\primevideo.svg       5.75 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\rumble.svg           631 B    
+  ├─ .output\chrome-mv3-dev\site-icons\SOURCES.txt          1.56 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\ted.svg              418 B    
+  ├─ .output\chrome-mv3-dev\site-icons\tiktok.svg           722 B    
+  ├─ .output\chrome-mv3-dev\site-icons\twitch.svg           307 B    
+  ├─ .output\chrome-mv3-dev\site-icons\vimeo.svg            712 B    
+  ├─ .output\chrome-mv3-dev\site-icons\vqq.ico              4.29 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\youku.ico            9.66 kB  
+  ├─ .output\chrome-mv3-dev\site-icons\youtube.png          525 B    
+  └─ .output\chrome-mv3-dev\site-icons\youtube.svg          474 B    
+Σ Total size: 1.02 MB                                     
+i Load ".output\chrome-mv3-dev" as an unpacked extension manually

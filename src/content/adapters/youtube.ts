@@ -28,7 +28,7 @@ export const youtubeAdapter: VideoAdapter = {
 
     const videoId = new URLSearchParams(location.search).get('v');
     return {
-      url: location.href.split('&t=')[0].split('?t=')[0],
+      url: location.href,
       title,
       episode,
       platform: this.platform,

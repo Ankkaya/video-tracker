@@ -1,10 +1,7 @@
 import { normalizeDomain } from './siteRules';
 import type { WatchRecord, Settings, SiteRule, DeletedRecord } from './types';
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from './constants';
-
-function getRecordKey(record: Pick<WatchRecord, 'platform' | 'url'>): string {
-  return `${record.platform}::${record.url}`;
-}
+import { recordKeyAliases, videoIdentity } from './videoIdentity';
 
 /** chrome.storage.local CRUD 封装 */
 export const StorageManager = {
@@ -19,13 +16,14 @@ export const StorageManager = {
   /** 保存/更新记录（upsert by id） */
   async saveRecord(record: WatchRecord): Promise<void> {
     const records = await this.getRecords();
-    const idx = records.findIndex((r) => r.id === record.id);
+    const unique = records.filter(r => r.id === record.id || videoIdentity(r).key !== videoIdentity(record).key);
+    const idx = unique.findIndex((r) => r.id === record.id);
     if (idx >= 0) {
-      records[idx] = record;
+      unique[idx] = record;
     } else {
-      records.unshift(record);
+      unique.unshift(record);
     }
-    await chrome.storage.local.set({ [STORAGE_KEYS.RECORDS]: records });
+    await chrome.storage.local.set({ [STORAGE_KEYS.RECORDS]: unique });
     await this.clearDeletedRecordIfSuperseded(record);
   },
 
@@ -77,12 +75,10 @@ export const StorageManager = {
     const deletedAt = Date.now();
 
     for (const record of records) {
-      const key = getRecordKey(record);
-      const existing = byKey.get(key);
-      byKey.set(key, {
-        key,
-        deletedAt: Math.max(existing?.deletedAt ?? 0, deletedAt),
-      });
+      for (const key of recordKeyAliases(record)) {
+        const existing = byKey.get(key);
+        byKey.set(key, { key, deletedAt: Math.max(existing?.deletedAt ?? 0, deletedAt) });
+      }
     }
 
     await this.setDeletedRecords(Array.from(byKey.values()));
@@ -90,9 +86,9 @@ export const StorageManager = {
 
   async clearDeletedRecordIfSuperseded(record: WatchRecord): Promise<void> {
     const deletedRecords = await this.getDeletedRecords();
-    const key = getRecordKey(record);
+    const keys = recordKeyAliases(record);
     const recordUpdatedAt = Math.max(record.lastWatchedAt, record.createdAt);
-    const next = deletedRecords.filter((item) => item.key !== key || item.deletedAt >= recordUpdatedAt);
+    const next = deletedRecords.filter((item) => !keys.includes(item.key) || item.deletedAt >= recordUpdatedAt);
 
     if (next.length !== deletedRecords.length) {
       await this.setDeletedRecords(next);

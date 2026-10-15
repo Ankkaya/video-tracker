@@ -28,6 +28,8 @@ import { STORAGE_KEYS } from '../shared/constants';
 import { api } from './composables/useApi';
 import { logger } from '../shared/logger';
 import BrandIcon from '../shared/components/BrandIcon.vue';
+import FeatureTour from './components/FeatureTour.vue';
+import { useFeatureTour } from './composables/useFeatureTour';
 
 type TabId = 'records' | 'settings' | 'sites' | 'feedback';
 
@@ -106,10 +108,17 @@ async function runInitialSync() {
 
 // Check URL parameter for login mode
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('tab') === 'feedback') activeTab.value = 'feedback';
+const requestedTab = urlParams.get('tab') as TabId | null;
+if (requestedTab && ['records', 'settings', 'sites', 'feedback'].includes(requestedTab)) activeTab.value = requestedTab;
 if (urlParams.get('login') === 'true') {
   showLoginView.value = true;
 }
+
+const {
+  open: tourOpen, ready: tourReady, busy: tourBusy, failed: tourFailed, step: tourStep,
+  start: startTour, next: nextTourStep, previous: previousTourStep, skip: skipTour,
+} = useFeatureTour(selectPage, !showLoginView.value && !window.location.hash.includes('access_token')
+  && (!requestedTab || requestedTab === 'records'));
 
 watch(activeTab, (tab) => {
   if (tab === 'records') recordsRef.value?.reload();
@@ -228,7 +237,7 @@ function getThemeIcon() {
             </div>
           </aside>
           <main class="options-main">
-            <header class="page-header"><div><h1>{{ pageTitle }}</h1><NText depth="3">{{ t(`options.layout.${showLoginView ? 'login' : activeTab}Subtitle`) }}</NText></div><div class="header-right"><NButton @click="toggleTheme" :title="t('common.theme')" :aria-label="t('common.theme')">{{ getThemeIcon() }}</NButton><NDropdown trigger="click" :options="languageOptions" @select="handleSelectLanguage"><NButton :title="t('language.title')">{{ SUPPORTED_LANGUAGES[currentLanguage] }} <svg class="language-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></NButton></NDropdown></div></header>
+            <header class="page-header"><div><h1>{{ pageTitle }}</h1><NText depth="3">{{ t(`options.layout.${showLoginView ? 'login' : activeTab}Subtitle`) }}</NText></div><div class="header-right"><NButton :disabled="!tourReady || tourBusy" @click="startTour">{{ t('featureTour.replay') }}</NButton><NButton @click="toggleTheme" :title="t('common.theme')" :aria-label="t('common.theme')">{{ getThemeIcon() }}</NButton><NDropdown trigger="click" :options="languageOptions" @select="handleSelectLanguage"><NButton :title="t('language.title')">{{ SUPPORTED_LANGUAGES[currentLanguage] }} <svg class="language-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg></NButton></NDropdown></div></header>
             <div class="page-content">
               <LoginView v-if="showLoginView" @success="handleLoginSuccess" @back="handleBackToSettings" />
               <RecordsTab v-else-if="activeTab === 'records'" ref="recordsRef" />
@@ -238,6 +247,8 @@ function getThemeIcon() {
             </div>
           </main>
         </NLayout>
+        <FeatureTour v-if="tourOpen" :step="tourStep" :busy="tourBusy" :failed="tourFailed"
+          @next="nextTourStep" @previous="previousTourStep" @skip="skipTour" />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

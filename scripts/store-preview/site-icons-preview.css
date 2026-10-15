@@ -1,0 +1,26 @@
+.site-icon-preview-notice {
+  border: 1px solid #dce2ff;
+  border-radius: 12px;
+  background: #f0f3ff;
+  color: #27334b;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.site-icon-preview-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.site-icon-preview-heading strong { font-size: 16px; }
+.site-icon-preview-heading p { margin: 6px 0 0; font-size: 12px; color: #63708b; line-height: 1.7; }
+.site-icon-preview-heading a { flex: none; font-size: 12px; color: #4361ee; }
+.site-icon-comparison { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.site-icon-comparison > span { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #e3e7f2; border-radius: 10px; padding: 14px 18px; }
+.site-icon-comparison img { width: 36px; height: 36px; object-fit: contain; }
+.site-icon-comparison span span { font-size: 13px; }
+.site-icon-comparison small { display: block; font-size: 11px; color: #63708b; margin-top: 4px; }
+html.dark .site-icon-preview-notice { background: #25283d; border-color: #3e466f; color: #e2e7f5; }
+html.dark .site-icon-comparison > span { background: #202030; border-color: #3e466f; }
+html.dark .site-icon-preview-heading p, html.dark .site-icon-comparison small { color: #b2bdd2; }
+@media (max-width: 600px) {
+  .site-icon-preview-heading { flex-direction: column; }
+  .site-icon-preview-notice { padding: 16px; }
+  .site-icon-comparison > span { width: 100%; min-width: 0; padding: 12px; }
+  .site-icon-comparison small { overflow-wrap: anywhere; }
+}

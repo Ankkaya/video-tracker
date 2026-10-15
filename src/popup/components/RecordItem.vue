@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import { computed } from 'vue';
 import type { WatchRecord } from '../../shared/types';
+import SiteIcon from '../../shared/components/SiteIcon.vue';
 
 const { t, locale } = useI18n();
 
@@ -36,20 +38,13 @@ function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString(locale.value === 'zh-CN' ? 'zh-CN' : 'en-US');
 }
 
-const platformIcons: Record<string, string> = {
-  bilibili: '📺',
-  youtube: '▶️',
-  iqiyi: '🥝',
-  vqq: '🎬',
-};
-
-const progressPercent = (props.record.progress * 100).toFixed(1);
+const progressPercent = computed(() => (props.record.progress * 100).toFixed(1));
 </script>
 
 <template>
   <div class="record-item" @click="emit('open')">
     <div class="record-header">
-      <span class="platform-icon">{{ platformIcons[record.platform] || '📹' }}</span>
+      <SiteIcon class="platform-icon" :url="record.url" :platform="record.platform" />
       <span class="platform-name">{{ record.platformName }}</span>
       <span class="time">{{ formatDate(record.lastWatchedAt) }}</span>
       <button class="delete-btn" @click.stop="emit('delete')" :title="t('popup.deleteTooltip')">✕</button>
@@ -67,6 +62,7 @@ const progressPercent = (props.record.progress * 100).toFixed(1);
         ({{ progressPercent }}%)
       </span>
     </div>
+    <button class="resume-btn" @click.stop="emit('open')">{{ t('common.continueWatching') }}</button>
   </div>
 </template>
 
@@ -85,6 +81,9 @@ const progressPercent = (props.record.progress * 100).toFixed(1);
   box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
 }
 
+.resume-btn { margin-top: 8px; padding: 5px 9px; border: 1px solid #d7dcff; border-radius: 6px; background: transparent; color: #4361ee; font-size: 12px; cursor: pointer; }
+.resume-btn:focus-visible { outline: 2px solid #4361ee; outline-offset: 2px; }
+
 .record-header {
   display: flex;
   align-items: center;
@@ -97,12 +96,14 @@ const progressPercent = (props.record.progress * 100).toFixed(1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
+  width: 24px;
   height: 22px;
+  border-radius: 5px;
   font-size: 14px;
   line-height: 1;
   flex: 0 0 auto;
 }
+.platform-icon :deep(img), .platform-icon :deep(svg) { width: 16px; height: 16px; }
 
 .platform-name {
   display: inline-flex;
@@ -201,6 +202,7 @@ html.dark .record-item {
   background: #222238;
   border-color: #383852;
 }
+html.dark .resume-btn { border-color: #414969; color: #a1b4ff; }
 
 html.dark .record-item:hover {
   border-color: #6c8cff;

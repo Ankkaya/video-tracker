@@ -27,14 +27,6 @@ export function formatDateStr(d: Date): string {
   return d.toISOString().split('T')[0];
 }
 
-/** 内置平台图标映射 */
-export const platformIcons: Record<string, string> = {
-  bilibili: '📺',
-  youtube: '▶️',
-  iqiyi: '🥝',
-  vqq: '🎬',
-};
-
 /** 校验域名合法性 */
 export function isValidDomain(domain: string): boolean {
   const pattern = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$/;

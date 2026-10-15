@@ -1,6 +1,7 @@
 import type { VideoInfo } from '../../shared/types';
 import type { VideoAdapter } from './types';
 import { findVideoElements, pickBestVideo } from '../videoProbe';
+import { videoMediaId } from '../../shared/videoIdentity';
 
 /**
  * 通用适配器
@@ -33,15 +34,16 @@ export const genericAdapter: VideoAdapter = {
     if (isInIframe && document.referrer) {
       try {
         const u = new URL(document.referrer);
-        currentUrl = u.origin + u.pathname + u.search;
+        currentUrl = u.href;
       } catch {
-        currentUrl = location.origin + location.pathname + location.search;
+        currentUrl = location.href;
       }
     } else {
-      currentUrl = location.origin + location.pathname + location.search;
+      currentUrl = location.href;
     }
 
     return {
+      mediaId: videoMediaId(video),
       url: currentUrl,
       title,
       episode: '正片',

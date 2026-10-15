@@ -29,6 +29,7 @@ beforeEach(async () => {
   const { default: script } = await import('../entrypoints/content');
   script.main({} as any);
   await flush();
+  sendMessage.mockClear();
 });
 afterEach(() => {
   vi.clearAllTimers();
@@ -40,6 +41,82 @@ afterEach(() => {
 });
 const heartbeats = () => sendMessage.mock.calls.filter(([m]) => m.type === MSG.HEARTBEAT);
 describe('generic content detection', () => {
+  it('keeps a saved video tracking when automatic creation is disabled', async () => {
+    settings = { ...settings, autoRecord: false };
+    sendMessage.mockImplementation(async (message: any) => message.type === MSG.MATCH_VIDEO
+      ? { record: { id: 'saved' }, allowNew: false } : { settings });
+    changed({ [STORAGE_KEYS.SETTINGS]: { newValue: settings } }, 'local');
+    await flush();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(heartbeats()).toHaveLength(1);
+  });
+
+  it('saves on pause, stops polling while paused, and resumes on play', async () => {
+    const video = document.querySelector('video')!;
+    Object.defineProperties(video, { currentTime: { configurable: true, value: 42 }, paused: { configurable: true, value: true } });
+    video.dispatchEvent(new Event('pause'));
+    await flush();
+    expect(heartbeats().at(-1)?.[0].data).toMatchObject({ currentTime: 42, event: 'pause', isPlaying: false });
+    const count = heartbeats().length;
+    await vi.advanceTimersByTimeAsync(60000);
+    expect(heartbeats()).toHaveLength(count);
+    Object.defineProperty(video, 'paused', { configurable: true, value: false });
+    video.dispatchEvent(new Event('play'));
+    await flush();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(heartbeats()).toHaveLength(count + 2);
+  });
+
+  it('reports ended immediately and saves the old identity on a route switch', async () => {
+    const video = document.querySelector('video')!;
+    Object.defineProperties(video, { currentTime: { configurable: true, value: 100 }, paused: { configurable: true, value: true } });
+    video.dispatchEvent(new Event('ended'));
+    await flush();
+    expect(heartbeats().at(-1)?.[0].data).toMatchObject({ currentTime: 100, event: 'ended' });
+    history.pushState({}, '', '/next-video');
+    await flush();
+    const unload = sendMessage.mock.calls.find(([message]) => message.type === MSG.PAGE_UNLOAD)?.[0];
+    expect(unload.data.info).toMatchObject({ currentTime: 100, event: 'switch' });
+    expect(unload.data.info.url).not.toContain('/next-video');
+  });
+
+  it('acknowledges a manual save only after background storage succeeds', async () => {
+    let resolveSave!: (value: any) => void;
+    sendMessage.mockImplementation(async (message: any) => {
+      if (message.type === MSG.GET_SETTINGS) return { settings };
+      if (message.type === MSG.MANUAL_SAVE) return new Promise(resolve => { resolveSave = resolve; });
+      return { success: true };
+    });
+    const respond = vi.fn();
+    messageListener({ type: MSG.MANUAL_SAVE_REQUEST }, {}, respond);
+    await flush();
+    expect(respond).not.toHaveBeenCalled();
+    resolveSave({ success: true });
+    await flush();
+    expect(respond).toHaveBeenCalledWith({ success: true });
+  });
+
+  it('returns a failure when a detected video cannot be stored', async () => {
+    sendMessage.mockImplementation(async (message: any) => message.type === MSG.MANUAL_SAVE
+      ? { success: false } : { settings });
+    const respond = vi.fn();
+    messageListener({ type: MSG.MANUAL_SAVE_REQUEST }, {}, respond);
+    await flush();
+    expect(respond).toHaveBeenCalledWith({ success: false, error: 'SAVE_FAILED' });
+  });
+
+  it('does not save stale progress when the player has disappeared', async () => {
+    await vi.advanceTimersByTimeAsync(5000);
+    document.body.innerHTML = '';
+    sendMessage.mockImplementation(async (message: any) => message.type === MSG.GET_SETTINGS
+      ? { settings } : { success: false });
+    const respond = vi.fn();
+    messageListener({ type: MSG.MANUAL_SAVE_REQUEST }, {}, respond);
+    await flush();
+    expect(respond).toHaveBeenCalledWith({ success: false, error: 'NO_VIDEO' });
+    expect(sendMessage.mock.calls.some(([m]) => m.type === MSG.MANUAL_SAVE)).toBe(false);
+  });
+
   it('manually saves cross-origin iframe progress while automatic recording is disabled', async () => {
     document.body.innerHTML = '<iframe></iframe>';
     settings = { ...settings, autoRecord: false };
@@ -81,7 +158,7 @@ describe('generic content detection', () => {
     changed({ [STORAGE_KEYS.SETTINGS]: { newValue: settings } }, 'local');
     await flush();
     await vi.advanceTimersByTimeAsync(5000);
-    expect(heartbeats()).toHaveLength(1);
+    expect(heartbeats()).toHaveLength(2); // immediate playback baseline, then the 5-second sample
   });
 });
 

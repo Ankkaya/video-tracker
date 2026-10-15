@@ -17,6 +17,7 @@ const message = useMessage();
 const dialog = useDialog();
 const settings = ref<Settings>({ ...DEFAULT_SETTINGS });
 const settingsLoaded = ref(false);
+const recordingChanging = ref(false);
 const emit = defineEmits<{
   loginRequired: []
 }>();
@@ -131,13 +132,23 @@ function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>,
 
 
 async function onAutoRecordChange(val: boolean) {
-  settings.value.autoRecord = val;
-  await persist();
+  await saveRecordingSettings({ autoRecord: val });
 }
 
 async function onThresholdChange(val: number) {
-  settings.value.threshold = val;
-  await persist();
+  await saveRecordingSettings({ threshold: val });
+}
+
+async function saveRecordingSettings(partial: Partial<Pick<Settings, 'autoRecord' | 'threshold'>>) {
+  if (!settingsLoaded.value || recordingChanging.value) return;
+  recordingChanging.value = true;
+  try {
+    await api.updateSettings(partial);
+    settings.value = { ...settings.value, ...partial };
+    message.success(t('options.settings.saveSuccess'));
+  } catch {
+    message.error(t('options.settings.saveFailed'));
+  } finally { recordingChanging.value = false; }
 }
 
 async function persist() {
@@ -448,19 +459,19 @@ function getSyncStatusActionText() {
   <div class="settings-cards">
   <NCard :title="t('options.layout.watchSettings')">
     <NSpace vertical :size="0">
-      <div class="setting-row">
+      <div class="setting-row" data-tour="auto-record">
         <div class="setting-info">
           <div class="setting-label">{{ t('options.settings.autoRecordLabel') }}</div>
           <NText depth="3" style="font-size: 13px">
             {{ t('options.settings.autoRecordDesc') }}
           </NText>
         </div>
-        <NSwitch :value="settings.autoRecord" @update:value="onAutoRecordChange" />
+        <NSwitch :value="settings.autoRecord" :disabled="!settingsLoaded || recordingChanging" :loading="recordingChanging" :aria-label="t('options.settings.autoRecordLabel')" @update:value="onAutoRecordChange" />
       </div>
 
       <NDivider style="margin: 16px 0" />
 
-      <div class="setting-row">
+      <div class="setting-row" data-tour="threshold">
         <div class="setting-info">
           <div class="setting-label">{{ t('options.settings.thresholdLabel') }}</div>
           <NText depth="3" style="font-size: 13px">
@@ -469,6 +480,7 @@ function getSyncStatusActionText() {
         </div>
         <NSelect
           :value="settings.threshold"
+          :disabled="!settingsLoaded || recordingChanging"
           :options="thresholdOptions"
           style="width: 140px"
           @update:value="onThresholdChange"
@@ -477,7 +489,7 @@ function getSyncStatusActionText() {
 
     </NSpace>
   </NCard>
-  <NCard class="shortcut-card" :title="t('options.layout.shortcuts')"><ShortcutStatus /></NCard>
+  <NCard class="shortcut-card" data-tour="shortcut" :title="t('options.layout.shortcuts')"><ShortcutStatus /></NCard>
   <NCard :title="t('options.settings.syncTitle')">
     <NSpace vertical :size="0">
 

@@ -1,10 +1,26 @@
 import type { WatchRecord, Settings, SiteRule } from '../../shared/types';
 import { MSG } from '../../shared/constants';
 
+export class BackgroundUnavailableError extends Error {}
+
 /** 与 background 通信的轻量封装 */
 export const api = {
+  async setCompleted(id: string, completed: boolean): Promise<WatchRecord | undefined> {
+    try {
+      const res = await chrome.runtime.sendMessage({ type: MSG.SET_RECORD_COMPLETED, data: { id, completed } });
+      if (!res || res.error === 'Unknown message type') throw new BackgroundUnavailableError('Background unavailable or outdated');
+      if (!res.success) throw new Error(res.error || 'Update failed');
+      return res.record;
+    } catch (error) {
+      if (error instanceof Error && /receiving end does not exist|could not establish connection|extension context invalidated|message (?:port|channel) closed/i.test(error.message)) {
+        throw new BackgroundUnavailableError(error.message);
+      }
+      throw error;
+    }
+  },
   async getRecords(): Promise<WatchRecord[]> {
     const res = await chrome.runtime.sendMessage({ type: MSG.GET_ALL_RECORDS });
+    if (!res?.records || res.error) throw new Error(res?.error || 'Records unavailable');
     return res?.records ?? [];
   },
 
@@ -23,7 +39,8 @@ export const api = {
   },
 
   async updateSettings(partial: Partial<Settings>): Promise<void> {
-    await chrome.runtime.sendMessage({ type: MSG.UPDATE_SETTINGS, data: partial });
+    const res = await chrome.runtime.sendMessage({ type: MSG.UPDATE_SETTINGS, data: partial });
+    if (!res?.success) throw new Error(res?.error || 'Unable to save settings');
   },
 
   async setSiteRule(domain: string, autoRecord: boolean): Promise<SiteRule[]> {

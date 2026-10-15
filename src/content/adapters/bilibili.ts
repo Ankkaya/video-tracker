@@ -34,7 +34,7 @@ export const bilibiliAdapter: VideoAdapter = {
     if (!video) return null;
 
     return {
-      url: location.href.split('?')[0],
+      url: location.href,
       title,
       episode,
       seriesName,

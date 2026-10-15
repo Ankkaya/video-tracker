@@ -33,6 +33,22 @@ npm run build
 
 Load `.output/chrome-mv3/` in Chrome or Edge. `npm run dev` starts development with hot reload. `npm test` runs the automated tests.
 
+## First use
+
+The records page opens on first installation with a four-step tour of records, automatic recording, minimum watch time and the manual-save shortcut. Next navigates to each page and highlights the relevant controls, which remain usable. Go back, skip, or restart from “Feature tour” in the page header. An unfinished tour resumes its saved step; completed or skipped tours do not reopen automatically.
+
+Finishing the tour returns to records. Enable automatic recording, open a video and play it for the minimum watch time. Use the manual-record shortcut assigned by your browser to save playback progress immediately. Choose “Continue watching” on a record to resume in a supported player.
+
+No account is needed. The feature tour remembers completion on this device, and updates do not reopen it. Existing users with records skip the tour. The records page and extension popup use simple empty-list messages, without additional first-save walkthrough cards. Searches with no results offer a way to clear filters. Refresh video pages that were open before installation. “Save page link” saves a link, not video progress.
+
+## Progress tracking and completion
+
+Existing records keep tracking even when automatic recording is off or the site is excluded from adding new records. Playback progress is read every 5 seconds and saved every 30 seconds, with immediate saves on pause, end and video switches. Only actual playback counts toward the threshold for adding a new video; paused, buffering and seek time do not count.
+
+The popup shows unfinished videos. All Records offers All / Watching / Completed filters and manual completion controls that preserve the playback position. Ending playback marks a video completed; reaching 98% with at most 10 seconds remaining also qualifies. Watch again opens from the beginning. Starting playback earlier returns the record to Watching.
+
+Matching uses platform video IDs and part/episode IDs. Generic sites use canonical page URLs and media sources, with title/duration as a fallback. Existing records remain compatible. Resume links verify the matching saved record before seeking; players without reliable content identity may need site-specific support.
+
 ## Data and privacy
 
 Viewing records are stored locally by default. Sign-in sends account information to the authentication service. Optional sync encrypts records on the device before upload to the configured Supabase service; the device remembers a sync data key locally. Remote thumbnails can make image requests even with sync off. No advertising trackers or analytics are used, and data is not sold.

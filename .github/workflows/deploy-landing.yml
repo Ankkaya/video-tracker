@@ -10,34 +10,57 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Huawei Cloud
+    name: Deploy to Tencent Cloud
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install sshpass
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
-
-      - name: Deploy landing page via rsync over sshpass
+      - name: Configure SSH key and known hosts
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TC_SERVER_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.TC_SERVER_KNOWN_HOSTS }}
         run: |
-          SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e rsync -avz --delete \
-            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "TC_SERVER_SSH_KEY is not configured" >&2
+            exit 1
+          fi
+          if [ -z "$SSH_KNOWN_HOSTS" ]; then
+            echo "TC_SERVER_KNOWN_HOSTS is not configured" >&2
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          ssh-keygen -y -P "" -f ~/.ssh/deploy_key > /dev/null
+          if ! ssh-keygen -F 43.139.44.156 -f ~/.ssh/known_hosts > /dev/null; then
+            echo "TC_SERVER_KNOWN_HOSTS has no entry for 43.139.44.156" >&2
+            exit 1
+          fi
+
+      - name: Deploy landing page via rsync over SSH
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" \
             landing/ \
-            root@124.70.160.134:/var/www/video-tracker/
+            root@43.139.44.156:/var/www/video-tracker/
 
       - name: Deploy auth-redirect.html
         run: |
-          SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e rsync -avz \
-            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" \
             public/auth-redirect.html \
-            root@124.70.160.134:/var/www/video-tracker/
+            root@43.139.44.156:/var/www/video-tracker/
 
       - name: Set permissions
         run: |
-          SSHPASS="${{ secrets.HW_SERVER_PASSWORD }}" sshpass -e ssh \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            root@124.70.160.134 \
+          ssh -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            root@43.139.44.156 \
             "chown -R www-data:www-data /var/www/video-tracker/ && find /var/www/video-tracker/ -type d -exec chmod 755 {} \; && find /var/www/video-tracker/ -type f -exec chmod 644 {} \;"

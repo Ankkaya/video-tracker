@@ -12,6 +12,7 @@ import { logger } from '../src/shared/logger';
 import { startPicker, parseTimePair } from '../src/content/picker';
 import { findVideoElements } from '../src/content/videoProbe';
 import { parseResumeTimeFromUrl } from '../src/shared/resume';
+import { mediaSourceId, videoIdentity } from '../src/shared/videoIdentity';
 
 export default defineContentScript({
   matches: ['*://*/*'],
@@ -52,14 +53,14 @@ export default defineContentScript({
      * 获取用于记录的页面 URL（顶层页面 URL）
      */
     function getPageUrl(): string {
-      if (!isInIframe) return location.origin + location.pathname + location.search;
+      if (!isInIframe) return location.href;
       try {
         if (document.referrer) {
           const u = new URL(document.referrer);
-          return u.origin + u.pathname + u.search;
+          return u.href;
         }
       } catch {}
-      return location.origin + location.pathname + location.search;
+      return location.href;
     }
 
     /**
@@ -76,6 +77,7 @@ export default defineContentScript({
 
     let currentAdapter: VideoAdapter | null = null;
     let lastVideoInfo: VideoInfo | null = null;
+    let lastVideoSource = '';
     let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
     let isActivated = false;
     let lastAutoSavedToastKey = '';
@@ -118,7 +120,7 @@ export default defineContentScript({
         teardownOnInvalidated();
         return null;
       }
-      if ((message as { type?: string }).type === MSG.HEARTBEAT && !autoRecordAllowed) return null;
+
       try {
         return await chrome.runtime.sendMessage(message);
       } catch (err: any) {
@@ -153,7 +155,7 @@ export default defineContentScript({
     }
 
     function handleMainWorldProgress(data: any) {
-      if (!data || data.paused) return;
+      if (!data || currentAdapter?.getVideoElement()) return;
       const currentTime = Number(data.currentTime);
       const duration = Number(data.duration);
       if (!Number.isFinite(currentTime) || !Number.isFinite(duration) || duration <= 0) return;
@@ -166,22 +168,64 @@ export default defineContentScript({
         platformName: '通用',
         currentTime,
         duration,
+        mediaId: data.mediaId || mediaSourceId(data.src, data.frameUrl || getPageUrl()),
+        event: data.event,
+        isPlaying: !data.paused,
       };
 
       isActivated = true;
-      lastVideoInfo = videoInfo;
-      logger.log(`[VideoTracker][main-bridge] 💓 ${data.source || 'player'}: ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
-      void safeSendMessage({
-        type: MSG.HEARTBEAT,
-        data: videoInfo,
-      });
+      publishProgress(videoInfo);
     }
 
     let autoRecordAllowed = false;
+    let recordingPageUrl = getPageUrl();
+    let trackingAllowed = false;
+    let matchedKey = '';
+    let matchGeneration = 0;
+
+    async function refreshTracking(info = currentAdapter?.extract(), event?: VideoInfo['event']) {
+      if (!info || contextInvalidated) return;
+      if (lastVideoInfo && videoIdentity(lastVideoInfo).key !== videoIdentity(info).key) flushCurrent('switch');
+      const generation = ++matchGeneration;
+      const previouslyAllowed = trackingAllowed;
+      const previousKey = matchedKey;
+      const result = await safeSendMessage({ type: MSG.MATCH_VIDEO, data: info });
+      if (generation !== matchGeneration || contextInvalidated) return;
+      matchedKey = videoIdentity(info).key;
+      trackingAllowed = !!result?.record || (result?.allowNew ?? autoRecordAllowed);
+      const player = currentAdapter?.getVideoElement();
+      if (trackingAllowed && player && !player.paused) startProgressPolling();
+      else clearProgressPolling();
+      if (event && trackingAllowed) publishProgress({ ...info, event, isPlaying: event === 'play' });
+      else if (trackingAllowed && player && !player.paused && (!previouslyAllowed || previousKey !== matchedKey)) {
+        publishProgress({ ...info, event: 'play', isPlaying: true });
+      }
+    }
+
+    function publishProgress(info: VideoInfo) {
+      const key = videoIdentity(info).key;
+      if (lastVideoInfo && videoIdentity(lastVideoInfo).key !== key) flushCurrent('switch');
+      lastVideoInfo = info;
+      lastVideoSource = boundVideo?.currentSrc || boundVideo?.getAttribute('src') || '';
+      if (key !== matchedKey) {
+        void refreshTracking(info, info.event ?? (info.isPlaying === false ? 'pause' : 'play'));
+        return;
+      }
+      if (trackingAllowed) void safeSendMessage({ type: MSG.HEARTBEAT, data: info });
+    }
+
+    function flushCurrent(event: 'switch' | 'unload') {
+      if (!lastVideoInfo) return;
+      const info = { ...lastVideoInfo, event, isPlaying: false };
+      void safeSendMessage({ type: MSG.PAGE_UNLOAD, data: { url: info.url, info } });
+      lastVideoInfo = null;
+    }
     let initGeneration = 0;
     async function init() {
       const generation = ++initGeneration;
       autoRecordAllowed = false;
+      trackingAllowed = false;
+      matchGeneration++;
       stopHeartbeat();
       stopRetryDetection();
       stopVideoDiscoveryObserver();
@@ -193,8 +237,9 @@ export default defineContentScript({
       const response = await safeSendMessage({ type: MSG.GET_SETTINGS });
       if (generation !== initGeneration || contextInvalidated) return;
       const settings = response?.settings;
+      recordingPageUrl = response?.pageUrl || getPageUrl();
       autoRecordAllowed = !!settings?.autoRecord && isSiteAutoRecordEnabled(response.pageUrl || 'https://' + getTopDomain(), settings.siteRules ?? []);
-      if (!autoRecordAllowed) return;
+
       if (currentAdapter?.getVideoElement()) {
         isActivated = true;
         startHeartbeat({ enableBridge: currentAdapter === genericAdapter });
@@ -202,7 +247,7 @@ export default defineContentScript({
         // 仅在有 iframe 且实际探测到视频时启动持续探测。
         if (!isInIframe && document.querySelector('iframe')) {
           const probe = await safeSendMessage({ type: MSG.PROBE_IFRAME_VIDEO });
-          if (generation !== initGeneration || !autoRecordAllowed) return;
+          if (generation !== initGeneration) return;
           if (probe?.success && probe.videoData) {
             isActivated = true;
             startIframeProbeHeartbeat();
@@ -248,7 +293,6 @@ export default defineContentScript({
             isActivated = true;
             startHeartbeat({ enableBridge: currentAdapter === genericAdapter });
             stopRetryDetection();
-            stopVideoDiscoveryObserver();
           } else {
             logger.log(`[VideoTracker]${frameLabel}   适配器存在但 getVideoElement() 返回 null`);
             currentAdapter = null;
@@ -277,11 +321,14 @@ export default defineContentScript({
       if (discoveryObserver || contextInvalidated) return;
 
       discoveryObserver = new MutationObserver((mutations) => {
-        if (isActivated || contextInvalidated) return;
-        const hasPlayer = mutations.some(m => [...m.addedNodes].some(n => n instanceof Element &&
+        if (contextInvalidated) return;
+        const hasPlayer = mutations.some(m => [...m.addedNodes, ...m.removedNodes].some(n => n instanceof Element &&
           (n.matches('video, iframe') || n.querySelector('video, iframe') || n.shadowRoot)));
         if (!hasPlayer) return;
-        void init();
+        if (isActivated) {
+          attachVideoListeners();
+          void refreshTracking();
+        } else void init();
       });
 
       discoveryObserver.observe(document.documentElement, {
@@ -298,31 +345,65 @@ export default defineContentScript({
     /** 当前已绑定 video 事件的元素 */
     let boundVideo: HTMLVideoElement | null = null;
 
-    /** 在 video 元素上绑定 pause/seeked 监听，确保关键节点立即上报最新进度 */
+    const videoEvents = ['play', 'pause', 'seeked', 'ended', 'loadedmetadata', 'emptied', 'loadstart'] as const;
     function attachVideoListeners() {
-      if (!currentAdapter) return;
-      const video = currentAdapter.getVideoElement();
+      const video = currentAdapter?.getVideoElement();
       if (!video || video === boundVideo) return;
+      if (boundVideo) flushCurrent('switch');
       detachVideoListeners();
       boundVideo = video;
-      video.addEventListener('pause', onVideoMoment);
-      video.addEventListener('seeked', onVideoMoment);
+      for (const name of videoEvents) video.addEventListener(name, onVideoMoment);
+      video.addEventListener('timeupdate', cacheCurrentPosition);
     }
 
     function detachVideoListeners() {
       if (!boundVideo) return;
-      boundVideo.removeEventListener('pause', onVideoMoment);
-      boundVideo.removeEventListener('seeked', onVideoMoment);
+      for (const name of videoEvents) boundVideo.removeEventListener(name, onVideoMoment);
+      boundVideo.removeEventListener('timeupdate', cacheCurrentPosition);
       boundVideo = null;
     }
 
-    /** pause/seeked 时立即上报一次最新进度 */
-    function onVideoMoment() {
-      if (!currentAdapter || !isActivated || contextInvalidated) return;
+    // No storage or DOM scanning here; keep an accurate old-video snapshot for a switch.
+    function cacheCurrentPosition() {
+      if (lastVideoInfo && boundVideo && Number.isFinite(boundVideo.duration) && boundVideo.duration > 0) {
+        const source = boundVideo.currentSrc || boundVideo.getAttribute('src') || '';
+        if (source !== lastVideoSource) return;
+        lastVideoInfo = { ...lastVideoInfo, currentTime: boundVideo.currentTime, duration: boundVideo.duration };
+      }
+    }
+
+    function onVideoMoment(event: Event) {
+      if (!currentAdapter || contextInvalidated) return;
+      if (event.type === 'emptied' || event.type === 'loadstart') {
+        flushCurrent('switch');
+        matchedKey = '';
+        trackingAllowed = false;
+        clearProgressPolling();
+        return;
+      }
       const videoInfo = currentAdapter.extract();
       if (!videoInfo) return;
-      lastVideoInfo = videoInfo;
-      void safeSendMessage({ type: MSG.HEARTBEAT, data: { ...videoInfo, isPlaying: false } });
+      if (event.type === 'loadedmetadata') { void refreshTracking(videoInfo); return; }
+      const type = event.type as VideoInfo['event'];
+      if (type === 'play') {
+        void refreshTracking(videoInfo, 'play');
+        return;
+      }
+      if (boundVideo?.paused || type === 'ended') clearProgressPolling();
+      publishProgress({ ...videoInfo, event: type, isPlaying: type === 'seeked' ? !boundVideo?.paused : false });
+    }
+
+    function clearProgressPolling() {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+
+    function startProgressPolling() {
+      if (heartbeatTimer) return;
+      heartbeatTimer = setInterval(() => {
+        attachVideoListeners();
+        sendHeartbeat();
+      }, HEARTBEAT_INTERVAL);
     }
 
     function formatResumeTime(seconds: number): string {
@@ -344,13 +425,24 @@ export default defineContentScript({
       let attempts = 0;
       const maxAttempts = 40;
 
-      const trySeek = () => {
+      const initialUrl = location.href;
+      const trySeek = async () => {
         if (contextInvalidated) return;
+        if (location.href !== initialUrl) return;
         attempts += 1;
 
         const video = currentAdapter?.getVideoElement() ?? document.querySelector('video');
         if (video) {
           try {
+            const expectedId = new URL(initialUrl).searchParams.get('vt_record');
+            if (expectedId) {
+              const info = currentAdapter?.extract();
+              const match = info && await safeSendMessage({ type: MSG.MATCH_VIDEO, data: info });
+              if (location.href !== initialUrl || !match?.record || match.record.id !== expectedId) {
+                if (attempts < maxAttempts && location.href === initialUrl) setTimeout(trySeek, 500);
+                return;
+              }
+            }
             const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : resumeTime + 1;
             const target = Math.min(resumeTime, Math.max(duration - 1, 0));
             if (Math.abs(video.currentTime - target) > 2) {
@@ -376,19 +468,14 @@ export default defineContentScript({
       trySeek();
     }
 
-    /** 启动心跳 */
+    /** Player listeners stay attached while paused; only playback uses the 5-second poll. */
     function startHeartbeat(options: { enableBridge?: boolean } = {}) {
-      stopVideoDiscoveryObserver();
       stopHeartbeat();
-      if (options.enableBridge) enableMainWorldBridge();
       attachVideoListeners();
+      startVideoDiscoveryObserver();
+      if (options.enableBridge && !currentAdapter?.getVideoElement()) enableMainWorldBridge();
       startResumeAttempt();
-      heartbeatTimer = setInterval(() => {
-        // 适配器可能在 SPA 切换后被替换；每次尝试重新绑定
-        attachVideoListeners();
-        startResumeAttempt();
-        sendHeartbeat();
-      }, HEARTBEAT_INTERVAL);
+      void refreshTracking(undefined, currentAdapter?.getVideoElement()?.paused ? undefined : 'play');
     }
 
     /** iframe 探测心跳定时器 */
@@ -455,11 +542,10 @@ export default defineContentScript({
         }
 
         const vd = response.videoData;
-        // 视频暂停时不上报
-        if (vd.paused) return;
+        // Fallback probes do not always receive media events, so detect their transitions here.
 
         const title = document.title?.trim() || '未命名视频';
-        const currentUrl = location.origin + location.pathname + location.search;
+        const currentUrl = getPageUrl();
 
         const videoInfo: VideoInfo = {
           url: currentUrl,
@@ -469,15 +555,15 @@ export default defineContentScript({
           platformName: '通用',
           currentTime: vd.currentTime,
           duration: vd.duration,
+          mediaId: mediaSourceId(vd.src, vd.frameUrl || getPageUrl()),
+          isPlaying: !vd.paused,
+          event: vd.ended ? 'ended' : vd.paused ? 'pause' : undefined,
         };
 
-        lastVideoInfo = videoInfo;
+        publishProgress(videoInfo);
         logger.log(`[VideoTracker]${frameLabel} 💓 探测心跳: ${title} | ${Math.floor(vd.currentTime)}/${Math.floor(vd.duration)}s`);
 
-        void safeSendMessage({
-          type: MSG.HEARTBEAT,
-          data: videoInfo,
-        });
+
       }, HEARTBEAT_INTERVAL);
     }
 
@@ -494,13 +580,7 @@ export default defineContentScript({
       const video = currentAdapter.getVideoElement();
       if (!video || video.paused) return;
 
-      lastVideoInfo = videoInfo;
-      logger.log(`[VideoTracker]${isInIframe ? '[iframe]' : '[top]'} 💓 心跳: ${videoInfo.title} | ${Math.floor(videoInfo.currentTime)}/${Math.floor(videoInfo.duration)}s | url=${videoInfo.url.substring(0, 80)}`);
-
-      void safeSendMessage({
-        type: MSG.HEARTBEAT,
-        data: videoInfo,
-      });
+      publishProgress({ ...videoInfo, isPlaying: true });
     }
 
     /** 显示 Toast 提示 */
@@ -549,9 +629,11 @@ export default defineContentScript({
 
     /** 手动保存 */
     async function handleManualSave() {
-      if (contextInvalidated) return;
+      if (contextInvalidated) return { success: false, error: 'PAGE_UNAVAILABLE' };
 
-      let videoInfo = currentAdapter?.extract() ?? null;
+      let videoInfo = currentAdapter?.extract()
+        ?? (!isInIframe ? registry.detect()?.extract() : null)
+        ?? genericAdapter.extract();
       // 快捷键发给顶层页面；跨域播放器必须由后台在所有 frame 中探测。
       if (!videoInfo && !isInIframe) {
         const probe = await safeSendMessage({ type: MSG.PROBE_IFRAME_VIDEO });
@@ -570,16 +652,21 @@ export default defineContentScript({
           }
         }
       }
-      videoInfo ??= lastVideoInfo;
-      if (!videoInfo) return;
+      if (!videoInfo || !Number.isFinite(videoInfo.duration) || videoInfo.duration <= 0
+        || !Number.isFinite(videoInfo.currentTime) || videoInfo.currentTime < 0) {
+        return { success: false, error: 'NO_VIDEO' };
+      }
 
       const response = await safeSendMessage({
         type: MSG.MANUAL_SAVE,
         data: videoInfo,
       });
       if (response?.success) {
+        void refreshTracking(videoInfo);
         showToast(videoInfo.title);
+        return { success: true };
       }
+      return { success: false, error: 'SAVE_FAILED' };
     }
 
     // ===== SPA 路由监听（仅顶层页面，iframe 中不需要） =====
@@ -590,13 +677,7 @@ export default defineContentScript({
         const oldUrl = lastUrl;
         lastUrl = location.href;
 
-        // 如果之前是激活状态，先发送 PAGE_UNLOAD
-        if (isActivated && lastVideoInfo) {
-          void safeSendMessage({
-            type: MSG.PAGE_UNLOAD,
-            data: { url: lastVideoInfo.url },
-          });
-        }
+        flushCurrent('switch');
 
         // 停止当前心跳和激活状态
         if (isActivated) {
@@ -639,8 +720,8 @@ export default defineContentScript({
         if (contextInvalidated) return false;
         try {
           if (message.type === MSG.MANUAL_SAVE_REQUEST) {
-            void handleManualSave();
-            sendResponse({ success: true });
+            void handleManualSave().then(sendResponse)
+              .catch(() => sendResponse({ success: false, error: 'SAVE_FAILED' }));
           } else if (message.type === MSG.AUTO_SAVED) {
             // background 在首次自动落库时通知，弹一次 Toast
             const info = message.data as VideoInfo | undefined;
@@ -736,7 +817,7 @@ export default defineContentScript({
         }
 
         const title = document.title?.trim() || '未命名视频';
-        const currentUrl = location.origin + location.pathname + location.search;
+        const currentUrl = getPageUrl();
 
         const videoInfo: VideoInfo = {
           url: currentUrl,
@@ -748,13 +829,10 @@ export default defineContentScript({
           duration: timePair.duration,
         };
 
-        lastVideoInfo = videoInfo;
+        publishProgress(videoInfo);
         logger.log(`[VideoTracker][selector] 💓 心跳: ${title} | ${Math.floor(timePair.current)}/${Math.floor(timePair.duration)}s`);
 
-        void safeSendMessage({
-          type: MSG.HEARTBEAT,
-          data: videoInfo,
-        });
+
       }, HEARTBEAT_INTERVAL);
     }
 
@@ -847,7 +925,7 @@ export default defineContentScript({
       }
 
       const title = document.title?.trim() || '未命名视频';
-      const currentUrl = location.origin + location.pathname + location.search;
+      const currentUrl = getPageUrl();
 
       const videoInfo: VideoInfo = {
         url: currentUrl,
@@ -859,24 +937,26 @@ export default defineContentScript({
         duration,
       };
 
-      lastVideoInfo = videoInfo;
+      publishProgress(videoInfo);
       logger.log(`[VideoTracker][iframe-probe] 💓 心跳: ${title} | ${Math.floor(currentTime)}/${Math.floor(duration)}s`);
 
-      void safeSendMessage({
-        type: MSG.HEARTBEAT,
-        data: videoInfo,
-      });
+
     }
 
-    // ===== 页面卸载 =====
-    window.addEventListener('beforeunload', () => {
-      if (lastVideoInfo && isActivated && !contextInvalidated) {
-        void safeSendMessage({
-          type: MSG.PAGE_UNLOAD,
-          data: { url: lastVideoInfo.url },
-        });
-      }
+    // Page lifecycle saves are best effort; periodic persistence covers crashes.
+    function leavePage() {
+      cacheCurrentPosition();
+      flushCurrent('unload');
       stopHeartbeat();
+    }
+    window.addEventListener('beforeunload', leavePage);
+    window.addEventListener('pagehide', leavePage);
+    window.addEventListener('pageshow', (event) => { if (event.persisted) void init(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && lastVideoInfo) {
+        cacheCurrentPosition();
+        void safeSendMessage({ type: MSG.HEARTBEAT, data: { ...lastVideoInfo, event: 'pause', isPlaying: !boundVideo?.paused } });
+      }
     });
 
     // ===== 认证回调检测 =====
@@ -899,7 +979,12 @@ export default defineContentScript({
 
     // ===== 启动 =====
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'local' && changes[STORAGE_KEYS.SETTINGS] && !contextInvalidated) void init();
+      if (area !== 'local' || contextInvalidated) return;
+      if (changes[STORAGE_KEYS.SETTINGS]) {
+        const settings = changes[STORAGE_KEYS.SETTINGS].newValue;
+        autoRecordAllowed = !!settings?.autoRecord && isSiteAutoRecordEnabled(recordingPageUrl, settings.siteRules ?? []);
+      }
+      if (changes[STORAGE_KEYS.SETTINGS] || changes[STORAGE_KEYS.RECORDS]) void refreshTracking();
     });
     void init();
   },

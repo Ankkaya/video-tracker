@@ -14,7 +14,9 @@ export type HeartbeatMessage = BaseMessage<typeof MSG.HEARTBEAT, VideoInfo>;
 export type ManualSaveMessage = BaseMessage<typeof MSG.MANUAL_SAVE, VideoInfo>;
 
 /** Content -> Background: 页面卸载 */
-export type PageUnloadMessage = BaseMessage<typeof MSG.PAGE_UNLOAD, { url: string }>;
+export type PageUnloadMessage = BaseMessage<typeof MSG.PAGE_UNLOAD, { url: string; info?: VideoInfo }>;
+export type MatchVideoMessage = BaseMessage<typeof MSG.MATCH_VIDEO, VideoInfo>;
+export type SetRecordCompletedMessage = BaseMessage<typeof MSG.SET_RECORD_COMPLETED, { id: string; completed: boolean }>;
 
 /** Content -> Background: 视频切换 */
 export type VideoChangedMessage = BaseMessage<typeof MSG.VIDEO_CHANGED, VideoInfo>;
@@ -46,15 +48,10 @@ export type GetAllRecordsMessage = BaseMessage<typeof MSG.GET_ALL_RECORDS, void>
 /** Options -> Background: 批量删除记录 */
 export type DeleteRecordsMessage = BaseMessage<typeof MSG.DELETE_RECORDS, { ids: string[] }>;
 
-/** Popup -> Background: 添加示例记录 */
-export type AddSampleRecordMessage = BaseMessage<typeof MSG.ADD_SAMPLE_RECORD, {
-  title?: string;
-  episode?: string;
-  platformName?: string;
-}>;
-
 /** 所有消息联合类型 */
 export type Message =
+  | MatchVideoMessage
+  | SetRecordCompletedMessage
   | HeartbeatMessage
   | ManualSaveMessage
   | PageUnloadMessage
@@ -67,8 +64,7 @@ export type Message =
   | ManualSaveRequestMessage
   | AutoSavedMessage
   | SetSiteRuleMessage
-  | GetAllRecordsMessage
-  | AddSampleRecordMessage;
+  | GetAllRecordsMessage;
 
 /** 创建消息辅助函数 */
 export function createMessage<T extends typeof MSG[keyof typeof MSG]>(

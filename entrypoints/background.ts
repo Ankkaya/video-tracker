@@ -1,25 +1,23 @@
-import { isSiteAutoRecordEnabled } from '../src/shared/siteRules';
 import { StorageManager } from '../src/shared/storage';
-import type { VideoInfo, WatchRecord } from '../src/shared/types';
-import { MSG, STORAGE_KEYS, HEARTBEAT_INTERVAL } from '../src/shared/constants';
+import { ProgressTracker } from '../src/shared/progressTracker';
+import { videoIdentity } from '../src/shared/videoIdentity';
+import type { VideoInfo } from '../src/shared/types';
+import { MSG, STORAGE_KEYS } from '../src/shared/constants';
 import { ICON_SIZES, drawVideoTrackerIcon } from '../src/shared/icon';
 import { logger } from '../src/shared/logger';
 import { supabase } from '../src/supabase';
 import { restoreRememberedDataKey } from '../src/shared/keyManager';
 import { syncEncryptedData } from '../src/shared/encryptedSync';
 
-interface TimerEntry {
-  url: string;
-  accumulated: number;
-  lastTick: number;
-  videoInfo: VideoInfo;
-  saved: boolean;
-  source: string;
-}
-
 export default defineBackground(() => {
-  /** 阈值计时器 Map<normalizedUrl, TimerEntry> */
-  const timers = new Map<string, TimerEntry>();
+  const tracker = new ProgressTracker(scheduleAutoSync);
+  let mutations: Promise<unknown> = Promise.resolve();
+  function enqueue<T>(work: () => Promise<T>): Promise<T> {
+    const next = mutations.then(work);
+    mutations = next.catch(() => {});
+    return next;
+  }
+  const sourceOf = (sender: chrome.runtime.MessageSender) => `${sender.tab?.id ?? 0}:${sender.frameId ?? 0}`;
   let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
   let autoSyncRunning = false;
 
@@ -171,76 +169,11 @@ export default defineBackground(() => {
     }
   }
 
-  /** 生成记录 ID */
-  function generateId(): string {
-    return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  }
-
-  /**
-   * 规范化 URL：保留 origin + pathname + search，去除 hash。
-   * 保留 search 是必要的，YouTube 的 ?v=xxx、B 站的 ?p=×× 都是区分不同视频的关键参数。 */
-  function normalizeUrl(url: string): string {
-    try {
-      const u = new URL(url);
-      return u.origin + u.pathname + u.search;
-    } catch {
-      return url;
-    }
-  }
-
-  /** 处理心跳 */
-  async function handleHeartbeat(
-    videoInfo: VideoInfo,
-    tabId?: number,
-    frameId?: number,
-    tabUrl?: string,
-    tabTitle?: string
-  ): Promise<void> {
-    const settings = await StorageManager.getSettings();
-    if (!settings.autoRecord || !isSiteAutoRecordEnabled(tabUrl || videoInfo.url, settings.siteRules)) {
-      timers.delete(normalizeUrl(tabUrl || videoInfo.url));
-      return;
-    }
-    if (!Number.isFinite(videoInfo.duration) || videoInfo.duration <= 0 || !Number.isFinite(videoInfo.currentTime) || videoInfo.currentTime <= 0) return;
-
-    const normalizedInfo = normalizeFrameVideoInfo(videoInfo, frameId, tabUrl, tabTitle);
-    if (normalizedInfo.platform === 'generic') normalizedInfo.platformName = new URL(normalizedInfo.url).hostname;
-    const key = normalizeUrl(normalizedInfo.url);
-    const now = Date.now();
-
-    const source = String(tabId) + ':' + String(frameId ?? 0);
-    let entry = timers.get(key);
-    // 活跃播放器继续上报时，忽略同页其他 frame 的竞争心跳。
-    if (entry && entry.source !== source && now - entry.lastTick < HEARTBEAT_INTERVAL * 2) return;
-    if (!entry && videoInfo.isPlaying === false) return;
-    if (!entry) {
-      entry = {
-        url: normalizedInfo.url,
-        accumulated: 0,
-        lastTick: now,
-        videoInfo: normalizedInfo,
-        saved: false,
-        source,
-      };
-      timers.set(key, entry);
-    }
-
-    entry.source = source;
-    const elapsed = videoInfo.isPlaying === false ? 0 : Math.min((now - entry.lastTick) / 1000, HEARTBEAT_INTERVAL / 1000);
-    entry.accumulated += elapsed;
-    entry.lastTick = now;
-    entry.videoInfo = normalizedInfo;
-
-    if (entry.accumulated >= settings.threshold && !entry.saved) {
-      const { isNew } = await saveRecord(entry.videoInfo, entry.accumulated);
-      entry.saved = true;
-      // 仅在首次新建记录时通知页面弹框；SW 重启后记录已存在，不会重复弹框
-      if (isNew && tabId !== undefined) {
-        chrome.tabs.sendMessage(tabId, {
-          type: MSG.AUTO_SAVED,
-          data: entry.videoInfo,
-        }, { frameId: 0 }).catch(() => {});
-      }
+  async function handleHeartbeat(videoInfo: VideoInfo, sender: chrome.runtime.MessageSender) {
+    const info = normalizeFrameVideoInfo(videoInfo, sender.frameId, sender.tab?.url, sender.tab?.title);
+    const result = await tracker.report(info, sourceOf(sender));
+    if (result?.isNew && sender.tab?.id !== undefined) {
+      chrome.tabs.sendMessage(sender.tab.id, { type: MSG.AUTO_SAVED, data: info }, { frameId: 0 }).catch(() => {});
     }
   }
 
@@ -263,6 +196,7 @@ export default defineBackground(() => {
       ...videoInfo,
       url: tabUrl,
       title: shouldPreferTabTitle && tabTitle ? cleanTabTitle(tabTitle) : videoInfo.title,
+      platform: videoIdentity({ ...videoInfo, url: tabUrl }).platform,
     };
   }
 
@@ -278,80 +212,8 @@ export default defineBackground(() => {
       .trim() || title;
   }
 
-  /** 处理手动保存 */
-  async function handleManualSave(
-    videoInfo: VideoInfo,
-    frameId?: number,
-    tabUrl?: string,
-    tabTitle?: string
-  ): Promise<void> {
-    const normalizedInfo = normalizeFrameVideoInfo(videoInfo, frameId, tabUrl, tabTitle);
-    const key = normalizeUrl(normalizedInfo.url);
-    const entry = timers.get(key);
-    const accumulated = entry?.accumulated ?? 0;
-    await saveRecord(normalizedInfo, accumulated);
-    if (entry) entry.saved = true;
-  }
-
-  /** 处理页面卸载 */
-  async function handlePageUnload(url: string): Promise<void> {
-    const key = normalizeUrl(url);
-    const entry = timers.get(key);
-    if (!entry) return;
-
-    const settings = await StorageManager.getSettings();
-    if (!settings.autoRecord || !isSiteAutoRecordEnabled(entry.url, settings.siteRules)) { timers.delete(key); return; }
-    if (!entry.saved) {
-      if (entry.accumulated >= settings.threshold) {
-        await saveRecord(entry.videoInfo, entry.accumulated);
-      }
-    } else {
-      const records = await StorageManager.getRecords();
-      const existing = records.find((r) => r.url === entry.videoInfo.url);
-      if (existing) {
-        existing.currentTime = entry.videoInfo.currentTime;
-        existing.duration = entry.videoInfo.duration;
-        existing.progress = entry.videoInfo.duration > 0
-          ? entry.videoInfo.currentTime / entry.videoInfo.duration
-          : 0;
-        existing.lastWatchedAt = Date.now();
-        await StorageManager.saveRecord(existing);
-      }
-    }
-    timers.delete(key);
-  }
-
-  /** 保存记录，返回是否为新增 */
-  async function saveRecord(
-    videoInfo: VideoInfo,
-    _accumulated: number
-  ): Promise<{ isNew: boolean }> {
-    // 使用完整 URL（含 query params）作为记录标识，确保不同视频互不覆盖
-    const fullUrl = videoInfo.url;
-    const existing = await StorageManager.findRecordByUrl(fullUrl);
-    const isNew = !existing;
-
-    const record: WatchRecord = {
-      id: existing?.id ?? generateId(),
-      url: fullUrl,
-      title: videoInfo.title,
-      episode: videoInfo.episode,
-      seriesName: videoInfo.seriesName,
-      platform: videoInfo.platform,
-      platformName: videoInfo.platformName,
-      currentTime: videoInfo.currentTime,
-      duration: videoInfo.duration,
-      progress: videoInfo.duration > 0 ? videoInfo.currentTime / videoInfo.duration : 0,
-      thumbnail: videoInfo.thumbnail,
-      lastWatchedAt: Date.now(),
-      createdAt: existing?.createdAt ?? Date.now(),
-      notes: existing?.notes,
-    };
-
-    await StorageManager.saveRecord(record);
-    scheduleAutoSync();
-    logger.log(`[VideoTracker] 记录已保存: ${record.title} - ${record.episode}`);
-    return { isNew };
+  async function handleManualSave(videoInfo: VideoInfo, frameId?: number, tabUrl?: string, tabTitle?: string) {
+    return tracker.saveManual(normalizeFrameVideoInfo(videoInfo, frameId, tabUrl, tabTitle));
   }
 
   // ===== 消息路由 =====
@@ -359,32 +221,39 @@ export default defineBackground(() => {
     const { type, data } = message;
 
     switch (type) {
+      case MSG.MATCH_VIDEO:
+        enqueue(() => tracker.match(normalizeFrameVideoInfo(data as VideoInfo, sender.frameId, sender.tab?.url, sender.tab?.title)))
+          .then(result => sendResponse(result)).catch(() => sendResponse({ allowNew: false }));
+        return true;
+
       case MSG.HEARTBEAT:
-        handleHeartbeat(
-          data as VideoInfo,
-          sender.tab?.id,
-          sender.frameId,
-          sender.tab?.url,
-          sender.tab?.title
-        );
-        sendResponse({ ok: true });
-        break;
+      case MSG.VIDEO_CHANGED:
+        enqueue(() => handleHeartbeat(data as VideoInfo, sender))
+          .then(() => sendResponse({ ok: true })).catch((err: Error) => sendResponse({ error: err.message }));
+        return true;
 
       case MSG.MANUAL_SAVE:
-        handleManualSave(
-          data as VideoInfo,
-          sender.frameId,
-          sender.tab?.url,
-          sender.tab?.title
-        )
+        enqueue(() => handleManualSave(data as VideoInfo, sender.frameId, sender.tab?.url, sender.tab?.title))
           .then(() => sendResponse({ success: true }))
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
 
       case MSG.PAGE_UNLOAD:
-        handlePageUnload(sender.frameId && sender.tab?.url ? sender.tab.url : (data as { url: string }).url);
-        sendResponse({ ok: true });
-        break;
+        enqueue(async () => {
+          // The sender tab may already point at the NEXT video: use the cached old snapshot.
+          await tracker.flush(sourceOf(sender), data?.info as VideoInfo | undefined);
+        }).then(() => sendResponse({ ok: true })).catch((err: Error) => sendResponse({ error: err.message }));
+        return true;
+
+      case MSG.SET_RECORD_COMPLETED:
+        if (typeof data?.id !== 'string' || typeof data?.completed !== 'boolean') {
+          sendResponse({ success: false, error: 'Invalid completion request' });
+          return;
+        }
+        enqueue(() => tracker.setCompleted(data.id, data.completed))
+          .then(record => sendResponse({ success: true, record }))
+          .catch((err: Error) => sendResponse({ success: false, error: err.message }));
+        return true;
 
       // GET_RECORDS 与 GET_ALL_RECORDS 语义一致，统一路由，保留两个常量以兼容现有调用方
       case MSG.GET_RECORDS:
@@ -395,7 +264,7 @@ export default defineBackground(() => {
         return true;
 
       case MSG.DELETE_RECORD:
-        StorageManager.deleteRecord((data as { id: string }).id)
+        enqueue(() => StorageManager.deleteRecord((data as { id: string }).id))
           .then(() => {
             scheduleAutoSync();
             sendResponse({ success: true });
@@ -404,7 +273,7 @@ export default defineBackground(() => {
         return true;
 
       case MSG.DELETE_RECORDS:
-        StorageManager.deleteRecords((data as { ids: string[] }).ids)
+        enqueue(() => StorageManager.deleteRecords((data as { ids: string[] }).ids))
           .then(() => {
             scheduleAutoSync();
             sendResponse({ success: true });
@@ -450,24 +319,7 @@ export default defineBackground(() => {
           currentTime: 0,
           duration: 0,
         };
-        saveRecord(videoInfo, 0)
-          .then(() => sendResponse({ success: true }))
-          .catch((err: Error) => sendResponse({ success: false, error: err.message }));
-        return true;
-      }
-
-      case MSG.ADD_SAMPLE_RECORD: {
-        const sample = data as { title?: string; episode?: string; platformName?: string } | undefined;
-        const videoInfo: VideoInfo = {
-          url: 'https://www.youtube.com/watch?v=_P9dU-BT_3c',
-          title: sample?.title || 'YouTube sample - resume at 10:00',
-          episode: sample?.episode || 'Sample video',
-          platform: 'youtube',
-          platformName: sample?.platformName || 'YouTube',
-          currentTime: 600,
-          duration: 1200,
-        };
-        saveRecord(videoInfo, 600)
+        enqueue(() => tracker.saveManual(videoInfo))
           .then(() => sendResponse({ success: true }))
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
@@ -516,6 +368,9 @@ export default defineBackground(() => {
                 currentTime,
                 duration,
                 paused: !!video.paused,
+                ended: !!video.ended,
+                src: video.currentSrc || video.src || '',
+                frameUrl: location.href,
                 title: document.title || '',
                 source: 'video',
               };
@@ -582,19 +437,20 @@ export default defineBackground(() => {
               return null;
             }
 
-            function tick() {
+            function tick(event?: Event) {
               const progress = findKnownPlayer();
-              if (!progress || progress.paused) return;
+              if (!progress || (progress.paused && !event)) return;
               window.postMessage({
                 source: 'VideoTrackerMainBridge',
                 type: 'PROGRESS',
-                data: progress,
+                data: { ...progress, event: event?.type },
               }, '*');
             }
 
             window.addEventListener('play', tick, true);
             window.addEventListener('seeked', tick, true);
             window.addEventListener('pause', tick, true);
+            window.addEventListener('ended', tick, true);
             setInterval(tick, bridgeInterval);
             setTimeout(tick, 1000);
           },
@@ -639,6 +495,7 @@ export default defineBackground(() => {
               currentTime: video.currentTime,
               duration: video.duration,
               paused: video.paused,
+              ended: video.ended,
               src: video.src || video.currentSrc || '',
               frameUrl: location.href,
               frameTitle: document.title || '',
@@ -771,7 +628,7 @@ export default defineBackground(() => {
           currentTime: pickerData.currentTime,
           duration: pickerData.duration,
         };
-        saveRecord(videoInfo, 0)
+        enqueue(() => tracker.saveManual(videoInfo))
           .then(() => sendResponse({ success: true }))
           .catch((err: Error) => sendResponse({ success: false, error: err.message }));
         return true;
@@ -819,22 +676,26 @@ export default defineBackground(() => {
     // commands API may not be available in all contexts
   }
 
-  chrome.runtime.onInstalled?.addListener(() => {
+  chrome.runtime.onInstalled?.addListener((details) => {
     void updateActionState();
     scheduleAutoSync();
+    if (details.reason === 'install') {
+      void (async () => {
+        await chrome.storage.local.set({ [STORAGE_KEYS.FEATURE_TOUR]: { step: 0, status: 'active' } });
+        await chrome.tabs.create({ url: chrome.runtime.getURL('/options.html') });
+      })().catch(err => logger.warn('Unable to open getting started:', err));
+    }
   });
   chrome.runtime.onStartup?.addListener(() => {
     void updateActionState();
     scheduleAutoSync();
   });
+  chrome.tabs.onRemoved?.addListener(tabId => { void enqueue(() => tracker.flushTab(tabId)); });
   chrome.storage?.onChanged?.addListener((changes, areaName) => {
     if (areaName !== 'local') return;
     const settingsChange = changes[STORAGE_KEYS.SETTINGS];
-    if (settingsChange) {
-      const settings = settingsChange.newValue;
-      for (const [key, entry] of timers) {
-        if (!settings?.autoRecord || !isSiteAutoRecordEnabled(entry.url, settings.siteRules ?? [])) timers.delete(key);
-      }
+    if (settingsChange?.newValue) {
+      void enqueue(async () => tracker.settingsChanged(settingsChange.newValue));
     }
     const autoRecord = settingsChange?.newValue?.autoRecord;
     if (typeof autoRecord === 'boolean') {
