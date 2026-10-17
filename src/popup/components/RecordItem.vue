@@ -50,7 +50,7 @@ const progressPercent = computed(() => (props.record.progress * 100).toFixed(1))
       <button class="delete-btn" @click.stop="emit('delete')" :title="t('popup.deleteTooltip')">✕</button>
     </div>
 
-    <div class="record-title">{{ record.title }}</div>
+    <button type="button" class="record-title" @click.stop="emit('open')" :title="record.title">{{ record.title }}</button>
     <div class="record-episode" v-if="record.episode !== t('popup.mainFilm')">{{ record.episode }}</div>
 
     <div class="record-progress">
@@ -62,7 +62,6 @@ const progressPercent = computed(() => (props.record.progress * 100).toFixed(1))
         ({{ progressPercent }}%)
       </span>
     </div>
-    <button class="resume-btn" @click.stop="emit('open')">{{ t('common.continueWatching') }}</button>
   </div>
 </template>
 
@@ -80,9 +79,6 @@ const progressPercent = computed(() => (props.record.progress * 100).toFixed(1))
   border-color: #4361ee;
   box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
 }
-
-.resume-btn { margin-top: 8px; padding: 5px 9px; border: 1px solid #d7dcff; border-radius: 6px; background: transparent; color: #4361ee; font-size: 12px; cursor: pointer; }
-.resume-btn:focus-visible { outline: 2px solid #4361ee; outline-offset: 2px; }
 
 .record-header {
   display: flex;
@@ -156,6 +152,14 @@ const progressPercent = computed(() => (props.record.progress * 100).toFixed(1))
 }
 
 .record-title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   color: #1a1a2e;
@@ -164,6 +168,8 @@ const progressPercent = computed(() => (props.record.progress * 100).toFixed(1))
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.record-title:focus-visible { outline: 2px solid #4361ee; outline-offset: 2px; border-radius: 2px; }
 
 .record-episode {
   font-size: 11px;
@@ -202,7 +208,6 @@ html.dark .record-item {
   background: #222238;
   border-color: #383852;
 }
-html.dark .resume-btn { border-color: #414969; color: #a1b4ff; }
 
 html.dark .record-item:hover {
   border-color: #6c8cff;

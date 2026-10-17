@@ -44,7 +44,7 @@ const { shortcut, status, openingFailed, settingsUrl, refresh, openSettings } = 
 kbd { background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; padding: 4px 8px; font-size: 12px; font-family: monospace; }
 .warning { border: 1px solid #e4ba70; background: #fff8eb; border-radius: 8px; padding: 12px; color: #704710; }
 .compact { margin: 12px 16px 0; }
-:global(html.dark) kbd { background: #333; border-color: #555; }
-:global(html.dark) .warning { background: #352b1c; border-color: #735a31; color: #f0ce90; }
-:global(html.dark) .shortcut-actions button { color: #a6b4ff; }
+html.dark kbd { background: #333; border-color: #555; }
+html.dark .warning { background: #352b1c; border-color: #735a31; color: #f0ce90; }
+html.dark .shortcut-actions button { color: #a6b4ff; }
 </style>

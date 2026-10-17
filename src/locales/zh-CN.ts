@@ -31,7 +31,7 @@ export default {
     allCompleted: '记录中的视频都已看完',
     completedHint: '可在“全部记录”中查看或重新观看。',
     settingsTooltip: '设置',
-    viewAllRecords: '📋 查看全部记录 →',
+    viewAllRecords: '查看更多',
     fallbackLabel: '自动识别失败时',
     manualRecord: '📌 保存网页链接',
     recording: '⏳ 记录中',

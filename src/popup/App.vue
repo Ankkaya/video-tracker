@@ -258,33 +258,38 @@ function handleSyncClick() {
     </header>
     <ShortcutStatus compact />
 
-    <h2 v-if="records.length" class="section-title">{{ t('common.continueWatching') }}</h2>
-    <SearchBar v-if="continuingRecords.length" v-model:query="query" />
+    <main class="popup-content" :class="{ 'is-empty': !continuingRecords.length }">
+      <template v-if="continuingRecords.length">
+        <SearchBar v-model:query="query" />
+        <div class="records-content">
+          <div v-if="recordsError" class="no-results" role="alert">
+            {{ t('options.records.loadFailed') }} <button @click="loadRecords">{{ t('common.retry') }}</button>
+          </div>
+          <RecordList
+            v-if="recentRecords.length > 0"
+            :records="recentRecords"
+            @delete="deleteRecord"
+            @open="openRecord"
+          />
+          <div v-else class="no-results">
+            <p>{{ t('options.records.noMatches') }}</p>
+            <button @click="query = ''">{{ t('popup.clearSearch') }}</button>
+          </div>
+        </div>
+      </template>
 
-    <div v-if="recordsError" class="no-results" role="alert">
-      {{ t('options.records.loadFailed') }} <button @click="loadRecords">{{ t('common.retry') }}</button>
-    </div>
-
-    <RecordList
-      v-if="recentRecords.length > 0"
-      :records="recentRecords"
-      @delete="deleteRecord"
-      @open="openRecord"
-    />
-
-    <div v-else-if="records.length && !continuingRecords.length" class="no-results">
-      <p>{{ t('popup.allCompleted') }}</p>
-      <p>{{ t('popup.completedHint') }}</p>
-    </div>
-    <div v-else-if="records.length" class="no-results">
-      <p>{{ t('options.records.noMatches') }}</p>
-      <button @click="query = ''">{{ t('popup.clearSearch') }}</button>
-    </div>
-    <EmptyState v-else-if="recordsLoaded && !recordsError" />
-
-    <button class="view-all-btn" @click="openAllRecords">
-      {{ t('popup.viewAllRecords') }}
-    </button>
+      <div class="more-action">
+        <div v-if="!continuingRecords.length" class="empty-message">
+          <div v-if="recordsError" class="no-results" role="alert">
+            {{ t('options.records.loadFailed') }} <button @click="loadRecords">{{ t('common.retry') }}</button>
+          </div>
+          <EmptyState v-else-if="recordsLoaded" />
+        </div>
+        <button class="view-all-btn" @click="openAllRecords">
+          {{ t('popup.viewAllRecords') }} <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    </main>
 
     <div class="fallback-actions">
       <span class="fallback-label">{{ t('popup.fallbackLabel') }}</span>
@@ -314,17 +319,28 @@ function handleSyncClick() {
 </template>
 
 <style scoped>
-.section-title { margin: 12px 0 8px; font-size: 13px; }
 .popup-container {
   padding: 12px;
   min-width: 360px;
+  min-height: 420px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
 }
 
+.popup-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.popup-content > :deep(.search-bar) { flex-shrink: 0; }
+.records-content { flex: 1; min-height: 0; overflow-y: auto; }
+.more-action { position: relative; flex-shrink: 0; margin-top: 12px; }
+.is-empty { justify-content: center; }
+.is-empty .more-action { width: 230px; max-width: 100%; align-self: center; margin-top: 0; }
+.empty-message { position: absolute; bottom: calc(100% + 18px); width: 100%; text-align: center; color: #8c8c99; }
 .no-results { padding: 16px; font-size: 12px; text-align: center; }
 .no-results p { margin: 6px 0; font-size: 12px; line-height: 1.6; }
 .no-results button { margin-top: 8px; border: none; background: transparent; color: #4361ee; cursor: pointer; }
 
 .header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -437,10 +453,9 @@ function handleSyncClick() {
 
 .view-all-btn {
   width: 100%;
-  margin-top: 12px;
   padding: 10px 16px;
-  background: #f8f9fa;
-  border: 1px solid #e8e8e8;
+  background: #f5f6fe;
+  border: 1px solid #dde1f4;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -449,6 +464,9 @@ function handleSyncClick() {
   transition: all 0.2s;
 }
 
+.view-all-btn span { margin-left: 8px; }
+.view-all-btn:focus-visible { outline: 2px solid #4361ee; outline-offset: 2px; }
+
 .view-all-btn:hover {
   background: #4361ee;
   color: white;
@@ -456,6 +474,7 @@ function handleSyncClick() {
 }
 
 .fallback-actions {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 6px;

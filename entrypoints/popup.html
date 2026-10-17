@@ -6,15 +6,25 @@
     <title>VideoTracker</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
+      /* Paint the popup canvas too, including fractional pixels at its edges. */
+      html {
+        background: #f8f9fa;
+        color-scheme: light;
+      }
+      html.dark {
+        background: #1a1a2e;
+        color-scheme: dark;
+      }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         width: 380px;
         min-height: 200px;
         max-height: 600px;
         overflow-y: auto;
-        background: #f8f9fa;
+        background: inherit;
         color: #1a1a2e;
       }
+      html.dark body { color: #e0e0e0; }
     </style>
   </head>
   <body>

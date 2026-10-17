@@ -321,10 +321,11 @@ defineExpose({ reload: loadRecords });
       style="padding: 60px 0"
     >
       <template #icon>
-        <div class="records-empty-icon" aria-hidden="true">📭</div>
-      </template>
-      <template #extra>
-        <NButton v-if="records.length" @click="resetFilters">{{ t('options.records.clearFilters') }}</NButton>
+        <svg class="records-empty-icon" viewBox="0 0 80 64" fill="none" aria-hidden="true">
+          <rect x="9" y="15" width="58" height="42" rx="7" stroke="currentColor" stroke-width="2.5" />
+          <path d="m33 27 15 9-15 9V27Z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" />
+          <path d="M62 2v6M74 8l-4 4M78 22h-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
       </template>
     </NEmpty>
   </NCard>

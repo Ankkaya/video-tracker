@@ -31,7 +31,7 @@ export default {
     allCompleted: 'All recorded videos are completed',
     completedHint: 'Find and replay them in All Records.',
     settingsTooltip: 'Settings',
-    viewAllRecords: '📋 View All Records →',
+    viewAllRecords: 'View more',
     fallbackLabel: 'When auto-detection fails',
     manualRecord: '📌 Save page link',
     recording: '⏳ Recording',
