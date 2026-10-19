@@ -12,7 +12,6 @@ import { useAuth } from '../options/composables/useAuth';
 import { useTheme } from '../shared/composables/useTheme';
 import { useSync } from '../options/composables/useSync';
 import { buildRecordResumeUrl } from '../shared/resume';
-import ShortcutStatus from '../shared/components/ShortcutStatus.vue';
 import BrandIcon from '../shared/components/BrandIcon.vue';
 import { isRecordCompleted } from '../shared/watchStatus';
 
@@ -256,7 +255,6 @@ function handleSyncClick() {
         <button class="settings-btn" @click="openSettings" :title="t('common.settings')">⚙️</button>
       </div>
     </header>
-    <ShortcutStatus compact />
 
     <main class="popup-content" :class="{ 'is-empty': !continuingRecords.length }">
       <template v-if="continuingRecords.length">
