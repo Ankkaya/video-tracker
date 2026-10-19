@@ -157,3 +157,23 @@ describe('progress persistence', () => {
     expect(records()).toHaveLength(1);
   });
 });
+
+
+describe('platform preview rejection at persistence boundary', () => {
+  it.each([
+    'https://www.bilibili.com/?vt_record=old',
+    'https://www.youtube.com/results?search_query=test',
+    'https://so.iqiyi.com/so/q_test',
+    'https://v.qq.com/x/search/?q=test',
+  ])('rejects frame or generic fallback reports for %s', async url => {
+    state[STORAGE_KEYS.SETTINGS] = { ...DEFAULT_SETTINGS, autoRecord: true, threshold: 0 };
+    const preview = { ...video, url, platform: 'generic' };
+    state[STORAGE_KEYS.RECORDS] = [history({ url, platform: 'generic' })];
+    expect(await tracker.match(preview)).toMatchObject({ allowNew: false });
+    expect((await tracker.match(preview)).record).toBeUndefined();
+    await tracker.report(preview, '1:2');
+    await tracker.flush('1:2', preview);
+    await expect(tracker.saveManual(preview)).rejects.toThrow('NO_VIDEO');
+    expect(writes).not.toHaveBeenCalled();
+  });
+});

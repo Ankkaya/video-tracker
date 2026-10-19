@@ -3,6 +3,7 @@ import { StorageManager } from './storage';
 import { isSiteAutoRecordEnabled } from './siteRules';
 import { findVideoRecord, videoIdentity } from './videoIdentity';
 import { isRecordCompleted, nearVideoEnd } from './watchStatus';
+import { isPlaybackPage } from './playbackPage';
 import type { Settings, VideoInfo, WatchRecord } from './types';
 
 interface Session {
@@ -21,6 +22,7 @@ export class ProgressTracker {
   constructor(private onSaved: () => void) {}
 
   async match(info: VideoInfo) {
+    if (!isPlaybackPage(info.url)) return { allowNew: false, key: videoIdentity(info).key };
     const [records, settings] = await Promise.all([StorageManager.getRecords(), StorageManager.getSettings()]);
     return { record: findVideoRecord(records, info), allowNew: this.canCreate(settings, info.url), key: videoIdentity(info).key };
   }
@@ -30,6 +32,7 @@ export class ProgressTracker {
   }
 
   async report(info: VideoInfo, source: string) {
+    if (!isPlaybackPage(info.url)) { await this.flush(source); return; }
     if (!Number.isFinite(info.duration) || info.duration <= 0 || !Number.isFinite(info.currentTime) || info.currentTime < 0) return;
     const identity = videoIdentity(info);
     info = { ...info, url: identity.url, platform: identity.platform };
@@ -112,6 +115,7 @@ export class ProgressTracker {
   }
 
   async saveManual(info: VideoInfo) {
+    if (!isPlaybackPage(info.url)) throw new Error('NO_VIDEO');
     const identity = videoIdentity(info);
     info = { ...info, url: identity.url, platform: identity.platform };
     const existing = findVideoRecord(await StorageManager.getRecords(), info);

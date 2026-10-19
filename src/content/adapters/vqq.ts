@@ -1,8 +1,7 @@
-import type { VideoInfo } from '../../shared/types';
-import type { VideoAdapter } from './types';
+import { createVideoAdapter } from './shared';
 
 /** 腾讯视频适配器 */
-export const vqqAdapter: VideoAdapter = {
+export const vqqAdapter = createVideoAdapter({
   platform: 'vqq',
   platformName: '腾讯视频',
 
@@ -10,9 +9,7 @@ export const vqqAdapter: VideoAdapter = {
     return location.hostname.includes('v.qq.com');
   },
 
-  extract(): VideoInfo | null {
-    const video = this.getVideoElement();
-    if (!video) return null;
+  metadata() {
 
     // 标题
     const titleEl =
@@ -32,42 +29,8 @@ export const vqqAdapter: VideoAdapter = {
       url: location.href,
       title,
       episode,
-      platform: this.platform,
-      platformName: this.platformName,
-      currentTime: video.currentTime,
-      duration: video.duration || 0,
     };
   },
 
-  getVideoElement(): HTMLVideoElement | null {
-    // 方式1：标准方式
-    const video = document.querySelector('video');
-    if (video) return video;
-
-    // 方式2：querySelectorAll
-    const videos = document.querySelectorAll('video');
-    if (videos.length > 0) return videos[0];
-
-    // 方式3：查找 iframe 内的 video（腾讯视频常用 iframe 播放器）
-    const iframes = document.querySelectorAll('iframe');
-    for (const iframe of iframes) {
-      try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (iframeDoc) {
-          const iframeVideo = iframeDoc.querySelector('video');
-          if (iframeVideo) return iframeVideo;
-        }
-      } catch {
-        // 跨域限制，静默忽略
-      }
-    }
-
-    return null;
-  },
-
-  buildResumeUrl(url: string, currentTime: number): string {
-    const u = new URL(url);
-    u.searchParams.set('start', Math.floor(currentTime).toString());
-    return u.toString();
-  },
-};
+  resumeParam: 'start',
+});

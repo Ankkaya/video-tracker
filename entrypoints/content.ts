@@ -1,4 +1,5 @@
 import { isSiteAutoRecordEnabled } from '../src/shared/siteRules';
+import { isPlaybackPage } from '../src/shared/playbackPage';
 import { registry } from '../src/content/adapters/registry';
 import { bilibiliAdapter } from '../src/content/adapters/bilibili';
 import { youtubeAdapter } from '../src/content/adapters/youtube';
@@ -184,6 +185,7 @@ export default defineContentScript({
     let matchGeneration = 0;
 
     async function refreshTracking(info = currentAdapter?.extract(), event?: VideoInfo['event']) {
+      if (!isPlaybackPage(getPageUrl())) return;
       if (!info || contextInvalidated) return;
       if (lastVideoInfo && videoIdentity(lastVideoInfo).key !== videoIdentity(info).key) flushCurrent('switch');
       const generation = ++matchGeneration;
@@ -203,6 +205,7 @@ export default defineContentScript({
     }
 
     function publishProgress(info: VideoInfo) {
+      if (!isPlaybackPage(getPageUrl()) || !isPlaybackPage(info.url)) return;
       const key = videoIdentity(info).key;
       if (lastVideoInfo && videoIdentity(lastVideoInfo).key !== key) flushCurrent('switch');
       lastVideoInfo = info;
@@ -238,6 +241,7 @@ export default defineContentScript({
       if (generation !== initGeneration || contextInvalidated) return;
       const settings = response?.settings;
       recordingPageUrl = response?.pageUrl || getPageUrl();
+      if (!isPlaybackPage(recordingPageUrl) || !isPlaybackPage(getPageUrl())) return;
       autoRecordAllowed = !!settings?.autoRecord && isSiteAutoRecordEnabled(response.pageUrl || 'https://' + getTopDomain(), settings.siteRules ?? []);
 
       if (currentAdapter?.getVideoElement()) {
@@ -630,6 +634,7 @@ export default defineContentScript({
     /** 手动保存 */
     async function handleManualSave() {
       if (contextInvalidated) return { success: false, error: 'PAGE_UNAVAILABLE' };
+      if (!isPlaybackPage(getPageUrl()) || !isPlaybackPage(recordingPageUrl)) return { success: false, error: 'NO_VIDEO' };
 
       let videoInfo = currentAdapter?.extract()
         ?? (!isInIframe ? registry.detect()?.extract() : null)

@@ -1,8 +1,7 @@
-import type { VideoInfo } from '../../shared/types';
-import type { VideoAdapter } from './types';
+import { createVideoAdapter } from './shared';
 
 /** 爱奇艺适配器 */
-export const iqiyiAdapter: VideoAdapter = {
+export const iqiyiAdapter = createVideoAdapter({
   platform: 'iqiyi',
   platformName: '爱奇艺',
 
@@ -10,9 +9,7 @@ export const iqiyiAdapter: VideoAdapter = {
     return location.hostname.includes('iqiyi.com');
   },
 
-  extract(): VideoInfo | null {
-    const video = this.getVideoElement();
-    if (!video) return null;
+  metadata() {
 
     // 标题
     const titleEl =
@@ -32,20 +29,6 @@ export const iqiyiAdapter: VideoAdapter = {
       url: location.href,
       title,
       episode,
-      platform: this.platform,
-      platformName: this.platformName,
-      currentTime: video.currentTime,
-      duration: video.duration || 0,
     };
   },
-
-  getVideoElement(): HTMLVideoElement | null {
-    return document.querySelector('video');
-  },
-
-  buildResumeUrl(url: string, currentTime: number): string {
-    const u = new URL(url);
-    u.searchParams.set('t', Math.floor(currentTime).toString());
-    return u.toString();
-  },
-};
+});

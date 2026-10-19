@@ -1,26 +1,12 @@
-import type { VideoInfo } from '../../shared/types';
-import type { VideoAdapter } from './types';
-import { findVideoElements, pickBestVideo } from '../videoProbe';
+import { createVideoAdapter } from './shared';
 import { videoMediaId } from '../../shared/videoIdentity';
 
-/**
- * 通用适配器
- * 用于所有非内置平台
- * 依赖通用 DOM API，无需专有选择器
- */
-export const genericAdapter: VideoAdapter = {
+/** Fallback metadata for sites without dedicated rules; frame selection stays external. */
+export const genericAdapter = createVideoAdapter({
   platform: 'generic',
   platformName: '通用',
-
-  detect(): boolean {
-    // 通用适配器不通过域名判断，由外部逻辑决定是否使用
-    return true;
-  },
-
-  extract(): VideoInfo | null {
-    const video = this.getVideoElement();
-    if (!video) return null;
-
+  detect: () => true,
+  metadata(video) {
     const isInIframe = window !== window.top;
 
     // 标题：优先使用当前 document.title，iframe 中可能为空则回退
@@ -47,51 +33,7 @@ export const genericAdapter: VideoAdapter = {
       url: currentUrl,
       title,
       episode: '正片',
-      platform: this.platform,
       platformName: location.hostname,
-      currentTime: video.currentTime,
-      duration: video.duration || 0,
     };
   },
-
-  getVideoElement(): HTMLVideoElement | null {
-    // 方式1：标准方式 + open shadow DOM
-    const video = pickBestVideo(findVideoElements());
-    if (video) return video;
-
-    // 方式2：查找 player 容器内的 video
-    const playerContainer = document.querySelector(
-      '[data-video], [data-player], .player, .video-player, #player, #video-player, .artplayer-app, .art-video-player'
-    );
-    if (playerContainer) {
-      const playerVideo = playerContainer.querySelector('video');
-      if (playerVideo) return playerVideo;
-    }
-
-    // 方式3：查找同源 iframe 内的 video（跨域 iframe 由 allFrames 处理）
-    const iframes = document.querySelectorAll('iframe');
-    for (const iframe of iframes) {
-      try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (iframeDoc) {
-          const iframeVideo = iframeDoc.querySelector('video');
-          if (iframeVideo) return iframeVideo;
-        }
-      } catch {
-        // 跨域限制，由 allFrames content script 在 iframe 内部处理
-      }
-    }
-
-    return null;
-  },
-
-  buildResumeUrl(url: string, currentTime: number): string {
-    try {
-      const u = new URL(url, location.origin);
-      u.searchParams.set('t', Math.floor(currentTime).toString());
-      return u.toString();
-    } catch {
-      return url;
-    }
-  },
-};
+});

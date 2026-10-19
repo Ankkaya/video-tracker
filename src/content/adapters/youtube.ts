@@ -1,8 +1,7 @@
-import type { VideoInfo } from '../../shared/types';
-import type { VideoAdapter } from './types';
+import { createVideoAdapter } from './shared';
 
 /** YouTube 适配器 */
-export const youtubeAdapter: VideoAdapter = {
+export const youtubeAdapter = createVideoAdapter({
   platform: 'youtube',
   platformName: 'YouTube',
 
@@ -10,9 +9,7 @@ export const youtubeAdapter: VideoAdapter = {
     return location.hostname.includes('youtube.com') || location.hostname === 'youtu.be';
   },
 
-  extract(): VideoInfo | null {
-    const video = this.getVideoElement();
-    if (!video) return null;
+  metadata() {
 
     // 标题
     const titleEl =
@@ -31,22 +28,9 @@ export const youtubeAdapter: VideoAdapter = {
       url: location.href,
       title,
       episode,
-      platform: this.platform,
-      platformName: this.platformName,
-      currentTime: video.currentTime,
-      duration: video.duration || 0,
       thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : undefined,
     };
   },
 
-  getVideoElement(): HTMLVideoElement | null {
-    return document.querySelector('video.html5-main-video') || document.querySelector('video');
-  },
-
-  buildResumeUrl(url: string, currentTime: number): string {
-    const u = new URL(url);
-    u.searchParams.set('t', Math.floor(currentTime).toString());
-    u.searchParams.delete('start'); // 移除旧的 start 参数
-    return u.toString();
-  },
-};
+  preferredVideoSelector: 'video.html5-main-video',
+});

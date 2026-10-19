@@ -1,8 +1,7 @@
-import type { VideoInfo } from '../../shared/types';
-import type { VideoAdapter } from './types';
+import { createVideoAdapter } from './shared';
 
 /** B站适配器 */
-export const bilibiliAdapter: VideoAdapter = {
+export const bilibiliAdapter = createVideoAdapter({
   platform: 'bilibili',
   platformName: 'B站',
 
@@ -10,7 +9,7 @@ export const bilibiliAdapter: VideoAdapter = {
     return location.hostname.includes('bilibili.com');
   },
 
-  extract(): VideoInfo | null {
+  metadata() {
     // 标题
     const titleEl =
       document.querySelector('.video-title') ||
@@ -29,30 +28,12 @@ export const bilibiliAdapter: VideoAdapter = {
     const pageNum = params.get('p') || '1';
     const episode = pageNum !== '1' ? `P${pageNum}` : '正片';
 
-    // video 元素
-    const video = this.getVideoElement();
-    if (!video) return null;
-
     return {
       url: location.href,
       title,
       episode,
       seriesName,
-      platform: this.platform,
-      platformName: this.platformName,
-      currentTime: video.currentTime,
-      duration: video.duration || 0,
       thumbnail: (document.querySelector('meta[property="og:image"]') as HTMLMetaElement)?.content,
     };
   },
-
-  getVideoElement(): HTMLVideoElement | null {
-    return document.querySelector('video');
-  },
-
-  buildResumeUrl(url: string, currentTime: number): string {
-    const u = new URL(url);
-    u.searchParams.set('t', Math.floor(currentTime).toString());
-    return u.toString();
-  },
-};
+});
