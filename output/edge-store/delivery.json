@@ -1,7 +1,7 @@
 {
   "version": "0.0.14",
   "date": "2026-10-20",
-  "status": "repository_materials_updated_not_uploaded",
+  "status": "in_review",
   "locales": [
     "zh-CN",
     "en-US"
@@ -25,16 +25,14 @@
   "bytes": 465916,
   "historicalDelivery": "archive/delivery-before-2026-10-20.json",
   "pending": [
-    "Verify authentication and sync with the formal extension ID.",
-    "Upload localized descriptions, screenshots and updated privacy disclosures when authorized.",
-    "Submit for store review when authorized."
+    "Await store review result."
   ],
   "sourceScope": "Version 0.0.14 source and materials dated 2026-10-20. Store submission status is separate from GitHub publication.",
   "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.14",
-  "historicalSubmission": {
-    "version": "0.0.13",
-    "date": "2026-10-13",
-    "submittedAt": "2026-10-13T07:15:21.295Z",
+  "submission": {
+    "version": "0.0.14",
+    "date": "2026-10-20",
+    "submittedAt": "2026-10-20T08:19:10.465Z",
     "status": "in_review",
     "dashboardStatus": "In review",
     "packageUploaded": true,
@@ -46,12 +44,14 @@
     ],
     "screenshotsPerLocale": 5,
     "screenshotCaptionsVerified": true,
-    "privacyDisclosuresSaved": true,
-    "reviewerNotesCharacters": 1853,
+    "promotionalImagesPerLocale": 2,
+    "privacyDisclosures": "Unchanged; existing saved disclosures retained.",
+    "reviewerNotesCharacters": 1952,
     "submittedForReview": true,
     "developerDashboard": "https://partner.microsoft.com/en-us/dashboard/microsoftedge/2bde0ce0-d428-4856-8ccb-88928b21af54/packages/dashboard",
-    "zipSha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
-    "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13",
-    "evidence": "evidence/submission-0.0.13.png"
+    "zipSha256": "e40ac443423b4618ea628c484e16b5bc2b1f8611d3b2034324d0ab00be3e8903",
+    "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.14",
+    "evidence": "evidence/submission-0.0.14.png",
+    "liveVersionAtSubmission": "0.0.13"
   }
 }

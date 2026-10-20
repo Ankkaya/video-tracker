@@ -2,6 +2,8 @@
 
 适用版本：`0.0.14`。更新日期：2026-10-20。本文与配图对应 0.0.14；商店上传和审核状态独立于 GitHub Release。历史发布与审核记录保留在 `releases/` 和 `output/*-store/submission-status.json`，不代表本次素材已上传。
 
+2026-10-20 后台核实：Edge 0.0.14 的中英文图文和安装包已提交审核（In review），线上仍为 0.0.13；Chrome 后台访问被浏览器工具拒绝（Not allowed），本次资料未上传。凭证分别见 `output/edge-store/submission-status.json` 和 `output/chrome-store/materials-update-status-0.0.14.json`。
+
 以下中英文介绍可用于商店详情页。简短描述与 `public/_locales` 中的扩展描述保持一致；隐私摘要以仓库根目录的 `PRIVACY_POLICY.md` 为准。
 
 ## 扩展名称

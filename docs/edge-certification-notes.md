@@ -1,6 +1,6 @@
 # Microsoft Edge Add-ons certification notes
 
-Version 0.0.14 reference, updated 2026-10-20. Historical submitted notes remain in `output/edge-store/reviewer-notes-submitted-0.0.13.txt`. These updated notes have not been uploaded.
+Version 0.0.14 reference, updated 2026-10-20. Historical submitted notes remain in `output/edge-store/reviewer-notes-submitted-0.0.13.txt`. Version 0.0.14 was submitted on 2026-10-20; dashboard status: In review. The exact 1,952-character submitted text is saved in `output/edge-store/reviewer-notes-submitted-0.0.14.txt`.
 
 Use the following text in the private certification notes field. It is within 2,000 characters. Supply cloud test credentials separately in private fields.
 

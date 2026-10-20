@@ -119,7 +119,23 @@ for (const store of ['chrome-store', 'edge-store']) {
     delivery.release = publication.release;
     delivery.packageStatus = 'Published as a GitHub Release; not uploaded to either extension store by this workflow.';
   }
-  if (submission) delivery.historicalSubmission = submission;
+  if (submission?.version === version && submission.date === date && submission.descriptionsSaved) {
+    delivery.status = submission.status;
+    delivery.submission = submission;
+    delivery.pending = submission.submittedForReview ? ['Await store review result.'] : ['Submit the saved materials for review.'];
+    for (const locale of ['zh-CN', 'en-US']) {
+      const listingPath = `${base}/${locale}/listing.json`;
+      const listing = JSON.parse(await readFile(resolve(root, listingPath), 'utf8'));
+      listing.materialStatus = 'saved_to_dashboard';
+      listing.dashboardStatus = submission.status;
+      await json(listingPath, listing);
+    }
+    const stateText = `${version} 中英文资料和安装包已提交商店审核，后台状态为 ${submission.dashboardStatus}；线上仍为 ${submission.liveVersionAtSubmission}，待审核通过。`;
+    const readme = await readFile(resolve(root, base, 'README.md'), 'utf8');
+    await write(`${base}/README.md`, readme.replace('仅更新仓库，未上传或提交审核。', stateText).replace('未上传商店或提交审核。', stateText));
+    const preview = await readFile(resolve(root, base, 'index.html'), 'utf8');
+    await write(`${base}/index.html`, preview.replace('仅同步仓库，未上传商店、未提交审核。', escape(stateText)));
+  } else if (submission) delivery.historicalSubmission = submission;
   await json(`${base}/delivery.json`, delivery);
 }
 console.log(`Generated source materials dated ${date}; historical publication receipts preserved separately. No dashboard actions performed.`);

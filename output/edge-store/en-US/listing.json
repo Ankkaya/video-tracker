@@ -28,9 +28,10 @@
   ],
   "version": "0.0.14",
   "updatedAt": "2026-10-20",
-  "materialStatus": "repository_only_not_uploaded",
+  "materialStatus": "saved_to_dashboard",
   "homepage": "https://video-tracker.ankkaya.top/",
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "support": "https://github.com/Ankkaya/video-tracker/issues",
-  "releaseNotes": "Current source 0.0.14 update notes (2026-10-20)\n• Continuous progress tracking with actual-playback thresholds for new records and saves on pause, end and video switches.\n• Watching and Completed views, manual completion controls, resume and watch-again actions; the popup focuses on unfinished videos.\n• Four-step first-use tour, site icons, refreshed records layout, shortcut settings and popup.\n• Unified video and episode matching, record validation before resume and playback-page filtering on supported platforms.\n• Local-first records, site exclusions, optional encrypted sync and in-extension feedback remain available."
+  "releaseNotes": "Current source 0.0.14 update notes (2026-10-20)\n• Continuous progress tracking with actual-playback thresholds for new records and saves on pause, end and video switches.\n• Watching and Completed views, manual completion controls, resume and watch-again actions; the popup focuses on unfinished videos.\n• Four-step first-use tour, site icons, refreshed records layout, shortcut settings and popup.\n• Unified video and episode matching, record validation before resume and playback-page filtering on supported platforms.\n• Local-first records, site exclusions, optional encrypted sync and in-extension feedback remain available.",
+  "dashboardStatus": "in_review"
 }

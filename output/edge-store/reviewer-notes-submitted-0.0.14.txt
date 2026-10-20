@@ -1,0 +1,10 @@
+VideoTracker saves and restores video progress. Local use needs no account. Auto Record is off by default; encrypted sync is optional.
+
+1. On first install, follow or skip the four-step tour. Open a supported video on YouTube, Bilibili, iQIYI or Tencent Video and start playback. Save with the assigned manual shortcut (suggested Ctrl+Shift+V; Command+Shift+V on Mac). Assign a shortcut in the browser's extension shortcut settings if needed.
+2. Open the popup: unfinished videos appear. Resume a record in a supported player. Open records, search titles/episodes and filter dates. Switch Watching/Completed, mark completed without losing position, then use Watch again to open from the beginning. Test individual and batch deletion with disposable data.
+3. Enable Auto Record with a 30-second threshold. Play a NEW video for 30 actual seconds; paused/buffering/seek time does not count. Pause to save progress. Existing records keep updating even with Auto Record off.
+4. In Site exclusions, add a domain or HTTP/HTTPS URL. New automatic records stop for its domain/subdomains; existing records keep tracking and manual saving works. Remove the rule to restore additions when Auto Record is on.
+5. Optional sync: sign in, set a separate sync password, sync, then unlock/sync in another profile with the same password. Test deletion propagation. Sign-out keeps local records; uninstall does not delete cloud data. Use disposable data for reset tests.
+6. Report an issue without signing in: up to 500 characters, one optional PNG/JPG/WebP up to 5 MB, optional email. Cancel first-use consent to send nothing; confirm with disposable test content. Network failures keep the draft.
+
+Feedback is readable by the developer and separate from encrypted sync. Remote thumbnails can load with sync off. See the privacy policy for account/connection data and deletion requests. Optional sync requires signing in; reviewers may register a disposable test account.

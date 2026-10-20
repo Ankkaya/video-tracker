@@ -1,0 +1,10 @@
+{
+  "version": "0.0.14",
+  "checkedAt": "2026-10-20T08:13:15.816Z",
+  "status": "blocked_browser_access",
+  "descriptionsSaved": false,
+  "screenshotsUploaded": false,
+  "submittedForReview": false,
+  "blocker": "Browser tool rejected navigation to the configured Chrome Web Store developer dashboard with Not allowed. No alternative route attempted.",
+  "materials": "index.html"
+}
