@@ -2,23 +2,38 @@
 
 [简体中文](README.md)
 
-Current version: `0.0.13`, released on 2026-10-13. [Download the latest Chrome / Edge package](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.13/video-tracker-0.0.13-chrome-mv3.zip) · [Release notes and checksum files](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13).
+Latest published version: `0.0.14`, released on 2026-10-20. [Download the latest Chrome / Edge package](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.14/video-tracker-0.0.14-chrome-mv3.zip) · [Release notes and checksum files](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.14).
 
 [Website](https://video-tracker.ankkaya.top/en/) · [Privacy policy](https://video-tracker.ankkaya.top/privacy-policy.html) · [Support](https://github.com/Ankkaya/video-tracker/issues)
 
 VideoTracker saves video watch progress across Bilibili, YouTube, iQIYI, Tencent Video and other compatible HTML5 video sites. Open a saved record to resume in a supported player. Local recording works without an account; cross-device encrypted sync is optional.
 
+The descriptions and screenshots below reflect version 0.0.14 (2026-10-20).
+
 ## Features
 
 - Automatic recording is off by default. Enable it and choose a threshold of 0, 10, 30, 60 or 120 seconds; the default threshold is 30 seconds.
 - Save manually with `Ctrl+Shift+V`, or `Command+Shift+V` on Mac. Manual saving works even when automatic recording is off or a site is excluded. Browser shortcut settings can resolve unassigned or conflicting shortcuts.
-- Search recent titles in the popup. The records page supports title/episode search, viewing-date filters, individual deletion and batch deletion.
-- Add a domain or HTTP/HTTPS webpage URL to the site exclusion list to stop automatic recording for its domain and subdomains. Remove it to restore recording when the global switch is on. Existing records stay.
+- The popup focuses on unfinished videos. Switch between Watching and Completed on the records page, mark completion manually without losing position, or watch completed videos again from the beginning.
+- Search titles in the popup; filter records by title, episode and viewing date, with individual or batch deletion and site icons.
+- Existing records keep tracking progress even with automatic recording off or the site excluded. Pause, end and video switches trigger saves; only actual playback counts toward the threshold for new records.
+- A four-step first-use tour introduces records, automatic recording, the viewing threshold and shortcuts. Skip, resume or restart it at any time.
+- Add a domain or HTTP/HTTPS webpage URL to the site exclusion list to stop automatically adding new records for its domain and subdomains. Remove it to restore recording when the global switch is on. Existing records stay and continue tracking progress.
 - Choose Chinese or English and a light, dark or system theme.
 - Sign in and set a separate sync encryption password for optional end-to-end encrypted sync of records, site rules and deletion markers. The sync password is not uploaded.
 - Open the feedback page from the popup or options. Send up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB and an optional email. No sign-in is required. A signed-in email is prefilled but editable or removable. The first submission requires confirming the purpose; failures keep your draft, and success shows a short message.
 
 Detection and playback restoration depend on the website and player. Live streams, restricted players and some third-party sites may need manual recording or may not support restoration.
+
+## Interface preview
+
+![Watching records with search, date filters and status actions](output/edge-store/en-US/01-records-1280x800.png)
+
+![Toolbar popup for resuming unfinished videos](output/edge-store/en-US/04-popup-1280x800.png)
+
+![Completed records with watch-again actions and preserved progress](landing/assets/completed-en-US.png)
+
+Actual interface with fictional sample records.
 
 ## Install or build
 
@@ -45,7 +60,7 @@ No account is needed. The feature tour remembers completion on this device, and 
 
 Existing records keep tracking even when automatic recording is off or the site is excluded from adding new records. Playback progress is read every 5 seconds and saved every 30 seconds, with immediate saves on pause, end and video switches. Only actual playback counts toward the threshold for adding a new video; paused, buffering and seek time do not count.
 
-The popup shows unfinished videos. All Records offers All / Watching / Completed filters and manual completion controls that preserve the playback position. Ending playback marks a video completed; reaching 98% with at most 10 seconds remaining also qualifies. Watch again opens from the beginning. Starting playback earlier returns the record to Watching.
+The popup shows unfinished videos. The records page offers Watching / Completed filters and manual completion controls that preserve the playback position. Ending playback marks a video completed; reaching 98% with at most 10 seconds remaining also qualifies. Watch again opens from the beginning. Starting playback earlier returns the record to Watching.
 
 Matching uses platform video IDs and part/episode IDs. Generic sites use canonical page URLs and media sources, with title/duration as a fallback. Existing records remain compatible. Resume links verify the matching saved record before seeking; players without reliable content identity may need site-specific support.
 

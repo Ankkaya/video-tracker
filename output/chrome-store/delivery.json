@@ -1,7 +1,7 @@
 {
-  "version": "0.0.13",
-  "date": "2026-10-13",
-  "status": "blocked_browser_access",
+  "version": "0.0.14",
+  "date": "2026-10-20",
+  "status": "repository_materials_updated_not_uploaded",
   "locales": [
     "zh-CN",
     "en-US"
@@ -19,16 +19,18 @@
   "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
   "support": "https://github.com/Ankkaya/video-tracker/issues",
   "preview": "index.html",
-  "packageStatus": "Published as a GitHub Release; individual store upload/review status is recorded separately.",
-  "package": "releases/video-tracker-0.0.13-chrome-mv3.zip",
-  "sha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
-  "bytes": 438644,
-  "historicalDelivery": "archive/delivery-before-2026-10-13.json",
+  "packageStatus": "Latest version built locally; not uploaded to either store or published as a GitHub Release.",
+  "package": "releases/video-tracker-0.0.14-chrome-mv3.zip",
+  "sha256": "e40ac443423b4618ea628c484e16b5bc2b1f8611d3b2034324d0ab00be3e8903",
+  "bytes": 465916,
+  "historicalDelivery": "archive/delivery-before-2026-10-20.json",
   "pending": [
-    "Complete store dashboard upload and review submission; see recorded blocker."
+    "Verify authentication and sync with the formal extension ID.",
+    "Upload localized descriptions, screenshots and updated privacy disclosures when authorized.",
+    "Submit for store review when authorized."
   ],
-  "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13",
-  "submission": {
+  "sourceScope": "Version 0.0.14 source and materials dated 2026-10-20. Store submission status is separate from GitHub publication.",
+  "historicalSubmission": {
     "version": "0.0.13",
     "date": "2026-10-13",
     "status": "blocked_browser_access",

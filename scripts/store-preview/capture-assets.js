@@ -24,6 +24,11 @@ try {
     await page.goto(url);
     await page.getByText(zh ? '摄影入门：光线与构图' : 'Photography essentials: light and composition', { exact: true }).waitFor();
     await capture(locale, '01-records');
+    await page.locator('.record-actions').first().getByRole('button', { name: zh ? '标记已看完' : 'Mark completed', exact: true }).click();
+    await page.locator('.n-radio__label').getByText(zh ? '已看完' : 'Completed', { exact: true }).click();
+    await page.getByRole('button', { name: zh ? '重新观看' : 'Watch again', exact: true }).waitFor();
+    await page.screenshot({ path: resolve(root, 'landing/assets', `completed-${locale}.png`), animations: 'disabled' });
+    await page.locator('.n-radio__label').getByText(zh ? '观看中' : 'Watching', { exact: true }).click();
     await page.getByRole('button', { name: zh ? '插件设置' : 'Settings', exact: true }).click();
     await page.getByText(zh ? '最低观看时长' : 'Minimum Watch Time', { exact: true }).waitFor();
     await page.getByRole('switch').first().waitFor();

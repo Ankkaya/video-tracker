@@ -3,3 +3,8 @@
 .product-preview img { display: block; width: 100%; height: auto; border-radius: 16px; box-shadow: 0 24px 64px #18265b18; }
 .product-preview figcaption { margin-top: 16px; text-align: center; color: var(--text-secondary); font-size: 13px; }
 @media (max-width: 1024px) { .product-preview { margin: 0; } }
+
+.interface-section { padding: 80px 0; background: #f5f7fc; }
+.records-preview { max-width: 1000px; margin: 36px auto 0; }
+.records-preview img { display: block; width: 100%; height: auto; border-radius: 16px; border: 1px solid #e4e8f0; box-shadow: 0 18px 48px #18265b10; }
+.records-preview figcaption { color: var(--text-secondary); font-size: 14px; text-align: center; margin-top: 18px; line-height: 1.6; }

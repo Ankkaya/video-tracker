@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - Video Watch Progress Tracker</title>
-  <meta name="description" content="Save and resume video progress across sites. Local by default, with optional encrypted sync, site exclusions and in-extension feedback.">
+  <meta name="description" content="Resume unfinished videos across sites. Organize Watching and Completed records. Local by default, with optional end-to-end encrypted sync.">
   <link rel="alternate" hreflang="zh-CN" href="https://video-tracker.ankkaya.top/">
   <link rel="alternate" hreflang="en" href="https://video-tracker.ankkaya.top/en/">
   <link rel="canonical" href="https://video-tracker.ankkaya.top/en/">
   <meta property="og:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta property="og:description" content="Save and resume video progress across sites. Local by default, with optional encrypted sync, site exclusions and in-extension feedback.">
+  <meta property="og:description" content="Resume unfinished videos across sites. Organize Watching and Completed records. Local by default, with optional end-to-end encrypted sync.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://video-tracker.ankkaya.top/en/">
   <meta property="og:image" content="https://video-tracker.ankkaya.top/og-image.png">
@@ -18,7 +18,7 @@
   <meta property="og:locale:alternate" content="zh_CN">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - Video Watch Progress Tracker">
-  <meta name="twitter:description" content="Save and resume video progress across sites. Local by default, with optional encrypted sync, site exclusions and in-extension feedback.">
+  <meta name="twitter:description" content="Resume unfinished videos across sites. Organize Watching and Completed records. Local by default, with optional end-to-end encrypted sync.">
   <meta name="twitter:image" content="https://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,7 +56,7 @@
           <span class="gradient-text">Where You Left Off</span>
         </h1>
         <p class="hero-desc">
-          VideoTracker automatically records your watch progress across video sites with one-click resume. Local by default, with optional end-to-end encrypted cloud sync.
+          Pick up where you left off and keep finished videos organized. Save progress across sites, mark completion or watch again from the beginning. No account needed locally; encrypted sync is optional.
         </p>
         <div class="hero-actions">
           <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
@@ -67,10 +67,10 @@
           </a>
         </div>
         <p class="hero-note">For Chrome / Edge · Free & Open Source · Automatic recording is off by default</p>
-        <p class="hero-note">Version 0.0.13 is available. See the download page for the package, release notes and checksum files.</p>
+        <p class="hero-note">0.0.14 · 2026-10-20: continuous progress tracking, completion status and a first-use tour. Download the package, release notes and checksums.</p>
       </div>
       <div class="hero-visual">
-        <figure class="product-preview"><img src="../assets/popup-en-US.png" width="380" alt="Current VideoTracker popup with search, watch progress and feedback"><figcaption>Current interface · Fictional sample records</figcaption></figure>
+        <figure class="product-preview"><img src="../assets/popup-en-US.png" width="380" alt="Current VideoTracker popup with unfinished videos, title search and resume"><figcaption>Current source interface · Fictional sample records</figcaption></figure>
       </div>
     </div>
   </section>
@@ -84,7 +84,7 @@
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
           <h3>Auto Record</h3>
-          <p>Enable automatic recording in settings to save progress after your viewing threshold. Off by default; local recording needs no account.</p>
+          <p>Enable to add new records after actual playback reaches your threshold. Off by default. Existing records keep updating, with saves on pause, end and video switches.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⌨️</div>
@@ -99,12 +99,12 @@
         <div class="feature-card">
           <div class="feature-icon">⏱️</div>
           <h3>Smart Threshold</h3>
-          <p>Default 30 seconds before recording. Customizable: 0 / 10 / 30 / 60 / 120 seconds.</p>
+          <p>Only actual playback counts: pauses, buffering and seeking do not. Default 30 seconds; choose 0 / 10 / 30 / 60 / 120 seconds.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3>Search & Filter</h3>
-          <p>Search titles in the popup. Filter the records page by title, episode and viewing date, with individual or batch deletion.</p>
+          <p>The popup focuses on unfinished videos. Filter records by title, episode and date, recognize site icons, and delete individual or selected records.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">☁️</div>
@@ -114,7 +114,7 @@
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
           <h3>Site Exclusions</h3>
-          <p>Add a domain or webpage URL to stop automatic recording for it and its subdomains. Remove it to restore recording; saved records stay.</p>
+          <p>Exclude a domain or webpage URL and its subdomains from new automatic records. Existing records keep updating and manual saving still works. Remove the rule to restore automatic additions.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">💬</div>
@@ -126,9 +126,17 @@
           <h3>Language & Theme</h3>
           <p>Choose Chinese or English, with a light, dark or system theme for your records and settings.</p>
         </div>
+        <div class="feature-card"><div class="feature-icon">✓</div><h3>Watching & Completed</h3><p>Completion is detected automatically. Mark status manually without losing position, or watch completed videos again from the beginning.</p></div>
+        <div class="feature-card"><div class="feature-icon">🧭</div><h3>Four-Step Feature Tour</h3><p>Get started with records, automatic recording, viewing thresholds and shortcuts. Skip, resume or restart whenever you need.</p></div>
       </div>
     </div>
   </section>
+
+  <section class="interface-section"><div class="container">
+    <h2 class="section-title">Keep watching. Keep finished videos organized.</h2>
+    <p class="section-desc">Current source interface · Fictional records · Marking completion preserves your position</p>
+    <figure class="records-preview"><img src="../assets/completed-en-US.png" width="1280" height="800" loading="lazy" alt="Completed records with completion status, preserved progress and watch-again action"><figcaption>Watch a completed video again, or mark it unfinished to continue.</figcaption></figure>
+  </div></section>
 
   <!-- Platforms -->
   <section id="platforms" class="platforms">

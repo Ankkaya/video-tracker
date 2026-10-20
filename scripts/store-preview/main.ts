@@ -13,7 +13,7 @@ const samples = [
   ['vqq', '腾讯视频', '前端开发实战', 'Frontend development workshop', 1510, 2700],
 ] as const;
 let records: WatchRecord[] = samples.map(([platform, platformName, titleZh, titleEn, currentTime, duration], index) => ({
-  id: `sample-${index}`, platform, platformName, title: zh ? titleZh : titleEn,
+  id: `sample-${index}`, platform, platformName: zh ? platformName : ({ bilibili: 'Bilibili', youtube: 'YouTube', vqq: 'Tencent Video' }[platform]), title: zh ? titleZh : titleEn,
   url: `https://example.com/video/${index}`, episode: zh ? '示例视频' : 'Sample video',
   currentTime, duration, progress: Number(currentTime) / Number(duration),
   lastWatchedAt: now - (index + 1) * 3600000, createdAt: now - 86400000,

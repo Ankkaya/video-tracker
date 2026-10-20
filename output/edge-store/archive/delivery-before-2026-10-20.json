@@ -1,0 +1,54 @@
+{
+  "version": "0.0.13",
+  "date": "2026-10-13",
+  "status": "in_review",
+  "locales": [
+    "zh-CN",
+    "en-US"
+  ],
+  "screenshotsPerLocale": 5,
+  "screenshotOrder": [
+    "01-records-1280x800.png",
+    "02-settings-1280x800.png",
+    "03-sites-1280x800.png",
+    "04-popup-1280x800.png",
+    "05-feedback-1280x800.png"
+  ],
+  "screenshotSource": "Current Vue components with fictional records and excluded example.com; isolated preview without cloud access. Feedback screenshot sends no request.",
+  "homepage": "https://video-tracker.ankkaya.top/",
+  "privacyPolicy": "https://video-tracker.ankkaya.top/privacy-policy.html",
+  "support": "https://github.com/Ankkaya/video-tracker/issues",
+  "preview": "index.html",
+  "packageStatus": "Published as a GitHub Release; individual store upload/review status is recorded separately.",
+  "package": "releases/video-tracker-0.0.13-chrome-mv3.zip",
+  "sha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
+  "bytes": 438644,
+  "historicalDelivery": "archive/delivery-before-2026-10-13.json",
+  "pending": [
+    "Await store review result."
+  ],
+  "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13",
+  "submission": {
+    "version": "0.0.13",
+    "date": "2026-10-13",
+    "submittedAt": "2026-10-13T07:15:21.295Z",
+    "status": "in_review",
+    "dashboardStatus": "In review",
+    "packageUploaded": true,
+    "packageVerified": true,
+    "descriptionsSaved": true,
+    "locales": [
+      "zh-CN",
+      "en-US"
+    ],
+    "screenshotsPerLocale": 5,
+    "screenshotCaptionsVerified": true,
+    "privacyDisclosuresSaved": true,
+    "reviewerNotesCharacters": 1853,
+    "submittedForReview": true,
+    "developerDashboard": "https://partner.microsoft.com/en-us/dashboard/microsoftedge/2bde0ce0-d428-4856-8ccb-88928b21af54/packages/dashboard",
+    "zipSha256": "27bc36c06bc18aa13d16fb4f6f4ce9aae858837bac8c0b9acff4a87bc3f025b8",
+    "release": "https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13",
+    "evidence": "evidence/submission-0.0.13.png"
+  }
+}

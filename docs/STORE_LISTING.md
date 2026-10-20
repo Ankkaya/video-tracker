@@ -1,6 +1,6 @@
 # Chrome Web Store / Edge Add-ons 上架资料
 
-适用版本：`0.0.13`。更新日期：2026-10-13。[GitHub Release](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.13) 已发布。Edge 已提交审核（In review）；Chrome 后台访问被浏览器工具拒绝，未上传或提交。实际商店状态以各自 `output/*-store/submission-status.json` 和后台为准。
+适用版本：`0.0.14`。更新日期：2026-10-20。本文与配图对应 0.0.14；商店上传和审核状态独立于 GitHub Release。历史发布与审核记录保留在 `releases/` 和 `output/*-store/submission-status.json`，不代表本次素材已上传。
 
 以下中英文介绍可用于商店详情页。简短描述与 `public/_locales` 中的扩展描述保持一致；隐私摘要以仓库根目录的 `PRIVACY_POLICY.md` 为准。
 
@@ -28,8 +28,11 @@ VideoTracker 帮你保存跨网站的视频观看进度，下次从上次看到�
 • 自动记录：在设置中开启自动记录后，达到设定的观看时长即可保存视频信息和播放进度。自动记录默认关闭，默认时长阈值为 30 秒，可选 0、10、30、60 或 120 秒。
 • 手动保存：使用快捷键 Ctrl+Shift+V（Mac：Command+Shift+V）保存当前视频进度，无需等待自动记录阈值。快捷键可在浏览器的扩展快捷键设置中调整。
 • 继续观看：点击记录打开对应视频页面，在支持的播放器中恢复上次播放位置。
-• 查找记录：在弹窗按标题搜索，在完整记录页按标题、分集信息和观看日期筛选，支持单条和批量删除。
-• 站点过滤：支持 B站、YouTube、爱奇艺、腾讯视频，并尝试识别其他兼容的 HTML5 视频网站。输入域名或网页链接加入排除名单，可停止该域名及子域名的自动记录，保留已有记录。移出名单后恢复自动记录；全局自动记录仍需开启。手动保存不受排除名单影响。识别和恢复进度取决于网站与播放器的实现。
+• 持续跟踪：已有记录在自动记录关闭或站点被排除后仍更新进度。暂停、播放结束和切换视频时及时保存；新增记录的时长阈值只累计实际播放。
+• 观看状态：弹窗聚焦未看完的视频，记录页可切换“观看中 / 已看完”。自动识别播放完成，也可手动标记，保留原播放位置；已看完的视频支持从头重新观看。
+• 查找与整理：弹窗按标题搜索，记录页按标题、分集和观看日期筛选，支持单条和批量删除，配有站点图标。
+• 首次使用引导：四步了解记录管理、自动记录、最低观看时长与快捷键，可跳过、继续或重新查看。
+• 站点过滤：支持 B站、YouTube、爱奇艺、腾讯视频，并尝试识别其他兼容的 HTML5 视频网站。输入域名或网页链接加入排除名单，可停止该域名及子域名自动新增记录，已有记录保留并继续跟踪进度。移出名单后恢复自动记录；全局自动记录仍需开启。手动保存不受排除名单影响。识别和恢复进度取决于网站与播放器的实现。
 • 可选加密同步：登录并开启云同步或执行手动同步时，观看记录和站点规则先在设备端加密，再上传。换设备后输入同步加密密码即可解锁。
 • 界面与反馈：支持中文、英文以及浅色、深色或跟随系统主题。从弹窗或选项页进入“反馈问题”，可填写最多 500 字，并附一张不超过 5 MB 的 PNG/JPG/WebP 图片及联系邮箱；无需登录。
 
@@ -54,8 +57,11 @@ Features
 • Automatic recording: Enable automatic recording in settings to save video details and progress after your chosen viewing threshold. Automatic recording is off by default. The default threshold is 30 seconds, with 0, 10, 30, 60 and 120 seconds available.
 • Manual saving: Save the current video's progress with Ctrl+Shift+V (Command+Shift+V on Mac), without waiting for the automatic threshold. You can change the shortcut in your browser's extension shortcut settings.
 • Resume watching: Open a saved record to return to the video and restore your position in supported players.
-• Find your records: Search titles in the popup. Filter the full records page by title, episode text and viewing date, and delete individual or selected records.
-• Site exclusions: Supports Bilibili, YouTube, iQIYI and Tencent Video, plus generic detection on other compatible HTML5 video sites. Add a domain or webpage URL to the exclusion list to stop automatic recording for that domain and its subdomains while preserving saved records. Removing it restores automatic recording when the global switch is on. Manual saving still works for excluded sites. Detection and playback restoration depend on the website and player implementation.
+• Continuous progress tracking: Existing records keep updating even with automatic recording off or the site excluded. Pause, end and video switches trigger saves; only actual playback counts toward the threshold for new records.
+• Watching and Completed: The popup focuses on unfinished videos. Switch status views on the records page, mark completion manually without losing position, or watch completed videos again from the beginning. Playback completion is also detected automatically.
+• Find and organize: Search titles in the popup. Filter records by title, episode and viewing date, delete individual or selected records, and identify sites by their icons.
+• First-use tour: Four steps introduce records, automatic recording, viewing thresholds and shortcuts. Skip, resume or restart the tour.
+• Site exclusions: Supports Bilibili, YouTube, iQIYI and Tencent Video, plus generic detection on other compatible HTML5 video sites. Add a domain or webpage URL to the exclusion list to stop automatically adding new records for that domain and its subdomains. Saved records stay and continue tracking progress. Removing it restores automatic recording when the global switch is on. Manual saving still works for excluded sites. Detection and playback restoration depend on the website and player implementation.
 • Optional encrypted sync: When you sign in and enable cloud sync or use manual sync, viewing records and site rules are encrypted on your device before upload. Enter your sync encryption password on another device to unlock them.
 • Interface and feedback: Choose Chinese or English and a light, dark or system theme. Open the feedback page from the popup or options to send up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB and an optional contact email. No sign-in is required.
 
@@ -107,12 +113,21 @@ English: Save and restore video watch progress across websites, with optional en
 
 删除与保留说明：退出登录清除本地会话和同步解锁状态，保留本地记录；卸载不会自动删除云端数据；云端重置不是账号删除。云端或账号删除可通过 GitHub Issues 联系开发者申请私下联系渠道，请勿在公开 issue 中发布密码、令牌或私人观看记录。服务提供方的备份与日志可能有单独保留周期。
 
-## 当前源码更新说明（0.0.13）
+## 当前源码更新说明（0.0.14）
 
-- 站点过滤改为排除名单，支持粘贴网页链接及子域名匹配；移出名单恢复自动记录，保留已有记录。
-- 新增插件内反馈：最多 500 字、单张不超过 5 MB 的图片、可选邮箱，首次提交前确认用途，失败保留内容。
-- 简化记录页与弹窗搜索；记录页按标题、分集信息和日期筛选，支持批量删除。
-- 更新中英文布局、同步状态、快捷键说明及与当前功能一致的隐私披露。
+- 新增持续进度跟踪，实际播放时长达到阈值才自动新增，暂停、结束与切换视频时及时保存。
+- 记录按观看中与已看完分类，支持手动标记完成、继续观看与从头重新观看；弹窗聚焦未看完的视频。
+- 增加四步首次使用引导、站点图标，优化记录页布局、快捷键设置与弹窗。
+- 统一视频与分集身份匹配，恢复前校验记录，过滤主流平台非播放页面。
+- 保留本地优先、站点排除、可选加密同步及插件内反馈。
+
+## Current source update notes (English)
+
+- Continuous progress tracking with actual-playback thresholds for new records and saves on pause, end and video switches.
+- Watching and Completed views, manual completion controls, resume and watch-again actions; the popup focuses on unfinished videos.
+- Four-step first-use tour, site icons, refreshed records layout, shortcut settings and popup.
+- Unified video and episode matching, record validation before resume and playback-page filtering on supported platforms.
+- Local-first records, site exclusions, optional encrypted sync and in-extension feedback remain available.
 
 ## 商店素材
 
@@ -128,7 +143,7 @@ English: Save and restore video watch progress across websites, with optional en
 2. 打开支持的视频页面并开始播放，使用快捷键手动保存，确认弹窗出现记录。
 3. 在设置中开启自动记录，使用默认 30 秒阈值；在视频页面观看达到阈值后检查记录更新。
 4. 点击记录，确认打开视频页面并在支持的播放器中恢复播放位置。
-5. 打开完整记录页，验证标题、分集及日期筛选和批量删除；打开站点过滤，加入域名或网页链接，确认该域名和子域名停止自动记录，手动保存及已有记录不受影响；移出名单后恢复自动记录。
+5. 打开完整记录页，切换观看中与已看完，验证手动标记保留播放位置、重新观看从头打开；验证标题、分集及日期筛选和批量删除；打开站点过滤，加入域名或网页链接，确认该域名和子域名停止自动新增记录，手动保存仍可用，已有记录继续跟踪；移出名单后恢复自动记录。
 6. 可选云同步需登录并设置同步加密密码；在另一台设备登录并使用同一同步密码解锁，验证记录同步。云同步审核所需的测试账号及操作说明应通过商店后台的测试说明字段单独提供，勿写入公开商店介绍。
 7. 无需登录打开反馈页，确认 0/500、图片 0/1 和 5 MB 限制及邮箱可清空。首次提交使用无私人数据的审核测试内容：取消确认不发送，同意后成功只显示简短提示；超过字数或图片限制时阻止提交。网络失败时保留草稿，恢复后可重试。登录后邮箱预填但可修改或清空。反馈内容可被开发者阅读，不属于端到端加密同步数据。
 

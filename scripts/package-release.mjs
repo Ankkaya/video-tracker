@@ -151,7 +151,7 @@ await createZip(sourceDir, zipPath);
 const archive = await readFileBuffer(zipPath);
 const sha256 = createHash('sha256').update(archive).digest('hex');
 writeFileSync(`${zipPath}.sha256`, `${sha256}  ${basename(zipPath)}\n`);
-writeFileSync(zipPath.replace(/\.zip$/, '.json'), `${JSON.stringify({ version, filename: basename(zipPath), builtAt: new Date().toISOString(), bytes: archive.length, sha256, manifestVersion: manifest.manifest_version, browsers: ['Chrome', 'Edge'], status: 'built_locally_not_published' }, null, 2)}\n`);
+writeFileSync(zipPath.replace(/\.zip$/, '.json'), `${JSON.stringify({ version, filename: basename(zipPath), builtAt: new Date().toISOString(), bytes: archive.length, sha256, materialsDate: (await readFile(resolve(root, 'docs/STORE_LISTING.md'), 'utf8')).match(/更新日期：(\d{4}-\d{2}-\d{2})/)?.[1], manifestVersion: manifest.manifest_version, browsers: ['Chrome', 'Edge'], status: 'built_locally_not_published' }, null, 2)}\n`);
 
 console.log(`Created ${zipPath}`);
 console.log(`Packaged ${basename(sourceDir)} manifest v${manifest.version} into ${basename(zipPath)}`);

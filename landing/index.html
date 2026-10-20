@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoTracker - 视频观看进度记录器</title>
-  <meta name="description" content="保存和恢复跨网站视频观看进度。默认本地存储，无需账号；可选加密云同步，支持站点排除和插件内问题反馈。">
+  <meta name="description" content="保存跨网站视频进度，继续未看完的视频，管理观看中与已看完记录。默认本地存储，无需账号；可选端到端加密同步。">
   <link rel="alternate" hreflang="zh-CN" href="https://video-tracker.ankkaya.top/">
   <link rel="alternate" hreflang="en" href="https://video-tracker.ankkaya.top/en/">
   <link rel="canonical" href="https://video-tracker.ankkaya.top/">
   <meta property="og:title" content="VideoTracker - 视频观看进度记录器">
-  <meta property="og:description" content="保存和恢复跨网站视频观看进度。默认本地存储，无需账号；可选加密云同步，支持站点排除和插件内问题反馈。">
+  <meta property="og:description" content="保存跨网站视频进度，继续未看完的视频，管理观看中与已看完记录。默认本地存储，无需账号；可选端到端加密同步。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://video-tracker.ankkaya.top/">
   <meta property="og:image" content="https://video-tracker.ankkaya.top/og-image.png">
@@ -18,7 +18,7 @@
   <meta property="og:locale:alternate" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="VideoTracker - 视频观看进度记录器">
-  <meta name="twitter:description" content="保存和恢复跨网站视频观看进度。默认本地存储，无需账号；可选加密云同步，支持站点排除和插件内问题反馈。">
+  <meta name="twitter:description" content="保存跨网站视频进度，继续未看完的视频，管理观看中与已看完记录。默认本地存储，无需账号；可选端到端加密同步。">
   <meta name="twitter:image" content="https://video-tracker.ankkaya.top/og-image.png">
   <meta name="twitter:site" content="@ankkayaaa">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,7 +56,7 @@
           <span class="gradient-text">看到哪一集了</span>
         </h1>
         <p class="hero-desc">
-          VideoTracker 自动记录你在各视频网站的观看进度，支持一键跳转继续观看。默认本地存储，登录后可开启端到端加密云同步。
+          接着上次的进度看，也能把已看完的视频整理好。VideoTracker 保存跨网站观看记录，支持继续观看、标记完成与从头重看。本地使用无需账号，可选端到端加密同步。
         </p>
         <div class="hero-actions">
           <a href="https://github.com/Ankkaya/video-tracker/releases" class="btn btn-primary" target="_blank" rel="noopener">
@@ -67,10 +67,10 @@
           </a>
         </div>
         <p class="hero-note">适用于 Chrome / Edge · 免费开源 · 自动记录默认关闭</p>
-        <p class="hero-note">最新版 0.0.13 已发布，下载页提供安装包、更新说明与校验文件。</p>
+        <p class="hero-note">0.0.14 · 2026-10-20：持续进度跟踪、完成状态与首次使用引导。下载页提供安装包、更新说明与校验文件。</p>
       </div>
       <div class="hero-visual">
-        <figure class="product-preview"><img src="assets/popup-zh-CN.png" width="380" alt="VideoTracker 当前弹窗：搜索、观看进度与反馈入口"><figcaption>当前真实界面 · 虚构示例记录</figcaption></figure>
+        <figure class="product-preview"><img src="assets/popup-zh-CN.png" width="380" alt="VideoTracker 当前弹窗：未看完的视频、标题搜索与继续观看"><figcaption>当前源码界面 · 虚构示例记录</figcaption></figure>
       </div>
     </div>
   </section>
@@ -84,7 +84,7 @@
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
           <h3>自动记录</h3>
-          <p>在设置中开启后，观看达到设定时长即可保存进度。默认关闭，记录保存在本地，无需账号。</p>
+          <p>开启后按实际播放时长新增记录，默认关闭。已有记录持续跟踪，暂停、结束或切换视频时及时保存。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⌨️</div>
@@ -99,12 +99,12 @@
         <div class="feature-card">
           <div class="feature-icon">⏱️</div>
           <h3>智能阈值</h3>
-          <p>默认观看满 30 秒才记录。可自定义阈值：0 / 10 / 30 / 60 / 120 秒。</p>
+          <p>实际播放满 30 秒才自动新增记录，暂停、缓冲和跳转不累计。可选 0 / 10 / 30 / 60 / 120 秒。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3>搜索筛选</h3>
-          <p>弹窗按标题搜索，记录管理页按标题、分集和观看日期筛选，支持单条与批量删除。</p>
+          <p>弹窗聚焦未看完的视频；记录页按标题、分集和日期筛选，配有站点图标，支持单条与批量删除。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">☁️</div>
@@ -114,7 +114,7 @@
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
           <h3>站点排除</h3>
-          <p>输入域名或网页链接，停止该域名及子域名的自动记录。移出排除名单后恢复，已有记录保留。</p>
+          <p>输入域名或网页链接，停止该域名及子域名自动新增。已有记录继续更新，手动保存仍可用，移出名单后恢复自动新增。</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">💬</div>
@@ -126,9 +126,17 @@
           <h3>语言与主题</h3>
           <p>中文和英文界面，浅色、深色或跟随系统主题，让查看记录和调整设置更顺手。</p>
         </div>
+        <div class="feature-card"><div class="feature-icon">✓</div><h3>观看中与已看完</h3><p>自动识别播放完成，也可手动标记状态，保留播放位置。已看完的视频支持从头重新观看。</p></div>
+        <div class="feature-card"><div class="feature-icon">🧭</div><h3>四步上手引导</h3><p>首次安装逐步了解记录、自动记录、最低观看时长与快捷键。可跳过、继续，或随时重新查看。</p></div>
       </div>
     </div>
   </section>
+
+  <section class="interface-section"><div class="container">
+    <h2 class="section-title">接着看，也能整理已看完</h2>
+    <p class="section-desc">当前源码真实界面 · 虚构示例记录 · 手动标记完成会保留播放位置</p>
+    <figure class="records-preview"><img src="assets/completed-zh-CN.png" width="1280" height="800" loading="lazy" alt="已看完记录页，显示完成标记、保留的进度与重新观看操作"><figcaption>从已看完记录重新观看，或标记为未看完后继续。</figcaption></figure>
+  </div></section>
 
   <!-- Platforms -->
   <section id="platforms" class="platforms">
@@ -174,7 +182,7 @@
         <div class="step">
           <div class="step-num">1</div>
           <h3>安装扩展</h3>
-          <p>下载已发布安装包，按说明加载到浏览器；安装后本地记录无需登录。</p>
+          <p>按说明安装扩展。首次使用的四步引导介绍记录、自动记录、最低观看时长与快捷键，可跳过或重看。</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>

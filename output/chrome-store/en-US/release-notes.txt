@@ -1,5 +1,6 @@
-Current source 0.0.13 update notes (2026-10-13)
-• Site filters now use an exclusion list: add a domain or webpage URL to stop automatic recording for it and its subdomains; remove it to restore recording. Saved records stay.
-• New feedback page: up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB, optional email and first-submission consent. Failed submissions keep the draft.
-• Simplified popup and records search; records can be filtered by title, episode and viewing date, with batch deletion.
-• Updated bilingual layout, sync status, shortcut guidance and privacy disclosures.
+Current source 0.0.14 update notes (2026-10-20)
+• Continuous progress tracking with actual-playback thresholds for new records and saves on pause, end and video switches.
+• Watching and Completed views, manual completion controls, resume and watch-again actions; the popup focuses on unfinished videos.
+• Four-step first-use tour, site icons, refreshed records layout, shortcut settings and popup.
+• Unified video and episode matching, record validation before resume and playback-page filtering on supported platforms.
+• Local-first records, site exclusions, optional encrypted sync and in-extension feedback remain available.

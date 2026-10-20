@@ -16,7 +16,7 @@ try {
   const filename = `video-tracker-${version}-chrome-mv3.zip`;
   const receipt = JSON.parse(await readFile(resolve(root, 'releases', filename.replace(/\.zip$/, '.json')), 'utf8'));
   const archive = await readFile(resolve(root, 'releases', filename));
-  if (receipt.version === version && receipt.sha256 === createHash('sha256').update(archive).digest('hex')) localPackage = receipt;
+  if (receipt.materialsDate === date && receipt.version === version && receipt.sha256 === createHash('sha256').update(archive).digest('hex')) localPackage = receipt;
 } catch { /* Materials can be prepared before building a release package. */ }
 const screenshotNames = ['01-records', '02-settings', '03-sites', '04-popup', '05-feedback'];
 function section(title) {
@@ -28,11 +28,11 @@ function section(title) {
 const descriptions = { 'zh-CN': section('详细描述（中文）'), 'en-US': section('Detailed description (English)') };
 const releaseNotes = {
   'zh-CN': `当前源码 ${version} 更新说明（${date}）\n${section(`当前源码更新说明（${version}）`).replace(/^- /gm, '• ')}\n`,
-  'en-US': `Current source ${version} update notes (${date})\n• Site filters now use an exclusion list: add a domain or webpage URL to stop automatic recording for it and its subdomains; remove it to restore recording. Saved records stay.\n• New feedback page: up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB, optional email and first-submission consent. Failed submissions keep the draft.\n• Simplified popup and records search; records can be filtered by title, episode and viewing date, with batch deletion.\n• Updated bilingual layout, sync status, shortcut guidance and privacy disclosures.\n`,
+  'en-US': `Current source ${version} update notes (${date})\n${section('Current source update notes (English)').replace(/^- /gm, '• ')}\n`,
 };
 const captions = {
-  'zh-CN': ['按标题、分集和观看日期查找记录，支持批量删除。画面使用虚构示例记录。', '自动记录默认关闭，可设置最低观看时长；本地记录无需账号，云同步需登录后主动选择。截图展示开启后的状态。', '域名或网页链接加入排除名单，停止该域名及子域名自动记录；移出恢复，已有记录保留。', '从工具栏按标题搜索最近记录，点击继续观看；可进入设置或反馈。画面使用示例记录。', '反馈最多 500 字，可附一张不超过 5 MB 的 PNG/JPG/WebP 图片及邮箱。首次提交前确认用途；此截图不发送反馈。'],
-  'en-US': ['Find records by title, episode or viewing date, with batch deletion. Fictional sample records shown.', 'Automatic recording is off by default. Choose a viewing threshold; local recording needs no account and optional sync requires sign-in. Enabled state shown.', 'Exclude a domain or webpage URL and its subdomains from automatic recording. Remove it to restore recording; saved records stay.', 'Search recent titles from the toolbar, resume watching and open settings or feedback. Sample records shown.', 'Send up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB and optional email. First-submission consent required; this screenshot sends no feedback.'],
+  'zh-CN': ['切换观看中与已看完，按标题、分集和日期筛选，支持标记完成与批量删除。虚构示例记录。', '自动记录默认关闭，可设置最低观看时长；本地记录无需账号，云同步需登录后主动选择。截图展示开启后的状态。', '域名或网页链接加入排除名单，停止该域名及子域名自动新增；移出恢复，已有记录继续跟踪。', '工具栏聚焦未看完的视频，按标题搜索并继续观看。示例记录。', '反馈最多 500 字，可附一张不超过 5 MB 的 PNG/JPG/WebP 图片及邮箱。首次提交前确认用途；此截图不发送反馈。'],
+  'en-US': ['Switch Watching / Completed, search titles and episodes, filter dates, mark completion and delete selected records. Fictional sample records.', 'Automatic recording is off by default. Choose a viewing threshold; local recording needs no account and optional sync requires sign-in. Enabled state shown.', 'Exclude a domain or webpage URL and its subdomains from new automatic records. Saved records continue tracking; manual saving still works.', 'Focus on unfinished videos in the toolbar, search titles and resume watching. Sample records shown.', 'Send up to 500 characters, one optional PNG/JPG/WebP image up to 5 MB and optional email. First-submission consent required; this screenshot sends no feedback.'],
 };
 const escape = value => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const write = (path, value) => writeFile(resolve(root, path), value, 'utf8');
@@ -76,7 +76,7 @@ for (const store of ['chrome-store', 'edge-store']) {
   });
   const gallery = listings.map(listing => `<section><h2>${escape(listing.locale)} · ${escape(listing.name)}</h2><p>${escape(listing.shortDescription)}</p><textarea readonly aria-label="${escape(listing.locale)} description">${escape(listing.description)}</textarea><pre>${escape(listing.releaseNotes)}</pre><div class="shots">${listing.screenshots.map((name, i) => `<figure><a href="${listing.locale}/${name}"><img loading="lazy" src="${listing.locale}/${name}" alt="${escape(listing.captions[i])}"></a><figcaption>${escape(listing.captions[i])}</figcaption></figure>`).join('')}</div><p><a href="${listing.locale}/listing.json">全部字段</a> · <a href="${listing.locale}/description.txt">详情文本</a> · <a href="${listing.locale}/promo-small-440x280.png">440×280 宣传图</a> · <a href="${listing.locale}/promo-large-1400x560.png">1400×560 宣传图</a></p></section>`).join('');
   await write(`${base}/index.html`, `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VideoTracker ${version} · ${store}</title><style>body{max-width:1100px;margin:40px auto;padding:0 24px;font:16px/1.7 system-ui;color:#243047;background:#f7f8fb}section{background:white;padding:24px;margin:24px 0;border-radius:16px}img{max-width:100%;border:1px solid #ddd;border-radius:8px}textarea{width:100%;box-sizing:border-box;height:260px;font:14px/1.6 system-ui}a{color:#245acc}.shots{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0}pre{white-space:pre-wrap}.status{padding:16px;background:#fff2d6}@media(max-width:650px){.shots{grid-template-columns:1fr}}</style></head><body><h1>VideoTracker ${version} · ${store}</h1><p class="status">资料更新：${date}。仅同步仓库，未上传商店、未提交审核。以下功能基于当前源码，提交前需构建匹配的安装包。</p><p><a href="README.md">使用说明</a> · <a href="../../docs/STORE_LISTING.md">统一文案与审核说明</a> · <a href="delivery.json">资料状态</a> · <a href="${privacyPolicy}">完整隐私政策</a></p>${gallery}</body></html>\n`);
-  await write(`${base}/README.md`, `# ${store === 'chrome-store' ? 'Chrome Web Store' : 'Edge Add-ons'} 资料\n\n适用当前源码：${version}。更新日期：${date}。仅更新仓库，未上传或提交审核。旧上传记录保留在 archive/delivery-before-${date}.json，历史状态不代表本次资料已上传。\n\n- 中英文名称、短描述、详情、截图说明与更新内容：各语言目录的 listing.json、description.txt、release-notes.txt。\n- 每种语言 5 张 1280×800 ${store === 'chrome-store' ? 'JPG' : '无损 PNG'}：记录、设置、站点排除、弹窗、反馈。来自当前真实 Vue 组件和虚构数据，无真实账号，反馈预览不发送请求。\n- 宣传图：每种语言 440×280 和 1400×560；使用当前功能文案。\n- 官网：${homepage}\n- 隐私政策：${privacyPolicy}\n- 支持：${support}\n- 统一权限说明与审核步骤：../../docs/STORE_LISTING.md；Edge 专用说明：../../docs/edge-certification-notes.md。\n\n更新统一文案后运行 npm run generate:store。截图可运行 node scripts/store-preview/capture-assets.js（需先启动该目录的 Vite 预览配置）。\n\n发布前构建包含当前源码功能的安装包，更新既有商店包时使用商店接受的新版本号；核对正式扩展 ID 的认证回调并验证登录、同步与反馈。审核账号只填私密字段。填写最新数据披露、上传中英文素材后再按授权提交审核。本次没有更新安装包、操作商店后台或提交审核。\n`);
+  await write(`${base}/README.md`, `# ${store === 'chrome-store' ? 'Chrome Web Store' : 'Edge Add-ons'} 资料\n\n适用当前源码：${version}。更新日期：${date}。仅更新仓库，未上传或提交审核。旧上传记录保留在 archive/delivery-before-${date}.json，历史状态不代表本次资料已上传。请使用与当前素材一致的版本安装包。\n\n- 中英文名称、短描述、详情、截图说明与更新内容：各语言目录的 listing.json、description.txt、release-notes.txt。\n- 每种语言 5 张 1280×800 ${store === 'chrome-store' ? 'JPG' : '无损 PNG'}：记录、设置、站点排除、弹窗、反馈。来自当前真实 Vue 组件和虚构数据，无真实账号，反馈预览不发送请求。\n- 宣传图：每种语言 440×280 和 1400×560；使用当前功能文案。\n- 官网：${homepage}\n- 隐私政策：${privacyPolicy}\n- 支持：${support}\n- 统一权限说明与审核步骤：../../docs/STORE_LISTING.md；Edge 专用说明：../../docs/edge-certification-notes.md。\n\n更新统一文案后运行 npm run generate:store。宣传图运行 node scripts/store-preview/capture-promos.mjs；截图可运行 node scripts/store-preview/capture-assets.js（需先启动该目录的 Vite 预览配置）。\n\n发布前构建包含当前源码功能的安装包，更新既有商店包时使用商店接受的新版本号；核对正式扩展 ID 的认证回调并验证登录、同步与反馈。审核账号只填私密字段。填写最新数据披露、上传中英文素材后再按授权提交审核。本次没有更新安装包、操作商店后台或提交审核。\n`);
   if (localPackage) {
     const readme = await readFile(resolve(root, base, 'README.md'), 'utf8');
     await write(`${base}/README.md`, readme.replace('本次没有更新安装包、操作商店后台或提交审核。', `本地已构建 ${localPackage.filename}，SHA-256 见 delivery.json；未上传商店或提交审核。`));
@@ -106,37 +106,17 @@ await json('output/chrome-store/privacy-form.json', {
   sources: ['PRIVACY_POLICY.md', 'docs/STORE_LISTING.md', 'https://developer.chrome.com/docs/webstore/cws-dashboard-privacy', 'https://developer.chrome.com/docs/webstore/program-policies/disclosure-requirements'],
   dashboardStatus: 'Repository reference only; actual dashboard selections unchanged. Confirm category definitions at submission.',
 });
-// Publication ledgers reflect verified remote actions; regenerating copy must not erase them.
+// Historical receipts do not mark regenerated source materials as uploaded.
 let publication;
 try { publication = JSON.parse(await readFile(resolve(root, 'releases', `PUBLISH_STATUS_${version}.json`), 'utf8')); } catch {}
 for (const store of ['chrome-store', 'edge-store']) {
   const base = `output/${store}`;
   let submission;
   try { submission = JSON.parse(await readFile(resolve(root, base, 'submission-status.json'), 'utf8')); } catch {}
-  if (submission?.version !== version) submission = undefined;
   const delivery = JSON.parse(await readFile(resolve(root, base, 'delivery.json'), 'utf8'));
-  if (publication?.version === version) {
-    delivery.release = publication.release;
-    delivery.packageStatus = 'Published as a GitHub Release; individual store upload/review status is recorded separately.';
-  }
-  if (submission) {
-    delivery.status = submission.status;
-    delivery.submission = submission;
-    delivery.pending = submission.submittedForReview ? ['Await store review result.'] : ['Complete store dashboard upload and review submission; see recorded blocker.'];
-    const stateText = submission.submittedForReview
-      ? `${version} 已提交商店审核，后台状态为 ${submission.dashboardStatus}；尚未代表审核通过。`
-      : `商店后台访问被工具拒绝（Not allowed），尚未上传或提交审核；详见 submission-status.json。`;
-    const readme = await readFile(resolve(root, base, 'README.md'), 'utf8');
-    await write(`${base}/README.md`, readme.replace('仅更新仓库，未上传或提交审核。', stateText).replace('未上传商店或提交审核。', stateText));
-    const preview = await readFile(resolve(root, base, 'index.html'), 'utf8');
-    await write(`${base}/index.html`, preview.replace('仅同步仓库，未上传商店、未提交审核。', escape(stateText)));
-    for (const locale of ['zh-CN', 'en-US']) {
-      const listing = JSON.parse(await readFile(resolve(root, base, locale, 'listing.json'), 'utf8'));
-      listing.dashboardStatus = submission.status;
-      if (submission.descriptionsSaved) listing.materialStatus = 'saved_to_dashboard';
-      await json(`${base}/${locale}/listing.json`, listing);
-    }
-  }
+  delivery.sourceScope = `Version ${version} source and materials dated ${date}. Store submission status is separate from GitHub publication.`;
+  if (publication) delivery.historicalRelease = publication.release;
+  if (submission) delivery.historicalSubmission = submission;
   await json(`${base}/delivery.json`, delivery);
 }
-console.log(`Generated bilingual materials for ${version}, preserving recorded publication status. No dashboard actions performed by this script.`);
+console.log(`Generated source materials dated ${date}; historical publication receipts preserved separately. No dashboard actions performed.`);
