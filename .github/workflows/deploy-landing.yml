@@ -41,19 +41,23 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy landing page via rsync over SSH
+      - name: Deploy landing page via tar over SSH
         run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" \
-            landing/ \
-            root@43.139.44.156:/var/www/video-tracker/
+          set -o pipefail
+          tar -C landing -czf - . | ssh \
+            -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
+            root@43.139.44.156 \
+            'mkdir -p /var/www/video-tracker && tar -xzf - -C /var/www/video-tracker'
 
       - name: Deploy auth-redirect.html
         run: |
-          rsync -avz \
-            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts" \
-            public/auth-redirect.html \
-            root@43.139.44.156:/var/www/video-tracker/
+          set -o pipefail
+          tar -C public -czf - auth-redirect.html | ssh \
+            -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
+            root@43.139.44.156 \
+            'tar -xzf - -C /var/www/video-tracker'
 
       - name: Set permissions
         run: |

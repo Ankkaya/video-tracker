@@ -115,7 +115,10 @@ for (const store of ['chrome-store', 'edge-store']) {
   try { submission = JSON.parse(await readFile(resolve(root, base, 'submission-status.json'), 'utf8')); } catch {}
   const delivery = JSON.parse(await readFile(resolve(root, base, 'delivery.json'), 'utf8'));
   delivery.sourceScope = `Version ${version} source and materials dated ${date}. Store submission status is separate from GitHub publication.`;
-  if (publication) delivery.historicalRelease = publication.release;
+  if (publication?.version === version) {
+    delivery.release = publication.release;
+    delivery.packageStatus = 'Published as a GitHub Release; not uploaded to either extension store by this workflow.';
+  }
   if (submission) delivery.historicalSubmission = submission;
   await json(`${base}/delivery.json`, delivery);
 }
