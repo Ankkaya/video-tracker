@@ -8,9 +8,12 @@ import { logger } from '../src/shared/logger';
 import { supabase } from '../src/supabase';
 import { restoreRememberedDataKey } from '../src/shared/keyManager';
 import { syncEncryptedData } from '../src/shared/encryptedSync';
+import { claimStoreReview, countReviewSave, initializeStoreReview, snoozeStoreReview, storeReviewUrl } from '../src/shared/storeReview';
 
 export default defineBackground(() => {
-  const tracker = new ProgressTracker(scheduleAutoSync);
+  const tracker = new ProgressTracker(scheduleAutoSync, async () => {
+    if (storeReviewUrl()) await countReviewSave().catch(err => logger.warn('Unable to count review save:', err));
+  });
   let mutations: Promise<unknown> = Promise.resolve();
   function enqueue<T>(work: () => Promise<T>): Promise<T> {
     const next = mutations.then(work);
@@ -221,6 +224,18 @@ export default defineBackground(() => {
     const { type, data } = message;
 
     switch (type) {
+      case MSG.CLAIM_STORE_REVIEW:
+        enqueue(async () => storeReviewUrl() ? claimStoreReview() : undefined)
+          .then(stage => sendResponse({ stage }))
+          .catch(err => sendResponse({ error: String(err) }));
+        return true;
+
+      case MSG.SNOOZE_STORE_REVIEW:
+        enqueue(snoozeStoreReview)
+          .then(() => sendResponse({ success: true }))
+          .catch(err => sendResponse({ error: String(err) }));
+        return true;
+
       case MSG.MATCH_VIDEO:
         enqueue(() => tracker.match(normalizeFrameVideoInfo(data as VideoInfo, sender.frameId, sender.tab?.url, sender.tab?.title)))
           .then(result => sendResponse(result)).catch(() => sendResponse({ allowNew: false }));
@@ -664,12 +679,14 @@ export default defineBackground(() => {
 
   // ===== 快捷键监听 =====
   try {
-    chrome.commands?.onCommand?.addListener(async (command: string) => {
-      if (command === 'manual-save') {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.id) {
-          chrome.tabs.sendMessage(tab.id, { type: MSG.MANUAL_SAVE_REQUEST }, { frameId: 0 }).catch(() => {});
-        }
+    chrome.commands?.onCommand?.addListener(async (command, tab) => {
+      if (command !== 'manual-save') return;
+      try {
+        const target = tab?.id == null ? (await chrome.tabs.query({ active: true, currentWindow: true }))[0] : tab;
+        if (target?.id == null) return;
+        await chrome.tabs.sendMessage(target.id, { type: MSG.MANUAL_SAVE_REQUEST }, { frameId: 0 });
+      } catch (error) {
+        logger.warn('Unable to reach the video page for manual save:', error);
       }
     });
   } catch {
@@ -677,6 +694,9 @@ export default defineBackground(() => {
   }
 
   chrome.runtime.onInstalled?.addListener((details) => {
+    if (storeReviewUrl() && (details.reason === 'install' || details.reason === 'update')) {
+      void enqueue(initializeStoreReview).catch(err => logger.warn('Unable to initialize review timing:', err));
+    }
     void updateActionState();
     scheduleAutoSync();
     if (details.reason === 'install') {

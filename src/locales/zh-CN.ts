@@ -1,4 +1,14 @@
 export default {
+  storeReview: {
+    settingsTitle: '分享你的使用体验',
+    settingsDescription: '欢迎到扩展商店留下真实评价，帮助我们改进。',
+    settingsAction: '去商店评价',
+    title: 'VideoTracker 用得怎么样？',
+    description: '欢迎分享真实体验，帮助我们做得更好。',
+    action: '去评价',
+    later: '暂不',
+    dismiss: '不再提醒',
+  },
   common: {
     settings: '设置',
     delete: '删除',

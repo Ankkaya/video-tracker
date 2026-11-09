@@ -11,7 +11,9 @@ import { useAuth } from '../composables/useAuth';
 import { useSync } from '../composables/useSync';
 import { logger } from '../../shared/logger';
 import ShortcutStatus from '../../shared/components/ShortcutStatus.vue';
+import { storeReviewUrl } from '../../shared/storeReview';
 
+const reviewUrl = storeReviewUrl();
 const { t } = useI18n();
 const message = useMessage();
 const dialog = useDialog();
@@ -550,6 +552,14 @@ function getSyncStatusActionText() {
     </NSpace>
   </NCard>
   <NText depth="3" class="settings-save-note">ⓘ {{ t('options.layout.autoSave') }}</NText>
+  <NCard v-if="reviewUrl" size="small" :title="t('storeReview.settingsTitle')">
+    <NSpace justify="space-between" align="center">
+      <NText depth="2">{{ t('storeReview.settingsDescription') }}</NText>
+      <NButton tag="a" :href="reviewUrl" target="_blank" rel="noopener noreferrer" type="primary" ghost>
+        {{ t('storeReview.settingsAction') }}
+      </NButton>
+    </NSpace>
+  </NCard>
   <NModal v-model:show="showReset" preset="card" :title="t('options.settings.resetSyncTitle')"
     style="width: min(520px, calc(100vw - 32px))" :closable="!encryptionBusy"
     :mask-closable="!encryptionBusy" :close-on-esc="!encryptionBusy">

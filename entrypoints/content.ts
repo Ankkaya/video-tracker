@@ -588,14 +588,14 @@ export default defineContentScript({
     }
 
     /** 显示 Toast 提示 */
-    function showToast(title: string, prefix = '✅ 已保存') {
+    function showToast(title: string, prefix = '✅ 已保存', failed = false) {
       const toast = document.createElement('div');
       toast.textContent = `${prefix}：${title}`;
       Object.assign(toast.style, {
         position: 'fixed',
         top: '20px',
         right: '20px',
-        background: '#2ecc71',
+        background: failed ? '#b45309' : '#2ecc71',
         color: '#ffffff',
         padding: '12px 20px',
         borderRadius: '8px',
@@ -634,13 +634,16 @@ export default defineContentScript({
     /** 手动保存 */
     async function handleManualSave() {
       if (contextInvalidated) return { success: false, error: 'PAGE_UNAVAILABLE' };
-      if (!isPlaybackPage(getPageUrl()) || !isPlaybackPage(recordingPageUrl)) return { success: false, error: 'NO_VIDEO' };
+      if (!isPlaybackPage(getPageUrl())) return { success: false, error: 'NO_VIDEO' };
 
-      let videoInfo = currentAdapter?.extract()
-        ?? (!isInIframe ? registry.detect()?.extract() : null)
-        ?? genericAdapter.extract();
+      const adapter = isInIframe ? currentAdapter : registry.detect();
+      const hasProgress = (info: VideoInfo | null | undefined): info is VideoInfo =>
+        !!info && Number.isFinite(info.duration) && info.duration > 0
+          && Number.isFinite(info.currentTime) && info.currentTime >= 0;
+      let videoInfo = adapter?.extract();
+      if (!hasProgress(videoInfo) && adapter !== genericAdapter) videoInfo = genericAdapter.extract();
       // 快捷键发给顶层页面；跨域播放器必须由后台在所有 frame 中探测。
-      if (!videoInfo && !isInIframe) {
+      if (!hasProgress(videoInfo) && !isInIframe) {
         const probe = await safeSendMessage({ type: MSG.PROBE_IFRAME_VIDEO });
         if (probe?.success && probe.videoData) {
           const { currentTime, duration } = probe.videoData;
@@ -657,8 +660,7 @@ export default defineContentScript({
           }
         }
       }
-      if (!videoInfo || !Number.isFinite(videoInfo.duration) || videoInfo.duration <= 0
-        || !Number.isFinite(videoInfo.currentTime) || videoInfo.currentTime < 0) {
+      if (!hasProgress(videoInfo)) {
         return { success: false, error: 'NO_VIDEO' };
       }
 
@@ -725,8 +727,17 @@ export default defineContentScript({
         if (contextInvalidated) return false;
         try {
           if (message.type === MSG.MANUAL_SAVE_REQUEST) {
-            void handleManualSave().then(sendResponse)
-              .catch(() => sendResponse({ success: false, error: 'SAVE_FAILED' }));
+            void handleManualSave()
+              .catch(() => ({ success: false, error: 'SAVE_FAILED' }))
+              .then(result => {
+                if (!result.success) {
+                  const detail = result.error === 'NO_VIDEO'
+                    ? '未检测到可保存的进度，请先播放视频后重试'
+                    : '请刷新视频页面后重试';
+                  showToast(detail, '未能保存', true);
+                }
+                sendResponse(result);
+              });
           } else if (message.type === MSG.AUTO_SAVED) {
             // background 在首次自动落库时通知，弹一次 Toast
             const info = message.data as VideoInfo | undefined;

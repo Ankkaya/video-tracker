@@ -1,4 +1,14 @@
 export default {
+  storeReview: {
+    settingsTitle: 'Share your experience',
+    settingsDescription: 'Leave an honest review in the extension store to help us improve.',
+    settingsAction: 'Review in store',
+    title: 'How is VideoTracker working for you?',
+    description: 'Share your honest experience to help us improve.',
+    action: 'Leave a review',
+    later: 'Not now',
+    dismiss: 'Don’t remind me again',
+  },
   common: {
     settings: 'Settings',
     delete: 'Delete',

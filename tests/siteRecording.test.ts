@@ -47,6 +47,31 @@ beforeEach(async () => {
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe('background site recording integration', () => {
+  it('counts five persisted video saves from zero before offering a store review', async () => {
+    storage[STORAGE_KEYS.STORE_REVIEW] = {
+      startedAt: Date.now() - 8 * 24 * 60 * 60 * 1000,
+      saves: 0,
+    };
+    function request(type: string, data?: unknown) {
+      return new Promise(resolve => {
+        expect(listener({ type, data }, sender, resolve)).toBe(true);
+      });
+    }
+
+    expect(await request(MSG.MANUAL_ADD_RECORD, { url: sender.tab.url, title: sender.tab.title }))
+      .toEqual({ success: true });
+    expect(storage[STORAGE_KEYS.STORE_REVIEW].saves).toBe(0);
+
+    for (let saves = 1; saves <= 5; saves++) {
+      const currentTime = saves * 10;
+      expect(await request(MSG.MANUAL_SAVE, { ...video, currentTime })).toEqual({ success: true });
+      expect(storage[STORAGE_KEYS.RECORDS][0].currentTime).toBe(currentTime);
+      expect(await request(MSG.MANUAL_SAVE, { ...video, currentTime })).toEqual({ success: true });
+      expect(storage[STORAGE_KEYS.STORE_REVIEW].saves).toBe(saves);
+      expect(await request(MSG.CLAIM_STORE_REVIEW)).toEqual({ stage: saves === 5 ? 'first' : undefined });
+    }
+  });
+
   it('persists manual completion through the real options API and background reply', async () => {
     const { api } = await import('../src/options/composables/useApi');
     const from = { url: 'chrome-extension://test/options.html' };

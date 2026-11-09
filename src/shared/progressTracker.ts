@@ -19,7 +19,7 @@ interface Session {
 /** Call through the background mutation queue so reads and writes cannot race. */
 export class ProgressTracker {
   private sessions = new Map<string, Session>();
-  constructor(private onSaved: () => void) {}
+  constructor(private onSaved: () => void, private onProgressSaved?: () => Promise<void>) {}
 
   async match(info: VideoInfo) {
     if (!isPlaybackPage(info.url)) return { allowNew: false, key: videoIdentity(info).key };
@@ -163,6 +163,7 @@ export class ProgressTracker {
     if (changed) {
       await StorageManager.saveRecord(record);
       this.onSaved();
+      if (record.duration > 0) await this.onProgressSaved?.();
     }
     session.recordId = record.id;
     session.lastSavedAt = Date.now();

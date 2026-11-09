@@ -2,7 +2,7 @@
 
 [简体中文](README.md)
 
-Latest published version: `0.0.14`, released on 2026-10-20. [Download the latest Chrome / Edge package](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.14/video-tracker-0.0.14-chrome-mv3.zip) · [Release notes and checksum files](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.14).
+Latest published version: `0.0.15`, released on 2026-11-09. [Download the latest Chrome / Edge package](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.15/video-tracker-0.0.15-chrome-mv3.zip) · [Release notes and checksum files](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.15).
 
 [Website](https://video-tracker.ankkaya.top/en/) · [Privacy policy](https://video-tracker.ankkaya.top/privacy-policy.html) · [Support](https://github.com/Ankkaya/video-tracker/issues)
 

@@ -27,8 +27,8 @@ describe('消息类型定义完整性', () => {
     expect(MSG.UPDATE_SETTINGS).toBe('UPDATE_SETTINGS');
   });
 
-  it('MSG 常量共 21 个消息类型', () => {
-    expect(Object.keys(MSG)).toHaveLength(21);
+  it('MSG 常量共 23 个消息类型', () => {
+    expect(Object.keys(MSG)).toHaveLength(23);
   });
 
   it('包含 AUTO_SAVED 通知消息', () => {

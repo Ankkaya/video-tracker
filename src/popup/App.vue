@@ -14,6 +14,7 @@ import { useSync } from '../options/composables/useSync';
 import { buildRecordResumeUrl } from '../shared/resume';
 import BrandIcon from '../shared/components/BrandIcon.vue';
 import { isRecordCompleted } from '../shared/watchStatus';
+import { storeReviewUrl } from '../shared/storeReview';
 
 const { t } = useI18n();
 const { isLoggedIn, loadAuthMeta, checkSession } = useAuth();
@@ -26,6 +27,35 @@ const recordsLoaded = ref(false);
 const recordsError = ref(false);
 const manualSaveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
 const showSyncModal = ref(false);
+const reviewUrl = storeReviewUrl();
+const reviewStage = ref<'first' | 'reminder'>();
+const reviewSnoozing = ref(false);
+
+async function loadReviewInvitation() {
+  if (!reviewUrl || !recordsLoaded.value) return;
+  try {
+    const response = await chrome.runtime.sendMessage({ type: MSG.CLAIM_STORE_REVIEW });
+    if (response?.stage === 'first' || response?.stage === 'reminder') {
+      reviewStage.value = response.stage;
+    }
+  } catch (error) {
+    logger.warn('Unable to load review invitation:', error);
+  }
+}
+
+async function postponeReview() {
+  if (reviewStage.value !== 'first' || reviewSnoozing.value) return;
+  reviewSnoozing.value = true;
+  try {
+    const response = await chrome.runtime.sendMessage({ type: MSG.SNOOZE_STORE_REVIEW });
+    if (!response?.success) throw new Error(response?.error || 'Unable to postpone review');
+    reviewStage.value = undefined;
+  } catch (error) {
+    logger.warn('Unable to postpone review invitation:', error);
+  } finally {
+    reviewSnoozing.value = false;
+  }
+}
 
 async function loadRecords() {
   recordsError.value = false;
@@ -60,6 +90,7 @@ function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>,
 onMounted(async () => {
   chrome.storage.onChanged.addListener(onStorageChanged);
   await loadRecords();
+  void loadReviewInvitation();
   await checkSession();
   await loadSyncMeta();
 });
@@ -91,7 +122,7 @@ async function openRecord(record: WatchRecord) {
 }
 
 function openSettings() {
-  chrome.tabs.create({ url: chrome.runtime.getURL('/options.html') });
+  chrome.tabs.create({ url: chrome.runtime.getURL('/options.html?tab=settings') });
 }
 
 function openAllRecords() {
@@ -276,6 +307,21 @@ function handleSyncClick() {
         </div>
       </template>
 
+      <section v-if="reviewStage && reviewUrl" class="review-invite" aria-labelledby="review-invite-title">
+        <button class="review-close" type="button" :aria-label="t('storeReview.dismiss')"
+          :title="t('storeReview.dismiss')" :disabled="reviewSnoozing" @click="reviewStage = undefined">×</button>
+        <h2 id="review-invite-title">{{ t('storeReview.title') }}</h2>
+        <p>{{ t('storeReview.description') }}</p>
+        <div class="review-actions">
+          <a :href="reviewUrl" target="_blank" rel="noopener noreferrer" @click="reviewStage = undefined">
+            {{ t('storeReview.action') }}
+          </a>
+          <button v-if="reviewStage === 'first'" type="button" :disabled="reviewSnoozing" @click="postponeReview">
+            {{ t('storeReview.later') }}
+          </button>
+        </div>
+      </section>
+
       <div class="more-action">
         <div v-if="!continuingRecords.length" class="empty-message">
           <div v-if="recordsError" class="no-results" role="alert">
@@ -284,7 +330,7 @@ function handleSyncClick() {
           <EmptyState v-else-if="recordsLoaded" />
         </div>
         <button class="view-all-btn" @click="openAllRecords">
-          {{ t('popup.viewAllRecords') }} <span aria-hidden="true">→</span>
+          {{ t('popup.viewAllRecords') }}
         </button>
       </div>
     </main>
@@ -317,6 +363,37 @@ function handleSyncClick() {
 </template>
 
 <style scoped>
+.review-invite {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid rgba(67, 97, 238, 0.25);
+  border-radius: 8px;
+  background: rgba(67, 97, 238, 0.1);
+}
+.review-invite h2 { margin: 0 25px 4px 0; font-size: 14px; }
+.review-invite p { margin: 0 0 8px; font-size: 12px; }
+.review-actions { display: flex; gap: 8px; align-items: center; }
+.review-actions a {
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #4361ee;
+  color: #fff;
+  text-decoration: none;
+}
+.review-actions a:hover { background: #3451de; }
+.review-invite button {
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.review-invite button:hover { background: rgba(67, 97, 238, 0.14); }
+.review-close { position: absolute; top: 5px; right: 5px; font-size: 18px; line-height: 1; }
+
 .popup-container {
   padding: 12px;
   min-width: 360px;
@@ -462,7 +539,6 @@ function handleSyncClick() {
   transition: all 0.2s;
 }
 
-.view-all-btn span { margin-left: 8px; }
 .view-all-btn:focus-visible { outline: 2px solid #4361ee; outline-offset: 2px; }
 
 .view-all-btn:hover {

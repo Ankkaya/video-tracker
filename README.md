@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-最近发布版本：`0.0.14`（发布于 2026-10-20）。[下载最新版 Chrome / Edge 安装包](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.14/video-tracker-0.0.14-chrome-mv3.zip) · [更新说明与校验文件](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.14)。
+最近发布版本：`0.0.15`（发布于 2026-11-09）。[下载最新版 Chrome / Edge 安装包](https://github.com/Ankkaya/video-tracker/releases/download/v0.0.15/video-tracker-0.0.15-chrome-mv3.zip) · [更新说明与校验文件](https://github.com/Ankkaya/video-tracker/releases/tag/v0.0.15)。
 
 [官方网站](https://video-tracker.ankkaya.top/) · [English website](https://video-tracker.ankkaya.top/en/) · [隐私政策](https://video-tracker.ankkaya.top/privacy-policy.html) · [问题反馈](https://github.com/Ankkaya/video-tracker/issues)
 

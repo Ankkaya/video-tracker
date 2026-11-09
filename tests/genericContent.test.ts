@@ -103,6 +103,7 @@ describe('generic content detection', () => {
     messageListener({ type: MSG.MANUAL_SAVE_REQUEST }, {}, respond);
     await flush();
     expect(respond).toHaveBeenCalledWith({ success: false, error: 'SAVE_FAILED' });
+    expect(document.body.textContent).toContain('未能保存');
   });
 
   it('does not save stale progress when the player has disappeared', async () => {
@@ -130,7 +131,10 @@ describe('generic content detection', () => {
     });
     changed({ [STORAGE_KEYS.SETTINGS]: { newValue: settings } }, 'local');
     await flush();
+    const placeholder = document.createElement('video');
+    document.body.prepend(placeholder);
     messageListener({ type: MSG.MANUAL_SAVE_REQUEST }, {}, () => {});
+    placeholder.remove();
     await flush();
     const saves = sendMessage.mock.calls.filter(([m]) => m.type === MSG.MANUAL_SAVE);
     expect(saves).toHaveLength(1);

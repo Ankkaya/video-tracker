@@ -34,6 +34,7 @@ export const STORAGE_KEYS = {
   AUTH_PENDING: 'video_tracker_auth_pending',
   ENCRYPTION_DEVICE_KEY: 'video_tracker_encryption_device_key',
   FEATURE_TOUR: 'video_tracker_feature_tour',
+  STORE_REVIEW: 'video_tracker_store_review',
 } as const;
 
 /** 消息类型 */
@@ -47,6 +48,8 @@ export const MSG = {
   MANUAL_SAVE_REQUEST: 'MANUAL_SAVE_REQUEST',
   AUTO_SAVED: 'AUTO_SAVED',
   GET_RECORDS: 'GET_RECORDS',
+  CLAIM_STORE_REVIEW: 'CLAIM_STORE_REVIEW',
+  SNOOZE_STORE_REVIEW: 'SNOOZE_STORE_REVIEW',
   DELETE_RECORD: 'DELETE_RECORD',
   GET_SETTINGS: 'GET_SETTINGS',
   UPDATE_SETTINGS: 'UPDATE_SETTINGS',
