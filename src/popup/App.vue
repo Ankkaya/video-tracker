@@ -282,8 +282,18 @@ function handleSyncClick() {
         <button class="theme-btn" @click="toggleTheme" :title="t('common.theme')">
           {{ getThemeIcon() }}
         </button>
-        <button class="settings-btn" @click="openFeedback" :title="t('options.tabs.feedback')" :aria-label="t('options.tabs.feedback')">✉</button>
-        <button class="settings-btn" @click="openSettings" :title="t('common.settings')">⚙️</button>
+        <button class="settings-btn" @click="openFeedback" :title="t('options.tabs.feedback')" :aria-label="t('options.tabs.feedback')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="m2 7 8.9 6a2 2 0 0 0 2.2 0L22 7" />
+          </svg>
+        </button>
+        <button class="settings-btn" @click="openSettings" :title="t('common.settings')" :aria-label="t('common.settings')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 3h4l.6 2.5 1.8 1 2.5-.7 2 3.4-1.9 1.8v2l1.9 1.8-2 3.4-2.5-.7-1.8 1L14 21h-4l-.6-2.5-1.8-1-2.5.7-2-3.4L5 13v-2L3.1 9.2l2-3.4 2.5.7 1.8-1L10 3Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -513,10 +523,12 @@ function handleSyncClick() {
 }
 
 .settings-btn {
+  display: grid;
+  place-items: center;
   background: none;
   border: none;
+  color: inherit;
   cursor: pointer;
-  font-size: 18px;
   padding: 4px;
   border-radius: 6px;
   transition: background 0.2s;
